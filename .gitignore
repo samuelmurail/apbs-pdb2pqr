@@ -3,3 +3,8 @@ build/**
 include/
 lib/
 **.out
+.project
+.pydevproject
+.sconf_temp/
+.sconsign.dblite
+

@@ -4,22 +4,22 @@
 #define PACKAGE_STRING "@PACKAGE_STRING@"
 
 // apbs debugging mode
-@USE_DEBUG@#define DEBUG
+//#cmakedefine DEBUG
 
 // prints verbose debugging information
-@USE_VERBOSE_DEBUG@#define VERBOSE_DEBUG
+//#cmakedefine VERBOSE_DEBUG
 
 // apbs quiet mode
-@USE_VAPBSQUIET@#define VAPBSQUIET
+//#cmakedefine VAPBSQUIET
 
 // time function available
-@HAVE_TIME@#define HAVE_TIME_FUNC
+#define HAVE_TIME_FUNC
 
 // rand function available
-@HAVE_RAND@#define HAVE_RAND_FUNC
+#define HAVE_RAND_FUNC
 
 // srand function available
-@HAVE_SRAND@#define HAVE_SRAND_FUNC
+#define HAVE_SRAND_FUNC
 
 // readline library is available
 @USE_READLINE@#define HAVE_LIBREADLINE
