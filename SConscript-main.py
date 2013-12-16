@@ -36,6 +36,7 @@ env = Environment(variables=vars,
 #env.Append(LIBS=[python_lib])
 #env.Append(ENV={'PATH' : os.environ['PATH']})
 env.Append(CPPPATH=[os.path.abspath('src')])
+env.Append(CFLAGS=['-std=c99'])
 
 #if os.name == 'nt':
 #    python_root = sys.prefix    
