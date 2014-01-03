@@ -1,3 +1,0 @@
-
-SConscript('SConscript-main.py')
-
