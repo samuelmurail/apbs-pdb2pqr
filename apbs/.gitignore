@@ -1,0 +1,10 @@
+bin/
+build/**
+include/maloc
+lib/
+**.out
+.project
+.pydevproject
+.sconf_temp/
+.sconsign.dblite
+*.o
