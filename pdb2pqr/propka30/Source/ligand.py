@@ -41,7 +41,6 @@
 
 import sys, pdb, protonate, lib, bonds
 from vector_algebra import *
-pka_print = lib.pka_print
 
 all_sybyl_types = [
     'C.3',   #  carbon sp3
@@ -227,7 +226,7 @@ class ligand:
         return
 
     def writePDB(self, pdbname):
-        pka_print("writing pdbfile %s" % (pdbname))
+        print("writing pdbfile %s" % (pdbname))
         file = open(pdbname, 'w')
 
         configurations = lib.get_sorted_configurations(self.configuration_keys)
@@ -260,7 +259,7 @@ class ligand:
         for atom in self.atoms:
             # check if we already have assigned a name to this atom
             if hasattr(atom,'sybyl_assigned'):
-                pka_print(atom.name,'already assigned')
+                print(atom.name,'already assigned')
                 continue
 
             # find some properties of the atom
@@ -400,11 +399,11 @@ class ligand:
 
             element = atom.get_element().capitalize()
             self.set_type(atom,element)
-            #pka_print('Using element as type for %s'%atom.get_element())
+            #print('Using element as type for %s'%atom.get_element())
         return
 
     def set_type(self,atom,type):
-        pka_print(atom,'->',type)
+        print(atom,'->',type)
         atom.name = type
         atom.sybyl_assigned=1
         return
@@ -448,7 +447,7 @@ class ligand:
         margin = 0.20
         for b in atoms[3:]:
             v = vector(atom1=atoms[0], atom2=b).rescale(1.0)
-            #pka_print(atoms[0],abs(v*n) )
+            #print(atoms[0],abs(v*n) )
             if abs(v*n)>margin:
                 return False
             
@@ -477,7 +476,7 @@ class ligand_residue:
             self.resNumb = self.atoms[0].resNumb
             self.resName = self.atoms[0].resName
 
-        pka_print('Created ligand residue %s with %2d atoms'%(self, len(self.atoms)))
+        print('Created ligand residue %s with %2d atoms'%(self, len(self.atoms)))
 
         return
 
@@ -491,7 +490,7 @@ if __name__ == '__main__':
 
     protonator = protonate.Protonate()
 
-    pka_print(sys.argv[1])
+    print(sys.argv[1])
     atoms = pdb.readPDB(sys.argv[1],tags=["ATOM","HETATM"])
     
     my_ligand = ligand(atoms)

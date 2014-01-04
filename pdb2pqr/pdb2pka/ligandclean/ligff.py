@@ -6,8 +6,6 @@ from pdb2pka import NEWligand_topology
 import sys
 import string
 
-from src.errors import PDBInputError
-
 def initialize(definition, ligdesc, pdblist, verbose=0):
     """
         Initialize a ligand calculation by adding ligand atoms to the definition.
@@ -28,16 +26,11 @@ def initialize(definition, ligdesc, pdblist, verbose=0):
     Lig = ligand_charge_handler()
     Lig.read(ligdesc)
     atomnamelist=[]
-    duplicatesFound = False
     for atom in Lig.lAtoms:
         if atom.name in atomnamelist:
-            duplicatesFound = True
-            sys.stderr.write("Duplicate atom names (%s) found in ligand file!\n" % atom.name)
+            sys.stderr.write("WARNING: Duplicate atom names (%s) found in ligand file, please change duplicate atom names to aviod atom overwriting!\n" % atom.name)
         else:
             atomnamelist.append(atom.name)
-            
-    if duplicatesFound:
-        raise PDBInputError("Duplicate atoms names.")
     # Create the ligand definition from the mol2 data
 
     MOL2FLAG = True
@@ -53,7 +46,7 @@ def initialize(definition, ligdesc, pdblist, verbose=0):
         obj = DefinitionAtom()
         entries = string.split(line)
         if len(entries) != 4:
-            raise PDBInputError("Invalid line for MOL2 definition!")
+            raise ValueError, "Invalid line for MOL2 definition!"
         name = entries[0]
         obj.name = name
         obj.x = float(entries[1])
@@ -267,10 +260,6 @@ ParseRadiiDict = {"C": 1.70,
                    "P": 1.90,
                    "Cl": 1.75}
 
-#Add lower case keys to more lenient matching.
-ParseRadiiDictLower = dict((key.lower(), value) for key, value in ParseRadiiDict.items()) 
-ParseRadiiDict.update(ParseRadiiDictLower)
-
 class ligand_charge_handler(MOL2MOLECULE):
     """Make sure that we are up to date with respect to the charge calculation"""
 
@@ -281,10 +270,10 @@ class ligand_charge_handler(MOL2MOLECULE):
         #
         if not getattr(self,'ligand_props',None):
             self.recalc_charges(residue)
-#            qqqgesges = 0.0
-#            for aa in residue.atoms:
-#                #print "newly_calced  %s  %1.4f " %(aa.name, aa.charge)
-#                qqqgesges = qqqgesges +  aa.charge
+            qqqgesges = 0.0
+            for aa in residue.atoms:
+                #print "newly_calced  %s  %1.4f " %(aa.name, aa.charge)
+                qqqgesges = qqqgesges +  aa.charge
             #print "-------------------------------"
             #print "newly_calced - net charge %1.4f" %(qqqgesges)
             #print
@@ -300,10 +289,10 @@ class ligand_charge_handler(MOL2MOLECULE):
             #print "atoms_now ",atoms_now
             atoms_last_calc.sort()
             #
-#            xxnetqxx = 0.0
-#            for aa in residue.atoms:
-#                #print "NOT recalced  %s  %1.4f  %1.4f " %(aa.name, aa.charge, aa.formalcharge)
-#                xxnetqxx = xxnetqxx+aa.charge
+            xxnetqxx = 0.0
+            for aa in residue.atoms:
+                #print "NOT recalced  %s  %1.4f  %1.4f " %(aa.name, aa.charge, aa.formalcharge)
+                xxnetqxx = xxnetqxx+aa.charge
             #print "NOT recalced, net_q : %1.2f" %(xxnetqxx)
             #print "###########################"
             #

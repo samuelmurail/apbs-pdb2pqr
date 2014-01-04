@@ -54,7 +54,6 @@ import string
 from pdb import *
 from utilities import *
 from quatfit import *
-from errors import PDBInternalError
 
 class Chain:
     """
@@ -95,7 +94,7 @@ class Chain:
                 return item
             except AttributeError:
                 message = 'Unable to get object "%s" in class Chain' % name
-                raise PDBInternalError(message)
+                raise ValueError, message
 
     def addResidue(self, residue):
         """
@@ -216,9 +215,9 @@ class Residue:
 
     def __str__(self):
         """
-            Basic string representation
+            Basic string representation for debugging
         """
-        text = "%s %s %i%s" % (self.name, self.chainID, self.resSeq, self.iCode)
+        text = "%s %s %i" % (self.name, self.chainID, self.resSeq)
         return text
     
     #TODO: Kill this in a fire.
@@ -248,7 +247,7 @@ class Residue:
             return item
         except AttributeError:
             message = "Unable to access object \"%s\" in class Residue" % name
-            raise PDBInternalError(message)
+            raise ValueError, message
 
     def set(self, name, value):
         """
@@ -282,7 +281,7 @@ class Residue:
                 setattr(self, name, value)
             except AttributeError:
                 message = "Unable to set object \"%s\" in class Residue" % name
-                raise PDBInternalError(message)
+                raise ValueError, message
 
     def update_terminus_status(self):
         """Update the isNterms and isCterm flags"""
@@ -577,7 +576,7 @@ class Atom(ATOM):
         if type == "ATOM" or type == "HETATM":
             self.type = type
         else:
-            raise PDBInternalError("Invalid atom type %s (Atom Class IN structures.py)!" % type)
+            raise ValueError, "Invalid atom type %s (Atom Class IN structures.py)!"
         self.serial = atom.serial
         self.name = atom.name
         self.altLoc = atom.altLoc
@@ -772,7 +771,7 @@ class Atom(ATOM):
             return item
         except AttributeError:
             message = "Unable to access object \"%s\" in class Atom" % name
-            raise PDBInternalError(message)
+            raise ValueError, message
 
     def set(self, name, value):
         """
@@ -808,7 +807,7 @@ class Atom(ATOM):
             setattr(self, name, value)
         except AttributeError:
             message = "Unable to set object \"%s\" in class Atom" % name
-            raise PDBInternalError(message)   
+            raise ValueError, message   
 
     def getCoords(self):
         """

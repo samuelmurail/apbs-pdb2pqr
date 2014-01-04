@@ -9,7 +9,6 @@ __author__="Jens Erik Nielsen, Todd Dolinsky, Yong Huang, Tommy Carstensen"
 
 debug=False
 import optparse
-import math
 import sys, os
 from pKa_base import *
 
@@ -254,7 +253,7 @@ class pKaRoutines:
         kappa = 'kappa_default.dx'
         
         if self.sd:
-            xdiel, ydiel, zdiel = smooth(xdiel,ydiel,zdiel)
+            xdiel, ydiel, zdiel = smooth(xdiel,ydiel,zdiel,self.sd)
         
         self.apbs_setup.xdiel = xdiel
         self.apbs_setup.ydiel = ydiel
@@ -584,7 +583,8 @@ class pKaRoutines:
                     #
                     atomlist=[]
                     for atomname in atomnames:
-                        if residue.getAtom(atomname) not in atomlist: 
+                        if residue.getAtom(atomname) in atomlist: pass
+                        else:
                             atomlist.append(residue.getAtom(atomname))
 
                     energy=0.0
@@ -868,7 +868,6 @@ class pKaRoutines:
                 else:
                     print 'Something is wrong'
                     print pKavals[count:count+30]
-                    import os
                     os._exit(0)
         #
         # Write a WHAT IF titration curve file
@@ -954,12 +953,9 @@ class pKaRoutines:
         #
         # Make matrix symmetric
         #
-        
-        outfile = open('%s.INTERACTION_MATRIX.DAT' %self.pdbfile_name, 'w')
-        
-        
-        outfile.write('Interaction energy matrix\n')
-        outfile.write('%25s %25s %10s %10s %16s\n' %('Group1','Group 2','State G1','State G2','Interaction energy (kT)'))
+        #print
+        #print 'Interaction energy matrix'
+        #print '%25s %25s %10s %10s %16s' %('Group1','Group 2','State G1','State G2','Interaction energy (kT)')
         symmetric_matrix={}
         for pKa1 in self.pKas:
             symmetric_matrix[pKa1]={}
@@ -989,10 +985,8 @@ class pKaRoutines:
                                 #
                                 # Insert the average value in the symetric matrix
                                 #
-                                average = (value1+value2)/2.0
-                                outfile.write('%25s %25s %10s %10s %6.3f %6.3f %6.3f\n' %(pKa1.uniqueid,pKa2.uniqueid,state1,state2,value1,value2,average))
-                                
-                                symmetric_matrix[pKa1][titration1][state1][pKa2][titration2][state2]=average
+                                #print '%25s %25s %10s %10s %6.3f' %(pKa1.uniqueid,pKa2.uniqueid,state1,state2,(value1+value2)/2.0)
+                                symmetric_matrix[pKa1][titration1][state1][pKa2][titration2][state2]=(value1+value2)/2.0
         return symmetric_matrix
 
     #
@@ -1025,8 +1019,9 @@ class pKaRoutines:
                 continue
             charge, radius = self.forcefield.getParams1(residue, atomname)
             sum=sum+charge
-
-        return abs(sum)>0.05
+        if abs(sum)>0.05:
+            return 1
+        return 0
 
     #
     # ----------------------------------
@@ -1163,13 +1158,11 @@ class pKaRoutines:
         #
         """
         # Setting up
-        myRoutines = Routines(self.protein, True)
+        myRoutines = Routines(self.protein, 0)
         myRoutines.updateResidueTypes()
         myRoutines.updateSSbridges()
         myRoutines.updateBonds()
         myRoutines.updateInternalBonds()
-
-        myRoutines.debumpProtein()
 
         # Initialize H-bond optimization
         self.hydrogenRoutines.setOptimizeableHydrogens()
@@ -1351,6 +1344,7 @@ class pKaRoutines:
                     # Add corrections for Asp and Glu trans states.
                     # His tautomers etc.
                     #
+                    import math
                     print self.get_state_name(titration.name,state)
                     if self.get_state_name(titration.name,state) in ['ASH1t','ASH2t','GLH1t','GLH2t']:
                         energy=energy+math.log(10)*1.99
@@ -1376,16 +1370,6 @@ class pKaRoutines:
                     import pickle
                     pickle.dump(savedict,fd)
                     fd.close()
-        
-        name=self.pdbfile_name+'.nice_background'            
-        with open(name, 'w') as f:
-            keys = savedict.keys()
-            keys.sort()
-            for key in keys:
-                value = savedict[key]
-                residue, tit_state = key.rsplit('_', 1)
-                
-                f.write(' '.join((residue, tit_state, str(value)))+'\n')
         return
 
     #
@@ -1531,16 +1515,6 @@ class pKaRoutines:
                     import pickle
                     pickle.dump(savedict,fd)
                     fd.close()
-                    
-        name=self.pdbfile_name+'.nice_desolv'            
-        with open(name, 'w') as f:
-            keys = savedict.keys()
-            keys.sort()
-            for key in keys:
-                value = savedict[key]
-                residue, tit_state = key.rsplit('_', 1)
-                
-                f.write(' '.join((residue, tit_state, str(value)))+'\n')
         return
 
     #
@@ -1997,7 +1971,7 @@ class pKaRoutines:
         start_state=titration.startstates[0]
         start_state=self.get_state_name(titration.name,start_state) 
         self.hydrogenRoutines.switchstate('pKa', ambiguity, start_state)
-        sum=0.0
+        chargeSum=0.0
         for atom in residue.getAtoms():
             atomname = atom.get("name")
             if atomname.find('FLIP')!=-1:
@@ -2009,8 +1983,8 @@ class pKaRoutines:
                 print atomname,charge
                 print residue.isCterm
                 raise 'Charge on atom is None'
-            sum+=charge
-        if abs(sum)<0.001:
+            chargeSum=chargeSum+charge
+        if abs(chargeSum)<0.001:
             neutral_state=start_state
         #
         # Check if charges change in all other states
@@ -2021,14 +1995,14 @@ class pKaRoutines:
             #
             # Check that no charges changed and that no atoms were added
             #
-            sum=0.0
+            chargeSum=0.0
             for atom in residue.getAtoms():
                 atomname = atom.get("name")
                 if atomname.find('FLIP')!=-1:
                     continue
 
                 charge, radius = self.forcefield.getParams1(residue, atomname)
-                sum=sum+charge
+                chargeSum=chargeSum+charge
                 if initialmap.has_key(atomname):
                     initcharge = initialmap[atomname]
                     if charge != initcharge:
@@ -2046,9 +2020,9 @@ class pKaRoutines:
         #
         # Make sure that the charges add up to integers by adding extra atoms
         #
-        sum=0.01
-        while sum>0.001:
-            sum=0.0
+        chargeSum=0.01
+        while chargeSum>0.001:
+            chargeSum=0.0
             added=None
             neutral_state=None
             #
@@ -2078,7 +2052,7 @@ class pKaRoutines:
                 # Is this an integer charge?
                 #
                 diff=float(abs(1000.0*this_sum)-abs(1000.0*int(this_sum)))/1000.0
-                sum=sum+diff
+                chargeSum=chargeSum+diff
                 if diff>0.001:
                     #
                     # Find all atoms one bond away
@@ -2115,8 +2089,8 @@ class pKaRoutines:
             #
             # Did we add anything?
             #
-            if added is None and sum>0.001:
-                print sum
+            if added is None and chargeSum>0.001:
+                print chargeSum
                 print atomnames
                 raise 'Could not find integer charge state'
         #
@@ -2262,10 +2236,10 @@ class pKaRoutines:
         filename = TITRATIONFILE
         if not os.path.isfile(TITRATIONFILE):
             raise ValueError, "Could not find TITRATION.DAT!"
-        file = open(filename)
+        titrationFile = open(filename)
         
         while 1:
-            line=file.readline()
+            line=titrationFile.readline()
             if line.startswith("//"): pass
             elif line == '': break
             elif line[0]=='*':
@@ -2275,14 +2249,14 @@ class pKaRoutines:
                 titrations = []
 
                 name = string.strip(line[1:])
-                line = file.readline()
+                line = titrationFile.readline()
                 if line[:8] != 'Residue:':
                     text = "Wrong line found when looking for 'Residue'"
                     raise ValueError, "%s: %s" % (text, line)
                 
                 resname = string.strip(string.split(line)[1])
             
-                line = file.readline()
+                line = titrationFile.readline()
                 if line[:10] != 'Grouptype:':
                     text = "Wrong line found when looking for 'Grouptype'"
                     raise ValueError, "%s: %s" % (text, line)
@@ -2291,14 +2265,14 @@ class pKaRoutines:
                 if type != 'acid' and type != 'base':
                     raise ValueError, 'Group type must be acid or base!'
 
-                line = file.readline()
+                line = titrationFile.readline()
                 while 1:  
                     """ Find next transition """
                     #
                     # Skip comments
                     #
                     while line[:2]=='//':
-                        line=file.readline()
+                        line=titrationFile.readline()
                     
                     startstates = []
                     endstates = []
@@ -2314,12 +2288,12 @@ class pKaRoutines:
                     for number in string.split(split[1], ','):
                         endstates.append(titrationdict[string.strip(number)])
 
-                    line = file.readline()
+                    line = titrationFile.readline()
                     #
                     # Skip comments
                     #
                     while line[:2]=='//':
-                        line=file.readline()
+                        line=titrationFile.readline()
                     #
                     # Must be the model pKa line
                     #
@@ -2332,13 +2306,13 @@ class pKaRoutines:
                     thisTitration = DefTitration(startstates, endstates,modelpKa,name)
                     titrations.append(thisTitration)
                     
-                    line = file.readline()
+                    line = titrationFile.readline()
                     if string.strip(line) == 'END': break
 
                 thisGroup = pKaGroup(name, resname, type, titrations)
                 mygroups[name] = thisGroup
 
-                line = file.readline()
+                line = titrationFile.readline()
                 if string.strip(line) == 'END OF FILE': break
         
         return mygroups
@@ -2372,7 +2346,7 @@ class pKaRoutines:
 # -----------------------------------------------
 #
 
-def smooth(xdiel,ydiel,zdiel):
+def smooth(xdiel,ydiel,zdiel,sd):
     print '\nSmooting dielectric constant using Gaussian filter:\n'
     
     diel=[xdiel,ydiel,zdiel]

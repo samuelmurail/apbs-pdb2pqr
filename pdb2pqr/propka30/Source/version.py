@@ -41,7 +41,6 @@ import math
 import lib
 import sys, os
 import calculator as calculate
-pka_print = lib.pka_print
 
 
 def getAtomInteractionList():
@@ -154,7 +153,7 @@ def checkCooArgException(residue_coo, residue_arg, version=None):
     value_tot = 0.00
     dpka_max, cutoff = version.SideChainParameters[residue_coo.resType][residue_arg.resType]
     # needs to be this way since you want to find shortest distance first
-    # pka_print("--- exception for %s %s ---" % (residue_coo.label, residue_arg.label))
+    # print("--- exception for %s %s ---" % (residue_coo.label, residue_arg.label))
     for iter in ["shortest", "runner-up"]:
       distance = 999.
       closest_coo_atom = None
@@ -166,7 +165,7 @@ def checkCooArgException(residue_coo, residue_arg, version=None):
             fucked = True
           if fucked == False:
             current_distance = calculate.InterAtomDistance(atom_coo, atom_arg)
-            #pka_print("- %-4s %-4s: %6.2lf%6.2lf %s" % (atom_coo.name, atom_arg.name, current_distance, distance, iter))
+            #print("- %-4s %-4s: %6.2lf%6.2lf %s" % (atom_coo.name, atom_arg.name, current_distance, distance, iter))
             if current_distance < distance:
               closest_arg_atom = atom_arg
               closest_coo_atom = atom_coo
@@ -178,12 +177,12 @@ def checkCooArgException(residue_coo, residue_arg, version=None):
         f_angle = 1.00
       value = calculate.HydrogenBondEnergy(distance, dpka_max, cutoff, f_angle)
       value_tot += value
-      #pka_print(">>> %s %s: %6.2lf %6.2lf %6.2lf %s" % (closest_coo_atom.name, closest_arg_atom.name, distance, f_angle, value, iter))
+      #print(">>> %s %s: %6.2lf %6.2lf %6.2lf %s" % (closest_coo_atom.name, closest_arg_atom.name, distance, f_angle, value, iter))
       str += "%6.2lf" % (value)
       #str += "%6.2lf" % (distance)
       excluded_atoms.append(closest_coo_atom)
       excluded_atoms.append(closest_arg_atom)
-    #pka_print(str)
+    #print(str)
 
     return exception, value_tot
 
@@ -313,10 +312,10 @@ def makeVersion(label="Nov30", options=None):
     elif label == "Nov30":
       version = Nov30(options=options)
     else:
-      pka_print("version \"%s\" not defined in makeVersion()" % (label))
+      print("version \"%s\" not defined in makeVersion()" % (label))
       sys.exit(9)
 
-    pka_print("created version \"%s\"" % (version.name))
+    print("created version \"%s\"" % (version.name))
 
     return version
 
@@ -356,7 +355,7 @@ class Version(object):
         """
         str  = "WARNING: you are trying to create a 'default' version object. "
         str += " This object contains the cross section of all versions and is not a complete version itself."
-        pka_print(str)
+        print(str)
         sys.exit(8)
 
 
@@ -364,21 +363,21 @@ class Version(object):
         """
         Print out the properties of this version - more a test and debug feature.
         """
-        pka_print("version = %s" % (self.name))
-        pka_print("  desolvation   = %s" % (self.DesolvationModel))
-        pka_print("    prefactor   = %6.2lf" % (self.desolvationPrefactor))
-        pka_print("    allowance   = %6.2lf" % (self.desolvationAllowance))
+        print("version = %s" % (self.name))
+        print("  desolvation   = %s" % (self.DesolvationModel))
+        print("    prefactor   = %6.2lf" % (self.desolvationPrefactor))
+        print("    allowance   = %6.2lf" % (self.desolvationAllowance))
         if   self.DesolvationModel in ["propka2", "ContactModel"]:
-          pka_print("    radii       = %s" % (self.desolvationRadii))
+          print("    radii       = %s" % (self.desolvationRadii))
         if   self.DesolvationModel in ["VolumeModel", "ScaledVolumeModel"]:
-          pka_print("    surface     = %s" % (self.desolvationSurfaceScalingFactor))
-        pka_print("  Coulomb       = %s" % (self.CoulombModel))
-        pka_print("    cutoff      = %s" % (self.coulomb_cutoff))
-        pka_print("    scaled      = %s" % (self.coulomb_scaled))
+          print("    surface     = %s" % (self.desolvationSurfaceScalingFactor))
+        print("  Coulomb       = %s" % (self.CoulombModel))
+        print("    cutoff      = %s" % (self.coulomb_cutoff))
+        print("    scaled      = %s" % (self.coulomb_scaled))
         if   self.CoulombModel == "Linear":
-          pka_print("    prefactor   = %s" % (self.coulomb_maxpka))
+          print("    prefactor   = %s" % (self.coulomb_maxpka))
         elif self.CoulombModel == "Coulomb":
-          pka_print("    diel        = %s" % (self.coulomb_diel))
+          print("    diel        = %s" % (self.coulomb_diel))
 
 
     def calculateWeight(self, Nmass):
@@ -412,20 +411,20 @@ class Version(object):
         """
         if resType == None:
           # doing it for all residues
-          #pka_print("changing back-bone parameters")
+          #print("changing back-bone parameters")
           for key in self.BackBoneParameters.keys():
             self.BackBoneParameters[key][0] = dpka
             str  = " %s: %6.2lf " % (key, self.BackBoneParameters[key][0])
             str += "[%5.2lf,%5.2lf]" % (self.BackBoneParameters[key][1][0], self.BackBoneParameters[key][1][1])
-            #pka_print(str)
+            #print(str)
         else:
           # doing it just for residue 'key'
           key = resType
-          #pka_print("changing back-bone parameters")
+          #print("changing back-bone parameters")
           self.BackBoneParameters[key][0] = dpka
           str  = " %s: %6.2lf " % (key, self.BackBoneParameters[key][0])
           str += "[%5.2lf,%5.2lf]" % (self.BackBoneParameters[key][1][0], self.BackBoneParameters[key][1][1])
-          #pka_print(str)
+          #print(str)
 
 
     def setSideChainMaxPKA(self, dpka=None, resType=None):
@@ -435,22 +434,22 @@ class Version(object):
         if resType == None:
           # doing it for all residues
           for key1 in self.SideChainParameters.keys():
-            #pka_print("changing side-chain parameters for resType \"%s\"" % (key1))
+            #print("changing side-chain parameters for resType \"%s\"" % (key1))
             for key2 in self.SideChainParameters[key1].keys():
               self.SideChainParameters[key1][key2][0] = dpka
               str  = " %s: %6.2lf " % (key2, self.SideChainParameters[key1][key2][0])
               str += "[%5.2lf,%5.2lf]" % (self.SideChainParameters[key1][key2][1][0], self.SideChainParameters[key1][key2][1][1])
-              #pka_print(str)
+              #print(str)
         else:
           # doing it just for residue 'key1'
           key1 = resType
-          #pka_print("changing side-chain parameters for resType \"%s\"" % (key1))
+          #print("changing side-chain parameters for resType \"%s\"" % (key1))
           for key2 in self.SideChainParameters[key1].keys():
             self.SideChainParameters[key1][key2][0] = dpka
             self.SideChainParameters[key2][key1][0] = dpka
             str  = " %s: %6.2lf " % (key2, self.SideChainParameters[key1][key2][0])
             str += "[%5.2lf,%5.2lf]" % (self.SideChainParameters[key1][key2][1][0], self.SideChainParameters[key1][key2][1][1])
-            #pka_print(str)
+            #print(str)
 
 
     def setCoulomb(self, label, max_dpka=None, cutoff=None, diel=None, scaled=None, mixed=False):
@@ -460,7 +459,7 @@ class Version(object):
         import parameters_new as parameters
         coulomb_parameters = parameters.getCoulombParameters()
         if label not in coulomb_parameters:
-          pka_print("do not accept Coulomb model \"%s\\n" % (label))
+          print("do not accept Coulomb model \"%s\\n" % (label))
           sys.exit(9)
         else:
           self.CoulombModel = label
@@ -497,7 +496,7 @@ class Version(object):
         import parameters_new as parameters
         desolvation_parameters = parameters.getDesolvationParameters()
         if label not in desolvation_parameters:
-          pka_print("do not accept solvation model \"%s\\n" % (label))
+          print("do not accept solvation model \"%s\\n" % (label))
           sys.exit(9)
         else:
           self.DesolvationModel = label
@@ -546,7 +545,7 @@ class Version(object):
         elif self.DesolvationModel in ["VolumeModel", "ScaledVolumeModel"]:
           Nmass, Emass, Nlocl, Elocl = calculate.radialVolumeDesolvation(residue, atoms, self, options=options)
         else:
-          pka_print("Desolvation \"%s\" is not implemented" % (self.DesolvationModel))
+          print("Desolvation \"%s\" is not implemented" % (self.DesolvationModel))
           sys.exit(8)
 
         return Nmass, Emass, Nlocl, Elocl
@@ -618,7 +617,7 @@ class Version(object):
         elif self.CoulombModel == "DistanceScaledCoulomb":
           return calculate.distanceScaledCoulombEnergy(distance, weight, self, options=options)
         else:
-          pka_print("Coulomb \"%s\" is not implemented" % (self.CoulombModel))
+          print("Coulomb \"%s\" is not implemented" % (self.CoulombModel))
           sys.exit(8)
           
 
@@ -843,7 +842,7 @@ class May13(Version):
 
         self.name             = "May13"
         self.coulomb_cutoff =   7.00
-        pka_print("creating propka version \"%s\"" % (self.name))
+        print("creating propka version \"%s\"" % (self.name))
         self.BackBoneParameters  = parameters.getHydrogenBondParameters(type='back-bone')
         self.SideChainParameters = parameters.getHydrogenBondParameters(type='side-chain')
         self.interaction         = getSideChainInteractionMatrix(side_chain=parameters.getInteraction()) # interaction rule matrix ['N'/'I'/'-']
@@ -1211,7 +1210,7 @@ class Oct13(Version):
         self.ions_long_names = {}
         file = os.path.join(os.path.dirname(__file__), 'ions.list')
         if not os.path.isfile(file):
-            pka_print('Error: Could not find ion parameter file:',file)
+            print('Error: Could not find ion parameter file:',file)
             exit(9)
 
         lines = open(file,'r').readlines()

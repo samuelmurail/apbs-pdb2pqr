@@ -28,7 +28,7 @@ from src.utilities import (getTrackingScriptString,
 
 def apbsOpalExec(logTime, form, apbsOptions):
     
-    sys.path.append(os.path.dirname(APBS_LOCATION))
+    sys.path.append(os.path.dirname(HAVE_APBS))
     from ApbsClient import execApbs, initRemoteVars, enoughMemory
 
     #style = "%spdb2pqr.css" # HARDCODED
@@ -72,7 +72,10 @@ def apbsOpalExec(logTime, form, apbsOptions):
 
     #argv=[os.path.abspath("tmp/%s/%s.in") % (logTime, "apbsinput")] # HARDCODED??  
     argv=[os.path.abspath("%s%s%s/apbsinput.in" % (INSTALLDIR, TMPDIR, logTime))]  
-    vars={'service_url' : APBS_OPAL_URL}
+    if DEFAULT_APBS_OPAL_URL == "0":
+        vars={'service_url' : APBS_OPAL_URL}
+    else:
+        vars = None
 
     # Check for enough memory
     if(not enoughMemory(argv[-1])):
@@ -161,7 +164,7 @@ def apbsExec(logTime, form, apbsOptions):
 #        statusfile.close()
 
 
-        apbs_stdin, apbs_stdout, apbs_stderr = os.popen3('%s apbsinput.in' % APBS_LOCATION)
+        apbs_stdin, apbs_stdout, apbs_stderr = os.popen3('%s apbsinput.in' % HAVE_APBS)
 
         startLogFile(logTime, 'apbs_stdout.txt', apbs_stdout.read())
 #        stdoutFile=open('%s%s%s/apbs_stdout.txt' % (INSTALLDIR, TMPDIR, logTime), 'w')
@@ -1212,7 +1215,6 @@ def unpickleVars(pdb2pqrID):
     elif myElec.npbe == 1:
         apbsOptions['solveType'] = 'nonlinearized'
 
-    #TODO: Currently this is not used.
     if len(myElec.ion) == 0:
         apbsOptions['mobileIonSpecies[0]'] = None
     else:
@@ -1421,15 +1423,12 @@ def fieldStorageToDict(form):
     apbsOptions['calcForce'] = form["calcforce"].value
 
     for i in range(0,3):
-        chStr = 'charge%i' % i
-        concStr = 'conc%i' % i
-        radStr = 'radius%i' % i
-        if form[chStr].value != "":
-            apbsOptions[chStr] = locale.atoi(form[chStr].value)
-        if form[concStr].value != "":
-            apbsOptions[concStr] = locale.atof(form[concStr].value)
-        if form[radStr].value != "":
-            apbsOptions[radStr] = locale.atof(form[radStr].value)
+        if form['charge%i' % i].value != "":
+            apbsOptions['mobileIonSpeciesCharge'] = locale.atoi(form['charge%i' % i].value)
+        if form['conc%i' % i].value != "":
+            apbsOptions['mobileIonSpeciesConcentration'] = locale.atof(form['conc%i' % i].value)
+        if form['radius%i' % i].value != "":
+            apbsOptions['mobileIonSpeciesRadius'] = locale.atof(form['radius%i' % i].value)
     apbsOptions['writeFormat'] = form["writeformat"].value
     #apbsOptions['writeStem'] = apbsOptions['pqrFileName'][:-4]
     apbsOptions['writeStem'] = form["pdb2pqrid"].value
@@ -1510,16 +1509,9 @@ def pqrFileCreator(apbsOptions):
     input.write('%stemp %g\n' % (apbsOptions['tab'], apbsOptions['temperature']))
     input.write('%scalcenergy %s\n' % (apbsOptions['tab'], apbsOptions['calcEnergy']))
     input.write('%scalcforce %s\n' % (apbsOptions['tab'], apbsOptions['calcForce']))
-    for i in range(0,3):
-        chStr = 'charge%i' % i
-        concStr = 'conc%i' % i
-        radStr = 'radius%i' % i
-        if apbsOptions.has_key(chStr) and apbsOptions.has_key(concStr) and apbsOptions.has_key(radStr):
-            #ion charge {charge} conc {conc} radius {radius}
-            input.write('%sion charge %d conc %g radius %g\n' % (apbsOptions['tab'], 
-                                                                 apbsOptions[chStr], 
-                                                                 apbsOptions[concStr], 
-                                                                 apbsOptions[radStr]))
+    if apbsOptions.has_key('mobileIonSpeciesCharge') and apbsOptions.has_key('conc') and apbsOptions.has_key('radius'):
+        input.write('%sion %d %g %g\n' % (apbsOptions['tab'], apbsOptions['mobileIonSpeciesCharge'], apbsOptions['mobileIonSpeciesConcentration'], apbsOptions['mobileIonSpeciesRadius']))
+
 
     if apbsOptions['writeCharge']:
         input.write('%swrite charge %s %s-charge\n' % (apbsOptions['tab'], apbsOptions['writeFormat'], apbsOptions['writeStem']))

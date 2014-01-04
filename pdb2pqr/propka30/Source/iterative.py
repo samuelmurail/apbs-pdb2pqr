@@ -39,7 +39,6 @@
 import math, time
 import calculator as calculate
 import lib
-pka_print = lib.pka_print
 #import debug
 from determinant import Determinant
 
@@ -73,11 +72,11 @@ def addtoDeterminantList(residue1, residue2, distance, iterative_interactions, v
           exception, hbond_value = version.checkExceptions(residue1, residue2)
           if residue1.resType == "COO" and residue2.resType == "COO":
             """ do nothing """
-            #pka_print("xxx %6.2lf" % (atom_distance))
+            #print("xxx %6.2lf" % (atom_distance))
           #exception = False # circumventing exception
           if exception == True:
             """ do nothing, value should have been assigned """
-            #pka_print(" exception for %s %s (I)" % (residue1.label, residue2.label))
+            #print(" exception for %s %s (I)" % (residue1.label, residue2.label))
           else:
             f_angle = 1.0
             hbond_value = version.calculateSideChainEnergy(atom_distance, dpka_max, cutoff, weight, f_angle)
@@ -259,7 +258,7 @@ def addDeterminants(iterative_interactions, version, options=None):
 
     # Initialize iterative scheme
     if options.print_iterations == True:
-      pka_print("\n   --- pKa iterations (%d residues, %d interactions) ---" % ( len(iteratives), len(iterative_interactions) ))
+      print("\n   --- pKa iterations (%d residues, %d interactions) ---" % ( len(iteratives), len(iterative_interactions) ))
     converged = False
     iteration = 0
     for itres in iteratives:
@@ -317,7 +316,7 @@ def addDeterminants(iterative_interactions, version, options=None):
         itres.pKa_iter.append(itres.pKa_new)
 
       if iteration == 10:
-          pka_print("did not converge in %d iterations" % (iteration))
+          print("did not converge in %d iterations" % (iteration))
           break
 
     # --- Iterations finished ---
@@ -327,14 +326,14 @@ def addDeterminants(iterative_interactions, version, options=None):
       str = "%12s" % (" ")
       for index in range(0, iteration+1 ):
         str += "%8d" % (index)
-      pka_print(str)
+      print(str)
       for itres in iteratives:
         str  = "%s   " % (itres.label)
         for pKa in itres.pKa_iter:
           str += "%8.2lf" % (pKa)
         if itres.converged == False:
           str += " *"
-        pka_print(str)
+        print(str)
 
     # creating real determinants and adding them to residue object
     for itres in iteratives:

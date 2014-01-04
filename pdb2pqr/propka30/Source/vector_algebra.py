@@ -38,7 +38,6 @@
 #-------------------------------------------------------------------------------------------------------
 import math, sys
 import lib
-pka_print = lib.pka_print
 
 
 class vector:
@@ -89,7 +88,7 @@ class vector:
         elif type(other) in [int, float]:
             return vector(self.x * other, self.y * other, self.z * other)
         else:
-            pka_print('%s not supported'%type(other))
+            print('%s not supported'%type(other))
             raise TypeError
 
 
@@ -279,8 +278,8 @@ class multi_vector:
             if atom2!=0:
                 keys2 = lib.get_sorted_configurations(atom2.configurations.keys())
                 if self.keys != keys2:
-                    pka_print("ERROR: Inequivalent configurations for atoms, please correct your pdbfile to single configuration")
-                    pka_print("%s\n%s" % (atom1, atom2))
+                    print("ERROR: Inequivalent configurations for atoms, please correct your pdbfile to single configuration")
+                    print("%s\n%s" % (atom1, atom2))
                     sys.exit(8)
                     #raise 'Cannot make multi vector: Atomic configurations mismatch for\n   %s\n   %s\n'%(atom1,atom2)
             for key in self.keys:
@@ -289,7 +288,7 @@ class multi_vector:
                     atom2.setConfiguration(key)
                 v = vector(atom1=atom1, atom2=atom2)
                 self.vectors.append(v)
-                #pka_print(key,v)
+                #print(key,v)
         return
     
 
@@ -308,7 +307,7 @@ class multi_vector:
 
 
     def do_job(self, job):
-        #pka_print(job)
+        #print(job)
         self.res = multi_vector()
         for i in range(len(self.vectors)):
             self.res.vectors.append(eval('self.vectors[%d].%s()'%(i,job)))

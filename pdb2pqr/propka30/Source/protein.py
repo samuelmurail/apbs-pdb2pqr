@@ -38,7 +38,6 @@
 #-------------------------------------------------------------------------------------------------------
 import math, sys, os, time, string
 import lib
-pka_print = lib.pka_print
 import determinants
 import pdb 
 #import debug
@@ -84,7 +83,7 @@ class Protein:
         resInfo = getResidueParameters()
 
         if options.verbose == True:
-          pka_print( "constructing protein \"%s\"" % (self.name) )
+          print( "constructing protein \"%s\"" % (self.name) )
 
 
         # creating chains from atom objects read from the pdbfile
@@ -148,7 +147,7 @@ class Protein:
         elif pdbfile != None:
           self.atoms = pdb.readPDB(filename=pdbfile)
         else:
-          pka_print("need either an atoms dictionary or pdbfile to create a protein")
+          print("need either an atoms dictionary or pdbfile to create a protein")
           sys.exit(9)
 
         return
@@ -182,7 +181,7 @@ class Protein:
         str = "configurations:"
         for key in self.configurations:
           str += "%6s" % (key)
-        pka_print(str)
+        print(str)
 
         return
 
@@ -396,7 +395,7 @@ class Protein:
         str = "%4s" % ("Res#")
         for residue in residue_list:
           str += "%6d" % (residue.resNumb)
-        pka_print(str)
+        print(str)
         index = 0
         for key in self.configurations:
           str = "%4s:" % (key)
@@ -405,7 +404,7 @@ class Protein:
             str += "%6.2lf" % (pkas[reskey][key])
             #str += "%6.2lf" % (Emass[reskey][key])
             #str += "%6.2lf" % (Elocl[reskey][key])
-          pka_print(str)
+          print(str)
 
         # get the average pKa properties by dividing the sum with number of configurations, len(configuration keys)
         from determinants import Determinant
@@ -471,10 +470,10 @@ class Protein:
             chain.calculateTotalPKA()
 
         # 6. printing out timings
-        # pka_print("   desolvation   %lf s" % (t1-t0))
-        # pka_print("   making lists  %lf s" % (t2-t1))
-        # pka_print("   back-bone     %lf s" % (t3-t2))
-        # pka_print("   determinants  %lf s" % (t4-t3))
+        # print("   desolvation   %lf s" % (t1-t0))
+        # print("   making lists  %lf s" % (t2-t1))
+        # print("   back-bone     %lf s" % (t3-t2))
+        # print("   determinants  %lf s" % (t4-t3))
 
         return
 
@@ -505,7 +504,7 @@ class Protein:
         set the 'available configuration keys' for this protein
         """ 
         if configurations == None:
-          pka_print("need to specify a list of available configuration keys")
+          print("need to specify a list of available configuration keys")
           sys.exit(8)
         self.configurations = configurations
 
@@ -517,7 +516,7 @@ class Protein:
         set the 'current possition' to a 'configuration'
         """ 
         if options.verbose == True:
-          pka_print( "switching to configuration %6s (protein)" % (key) )
+          print( "switching to configuration %6s (protein)" % (key) )
         for chain in self.chains:
             chain.setConfiguration(key=key)
 
@@ -813,7 +812,7 @@ class Protein:
             sequence += "/"
           else:
             """ do nothing ? """
-            #pka_print("multiple-chain convention not verified in sequence")
+            #print("multiple-chain convention not verified in sequence")
             #sys.exit(9)
 
         return sequence
@@ -864,7 +863,7 @@ class Protein:
         Calculates the titration curve of residue 'label'
         """ 
         if label == None:
-          pka_print("Must specify residue label, cannot calculate titration curve on whole protein")
+          print("Must specify residue label, cannot calculate titration curve on whole protein")
           sys.exit(8)
         else:
           residue = self.getResidue(label=label)
@@ -877,7 +876,7 @@ class Protein:
         """ 
         Calculates the pKa-dependant folding energy
         """ 
-        pka_print("\n# stability bars for %s" % (self.name))
+        print("\n# stability bars for %s" % (self.name))
         targets = ["GLU", "ASP", "HIS", "LYS", "ARG"]
         targets = ["C- ", "ASP", "GLU", "HIS", "CYS", "TYR", "LYS", "ARG", "N+ "]
         for target in targets:
@@ -887,8 +886,8 @@ class Protein:
                 dG = 1.36*residue.Q*(residue.pKa_pro - residue.pKa_mod)
                 str = "%6.2lf %6.2lf" % (residue.pKa_pro, dG)
                 str += "  %s" % (residue.label)
-                pka_print(str)
-          pka_print("")
+                print(str)
+          print("")
 
         return  None
 
@@ -916,9 +915,9 @@ class Protein:
         # set 'protein' based on pdbcode
         for protein in experiment.keys():
           str  = "%s" % (protein)
-          #pka_print(str)
+          #print(str)
           #str += " %s" % (experiment[protein]['pdb'])
-          pka_print(str)
+          print(str)
           if experiment[protein]['pdb'] == self.name:
             break
 
@@ -932,12 +931,12 @@ class Protein:
         for label in lib.extractResidueType(labels, restype=restype, sort=False):
           residue = self.getResidue(label=label)
           pka_exp  = experiment[protein][label]
-          pka_print(label)
+          print(label)
           dpka_exp = pka_exp - residue.pKa_mod
           dpka_clc = residue.pKa_pro - residue.pKa_mod
           diff = residue.pKa_pro - pka_exp
-          #pka_print( "compare:%s%6.2lf%6.2lf (%6.2lf%6.2lf) %6.2lf" % (label, pka_exp, residue.pKa_pro, dpka_exp, dpka_clc, diff) )
-          #pka_print( "xxx%6.2lf%6.2lf " % (dpka_exp, residue.Emass+residue.Elocl) )
+          #print( "compare:%s%6.2lf%6.2lf (%6.2lf%6.2lf) %6.2lf" % (label, pka_exp, residue.pKa_pro, dpka_exp, dpka_clc, diff) )
+          #print( "xxx%6.2lf%6.2lf " % (dpka_exp, residue.Emass+residue.Elocl) )
           list.append(diff)
           str = "%8.2lf%8.2lf" % (dpka_exp, dpka_clc)
           #str += " %s" % (residue.label)

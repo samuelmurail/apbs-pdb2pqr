@@ -38,7 +38,6 @@
 #-------------------------------------------------------------------------------------------------------
 import math, sys
 import lib
-pka_print = lib.pka_print
 import mutate
 from residue import Residue
 
@@ -59,7 +58,7 @@ class Chain:
         self.last_residue   = None
 
         if options.verbose == True:
-          pka_print("constructing chain %c (atoms: configurations)" % (self.chainID))
+          print("constructing chain %c (atoms: configurations)" % (self.chainID))
 
         # creating the 'residues'
         for key in atoms["keys"]:
@@ -124,7 +123,7 @@ class Chain:
         for residue in self.residues:
             resNumb += 1
             while resNumb < residue.resNumb:
-               pka_print("XXX%4d - missing residue" % (resNumb))
+               print("XXX%4d - missing residue" % (resNumb))
                resNumb += 1
             residue.checkResidue(options=options)
 
@@ -159,11 +158,11 @@ class Chain:
             elif residue.type == "amino-acid":
                 N, H, C, O = residue.extractBackBoneAtoms()
                 if N == None or H == None:
-                  """ do nothing, probably PRO; pka_print("%s missing N-H" % (residue.label)) """
+                  """ do nothing, probably PRO; print("%s missing N-H" % (residue.label)) """
                 else:
                   NHlist.append([N, H])
                 if C == None or O == None:
-                  """ do nothing, no idear what this is; pka_print("%s missing N-H" % (residue.label)) """
+                  """ do nothing, no idear what this is; print("%s missing N-H" % (residue.label)) """
                 else:
                   COlist.append([C, O])
             else:
@@ -184,7 +183,7 @@ class Chain:
           elif residue.type == "ion":
             key = "ION"
           else:
-            pka_print("don't know what I have here %s (%s)" % (residue.type, residue.resName))
+            print("don't know what I have here %s (%s)" % (residue.type, residue.resName))
 
           if residue.location != "BONDED":
             if key in residue_dictionary:
@@ -204,7 +203,7 @@ class Chain:
             if residue.resName in residue_interaction_list or residue.resName in ligand_interaction_list:
                 if residue.location == "BONDED":
                     """ do nothing """
-                    #pka_print("%s %s" % (residue.label, residue.type))
+                    #print("%s %s" % (residue.label, residue.type))
                 else:
                     propka_residues.append(residue)
                     
@@ -248,7 +247,7 @@ class Chain:
         """
         set the 'current possition' to a 'configuration'
         """
-        #pka_print( "switching to configuration %s (chain)" % (key) )
+        #print( "switching to configuration %s (chain)" % (key) )
         for residue in self.residues:
             residue.setConfiguration(key=key)
 
@@ -296,15 +295,15 @@ class Chain:
         Sets the alignment information (from self)
         """
         if alignment == None:
-          pka_print("setting alignment according to protein")
+          print("setting alignment according to protein")
           self.alignment = ""
           for residue in self.residues:
             if residue.resName != "N+ " and residue.resName != "C- ":
               code, resName = lib.convertResidueCode(resName=residue.resName)
               if code in "ARNDCQEGHILKMFPSTWYV":
                 self.alignment += (code)
-          pka_print(self.alignment)
-          pka_print( len(self.alignment) )
+          print(self.alignment)
+          print( len(self.alignment) )
         else:
           self.alignment = alignment
 
@@ -326,7 +325,7 @@ class Chain:
         for residue_type in residue_list:
           for residue in self.residues:
             if residue.resName == residue_type:
-                pka_print("%s" % ( residue.getDeterminantString() ))
+                print("%s" % ( residue.getDeterminantString() ))
 
 
     def writeDeterminants(self, file, verbose=True):
@@ -341,7 +340,7 @@ class Chain:
                 str = "%s\n" % ( residue.getDeterminantString() )
                 file.write(str)
                 if verbose == True:
-                  pka_print(str)
+                  print(str)
 
 
     def writeSummary(self, file, verbose=True):
@@ -356,7 +355,7 @@ class Chain:
                 str = "%s\n" % ( residue.getSummaryString() )
                 file.write(str)
                 if verbose == True:
-                  pka_print(str)
+                  print(str)
 
 
     def printSummary(self):
@@ -369,7 +368,7 @@ class Chain:
           for residue in self.residues:
             if residue.resName == residue_type:
                 str = residue.getSummaryString()
-                pka_print(str)
+                print(str)
 
 
     def calculateCharge(self, pH):

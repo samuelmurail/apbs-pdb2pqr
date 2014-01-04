@@ -3,8 +3,10 @@
 # PC 2005/09/23
 # Get ligand topologies
 #
-
-import numpy
+try:
+    import Numeric
+except:
+    import numpy as Numeric
     
 #from sets import Set
 from ligandclean.trial_templates import *
@@ -45,7 +47,7 @@ class get_ligand_topology:
             for line in lines:
                 split=string.split(line)
                 name=split[0]
-                self.atoms[name]={'coords':numpy.array([float(split[1]),float(split[2]),float(split[3])])}
+                self.atoms[name]={'coords':Numeric.array([float(split[1]),float(split[2]),float(split[3])])}
                 self.atoms[name]['bonds']=[]
             #
             # Get the likely types from names
@@ -100,7 +102,7 @@ class get_ligand_topology:
             for line in lines:
                 name = line.name
                 #            self.atoms[name] = name
-                self.atoms[name] = {'coords': numpy.array([float(line.x),float(line.y),float(line.z)])}
+                self.atoms[name] = {'coords': Numeric.array([float(line.x),float(line.y),float(line.z)])}
                 self.atoms[name]['sybylType'] = line.sybylType
                 #
                 # we don't have this information when coming from PDB!
@@ -524,9 +526,9 @@ class get_ligand_topology:
                             templates[current_template][i.at_idx2]['alreadyvisited'] = True
                             AtomNameListList.append(AtomNameList)
 				# AGL must be a 2-D integer array, this fixes the bug with NumPy.     --Yong Huang
-                AGL = numpy.zeros((len(AtomNameListList),len(AtomNameListList)))
+                AGL = Numeric.zeros((len(AtomNameListList),len(AtomNameListList)))
                 if str(AGL[0,0]) != '0':
-                    AGL = numpy.zeros((len(AtomNameListList),len(AtomNameListList)), numpy.int)
+                    AGL = Numeric.zeros((len(AtomNameListList),len(AtomNameListList)), Numeric.int)
 				
                 daseinecounter = 0
                 dasanderecounter = 0

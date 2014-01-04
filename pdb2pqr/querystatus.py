@@ -549,31 +549,13 @@ def mainCGI():
         #                printname = line
         #            print "<li><a href=%s>%s</a></li>" % (WEBSITE+TMPDIR+jobid+"/"+line,printname)
 
-        if calctype=="pdb2pqr" and apbs_input and HAVE_APBS:
+        if calctype=="pdb2pqr" and apbs_input and HAVE_APBS!="":
             print "</ul></p><hr><p><b><a href=%s>Click here</a> to run APBS with your results.</b></p>" % nexturl
         elif calctype=="apbs":
             print "</ul></p><hr><p><b><a href=%s>Click here</a> to visualize your results.</b></p>" % nexturl
 
     elif progress == "error":
         print "There was an error with your query request. This page will not refresh."
-        
-        print "</ul></li>"
-        print "<li>Runtime and debugging information<ul>"
-        
-        if have_opal:    
-            resp = appServicePort.getOutputs(getOutputsRequest(jobid))
-            stdouturl = resp._stdOut
-            stderrurl = resp._stdErr
-        else:
-            stdouturl = "%s%s%s/%s_stdout.txt" % (WEBSITE, TMPDIR, jobid, calctype)
-            stderrurl = "%s%s%s/%s_stderr.txt" % (WEBSITE, TMPDIR, jobid, calctype)
-
-        print "<li><a href=%s>Program output (stdout)</a></li>" % stdouturl
-        print "<li><a href=%s>Program errors and warnings (stderr)</a></li>" % stderrurl
-
-        print "</ul></li></ul>"
-
-        
     elif progress == "running":
         print "Page will refresh in %d seconds<br />" % refresh
         print "<HR>"

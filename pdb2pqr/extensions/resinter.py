@@ -198,12 +198,7 @@ def save_residue_interaction_energies(residues, output):
             if abs(energyDiff) > PAIR_ENERGY_EPSILON:
                 txt = '#%s re-tested' % pairText
                 txt += ' with a difference of %s' % repr(energyDiff)
-                if (energy != 0):
-                    txt += ' and a reference of %s' % repr(energyDiff/energy)
-                else:
-                    txt += ' and the previous energy was 0'
-                txt += '\n'
-
+                txt += ' and a reference of %s\n' % repr(energyDiff/energy)
                 output.write(txt)
                  
             continue

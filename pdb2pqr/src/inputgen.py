@@ -71,7 +71,7 @@ class Elec:
     """
         An object for the ELEC section of an APBS input file
     """
-    def __init__(self, pqrpath, size, method, asyncflag, istrng=0, potdx=False):
+    def __init__(self, pqrpath, size, method, asyncflag, istrng=0, potdx=0):
         """
             Initialize the variables that can be set in this object
             Users can modify any of these variables (that's why
@@ -121,7 +121,7 @@ class Elec:
         self.gamma = 0.105
         self.calcenergy = "total"
         self.calcforce = "no"
-        if potdx:
+        if potdx == 1:
             self.write = [["pot", "dx", pqrpath]]
         else:
             self.write = [["pot", "dx", "pot"]] # Multiple write statements possible
@@ -178,7 +178,7 @@ class Input:
         The input class.  Each input object is one APBS input file.
     """
 
-    def __init__(self, pqrpath, size, method, asyncflag, istrng=0, potdx=False):
+    def __init__(self, pqrpath, size, method, asyncflag, istrng=0, potdx=0):
         """
             Initialize the input file class.  Each input file contains
             a PQR name, a list of elec objects, and a list of strings
@@ -207,7 +207,7 @@ class Input:
         # Initialize variables to default elec values
 
         elec1 = Elec(pqrpath, size, method, asyncflag, istrng, potdx)
-        if not potdx:
+        if potdx == 0:
             elec2 = Elec(pqrpath, size, method, asyncflag, istrng, potdx)
             setattr(elec2, "sdie", 2.0)
             setattr(elec2, "write", [])
@@ -218,10 +218,10 @@ class Input:
         i = string.rfind(pqrpath, "/") + 1
         self.pqrname = pqrpath[i:]
 
-        if not potdx:
+        if potdx == 0:
             self.prints = ["print elecEnergy 2 - 1 end"]     
         else:
-            self.prints = ["print elecEnergy 1 end"]
+            self.prints = []
 
     def __str__(self):
         """

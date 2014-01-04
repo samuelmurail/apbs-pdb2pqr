@@ -46,6 +46,8 @@
 
 __date__  = "5 April 2010"
 __author__ = "Todd Dolinsky, Nathan Baker, Jens Nielsen, Paul Czodrowski, Jan Jensen, Samir Unni, Yong Huang"
+__version__ = "1.8"
+
 
 import glob
 import os
@@ -78,10 +80,7 @@ from src.aconf import (STYLESHEET,
                        HAVE_PDB2PQR_OPAL,
                        INSTALLDIR,
                        TMPDIR,
-                       MAXATOMS, 
-                       PDB2PQR_VERSION)
-
-__version__ = PDB2PQR_VERSION
+                       MAXATOMS)
 
 
 from main import runPDB2PQR
@@ -92,9 +91,9 @@ def printHeader(pagetitle,have_opal=None,jobid=None):
     """
     if jobid:
         if have_opal:
-            print "Location: querystatus.cgi?jobid=%s&typeofjob=opal\n" % (jobid)
+            print "Location: querystatus.cgi?jobid=%s&typeofjob=opal\n" % (jobid,)
         else:
-            print "Location: querystatus.cgi?jobid=%s&typeofjob=local\n" % (jobid)
+            print "Location: querystatus.cgi?jobid=%s&typeofjob=local\n" % (jobid,)
 
     #print "Content-type: text/html\n"
     print "<HTML>"
@@ -380,7 +379,6 @@ def handleOpal(weboptions):
     # Opal-specific import statements
     from AppService_client import AppServiceLocator, getAppMetadataRequest, launchJobRequest, launchJobBlockingRequest, getOutputAsBase64ByNameRequest
     from AppService_types import ns0
-    from ZSI.TC import String
 
     inputFiles = []
     
@@ -559,7 +557,6 @@ def handleNonOpal(weboptions):
             header, lines, missedligands = runPDB2PQR(pdblist, 
                                                       weboptions.ff,
                                                       outname = pqrpath,
-                                                      commandLine = weboptions.getCommandLine(),
                                                       **weboptions.getRunArguments())
             
             sys.stdout.close()
@@ -596,7 +593,7 @@ def handleNonOpal(weboptions):
                 size.parseInput(pqrpath)
                 size.runPsize(pqrpath)
                 async = 0 # No async files here!
-                myinput = inputgen.Input(pqrpath, size, method, async, potdx=True)
+                myinput = inputgen.Input(pqrpath, size, method, async)
                 myinput.printInputFiles()
                 myinput.dumpPickle()
                         
