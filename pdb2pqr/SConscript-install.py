@@ -41,6 +41,7 @@ def installFile(file_name, build_target='install'):
 		if GetOption("clean"):
 			env.Default(result)
 		Alias(build_target, env.Install(env['PREFIX']+dirname(file_name), result))
+		Alias(build_target, env.Install(env['PREFIX']+dirname(file_name), file_name))
 	else:
 		Alias(build_target, env.Install(env['PREFIX']+dirname(file_name), target))
 
