@@ -48,6 +48,13 @@ project(apbs)
 OPTION (BUILD_SHARED_LIBS "Build shared libraries." OFF)
 
 ################################################################################
+# OS / Compiler tweaks                                                         #
+################################################################################
+if(WIN32)
+    SET(CMAKE_EXE_LINKER_FLAGS "/LARGEADDRESSAWARE")
+endif()
+
+################################################################################
 # Set project paths                                                            #
 ################################################################################
 
@@ -271,7 +278,12 @@ if(NOT (HAVE_MALOC_H AND MALOC_LIBRARY))
     )
     set(MALOC_LIBRARY ${LIBRARY_OUTPUT_PATH}/${MALOC_LIBRARY_BASENAME})
 endif()
-list(APPEND APBS_LIBS -lmaloc)
+
+if(WIN32)
+    list(APPEND APBS_LIBS "${APBS_ROOT}/lib/maloc.lib")
+else()
+    list(APPEND APBS_LIBS -lmaloc)
+endif()
 
 
 ##############################################################################
