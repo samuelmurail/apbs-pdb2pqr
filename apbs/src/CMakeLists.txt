@@ -43,6 +43,7 @@ endmacro()
 
 
 
+add_subdirectory(cuspcg)
 add_subdirectory(generic)
 add_subdirectory(pmgc)
 add_subdirectory(mg)
@@ -55,6 +56,7 @@ endif(ENABLE_FETK)
 message(STATUS ${EXTERNAL_HEADERS})
 
 add_executable(apbs main.c apbs.h routines.c routines.h)
+set_target_properties( apbs PROPERTIES LINK_FLAGS "-L../lib -L/usr/local/cuda/lib64 -lcudart -lcuspcg")
 message(STATUS " ")
 message(STATUS "${APBS_LIBS} ${APBS_INTERNAL_LIBS}")
 message(STATUS " ")

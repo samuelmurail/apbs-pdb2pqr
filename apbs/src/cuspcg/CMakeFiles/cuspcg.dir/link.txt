@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../../lib/libcuspcg.a  CMakeFiles/cuspcg.dir/cuspcgtest.C.o CMakeFiles/cuda_compile.dir/./cuda_compile_generated_simplesolver.cu.o
+/usr/bin/ranlib ../../lib/libcuspcg.a

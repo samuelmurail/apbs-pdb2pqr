@@ -284,6 +284,20 @@ if(NOT WIN32)
     list(APPEND APBS_LIBS -lm)
 endif()
 
+list(APPEND APBS_LIBS -lcuspcg)
+
+################################################################################
+# Look for CUDA
+# # 
+################################################################################
+find_package(CUDA)
+set(CUDAHOME /usr/local/cuda)
+set(THRUST /usr/local/thrust)
+set(CUSP /usr/local/cusp/cusplibrary)
+#set(CUDA_NVCC_FLAGS -I${CUDAHOME}/include ${CUDA_NVCC_FLAGS};-gencode arch=compute_20,code=sm_20)
+set(CUDA_NVCC_FLAGS -I${CUDAHOME}/include ${CUDA_NVCC_FLAGS};-gencode arch=compute_20,code=sm_20)
+
+
 
 ################################################################################
 # Handle the finite element solver dependencies                                #
