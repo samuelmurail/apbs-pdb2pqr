@@ -187,21 +187,21 @@ if(ENABLE_BEM)
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${APBS_ROOT}
             -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
     )
-    
+
     if(BUILD_SHARED_LIBS)
         set(TABI_LIBRARY_BASENAME ${CMAKE_SHARED_LIBRARY_PREFIX}${TABI}${CMAKE_SHARED_LIBRARY_SUFFIX})
     else()
         set(TABI_LIBRARY_BASENAME ${CMAKE_STATIC_LIBRARY_PREFIX}${TABI}${CMAKE_STATIC_LIBRARY_SUFFIX})
     endif()
-    
+
     install(
         FILES ${LIBRARY_OUTPUT_PATH}/${TABI_LIBRARY_BASENAME} ${LIBRARY_OUTPUT_PATH}/*.mod
         DESTINATION ${LIBRARY_INSTALL_PATH}
     )
     set(TABI_LIBRARY ${APBS_ROOT}/${LIBRARY_INSTALL_PATH}/${TABI_LIBRARY_BASENAME})
-    
+
     set(LIBGFORTRAN_NAME ${CMAKE_SHARED_LIBRARY_PREFIX}gfortran${CMAKE_SHARED_LIBRARY_SUFFIX})
-    execute_process(COMMAND gfortran --print-file-name ${LIBGFORTRAN_NAME} 
+    execute_process(COMMAND gfortran --print-file-name ${LIBGFORTRAN_NAME}
                     OUTPUT_VARIABLE LIBGFORTRANPATH
                     RESULT_VARIABLE HAVE_GFORTRAN
     )
@@ -298,8 +298,8 @@ if(ENABLE_FETK)
     list(APPEND APBS_LIBS "-lstdc++")
     list(APPEND APBS_LIBS "-L${FETK_PATH}/lib")
     list(APPEND APBS_LIBS -lamd -lpunc -lmc -lgamer -lsuperlu -lumfpack
--lblas -lvf2c -ltetgen -ltriangle -lg2c -lreadline )
-    
+-lblas -lvf2c -ltetgen -ltriangle -lreadline )
+
     SET(HAVE_MC_H YES)
 endif()
 
