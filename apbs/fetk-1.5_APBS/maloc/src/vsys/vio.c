@@ -40,11 +40,11 @@ VEMBED(rcsid="$Id: vio.c,v 1.32 2010/08/12 05:40:30 fetk Exp $")
 #endif
 
 #if defined(HAVE_SYS_TYPES_H)
-#   include <sys/types.h> 
+#   include <sys/types.h>
 #endif
 
 #if defined(HAVE_SYS_STAT_H)
-#   include <sys/stat.h> 
+#   include <sys/stat.h>
 #endif
 
 #if defined(HAVE_FCNTL_H)
@@ -60,21 +60,21 @@ VEMBED(rcsid="$Id: vio.c,v 1.32 2010/08/12 05:40:30 fetk Exp $")
 #endif
 
 #if defined(HAVE_NETINET_IN_H)
-#   include <netinet/in.h> 
+#   include <netinet/in.h>
 #endif
 
 #if defined(HAVE_ARPA_INET_H)
-#   include <arpa/inet.h> 
+#   include <arpa/inet.h>
 #endif
 
 #if defined(HAVE_NETDB_H)
-#   include <netdb.h> 
+#   include <netdb.h>
 #endif
 
 #if defined(HAVE_RPC_RPC_H)
-#   include <rpc/rpc.h> 
+#   include <rpc/rpc.h>
 #elif defined(HAVE_RPC_H)
-#   include <rpc.h> 
+#   include <rpc.h>
 #endif
 
 #if defined(HAVE_WINSOCK_H)
@@ -100,6 +100,7 @@ typedef struct ASC {
     char    *buf;                    /* the character buffer                */
     char    whiteChars[VMAX_ARGNUM]; /* white space character set           */
     char    commChars[VMAX_ARGNUM];  /* comment character set               */
+    int     error;                   /* APBS-KTS: Currently for EOF cond    */
 } ASC;
 
 /* use ASC in place of XDR if XDR does not exist */
@@ -190,7 +191,7 @@ VPRIVATE int writen(int fd, void *vptr, unsigned int n) ;
  *           We un-register the SIGPIPE handler in Vio_stop().
  *
  *           To use the Vio library, you need to call Vio_start() before
- *           you make any calls to the Vio_ctor().  Calling the Vio_ctor() 
+ *           you make any calls to the Vio_ctor().  Calling the Vio_ctor()
  *           (or any other Vio method) before Vio_start() generates an error.
  *           For example, you can call this routine as follows:
  *
@@ -373,7 +374,7 @@ VPRIVATE const char *VIOstrerrno(int err)
 #endif
 
     else sprintf(errstr,"VIO_UNKNOWN_ERROR(%d)",err);
-    return errstr; 
+    return errstr;
 }
 
 /*
@@ -385,7 +386,7 @@ VPRIVATE const char *VIOstrerrno(int err)
  * Author:   Michael Holst
  * ***************************************************************************
  */
-VPUBLIC Vio* Vio_ctor(const char *socktype, const char *datafrmt, 
+VPUBLIC Vio* Vio_ctor(const char *socktype, const char *datafrmt,
     const char *hostname, const char *filename, const char *rwkey)
 {
     Vio *thee = VNULL;
@@ -423,7 +424,7 @@ VPUBLIC Vio* Vio_ctor(const char *socktype, const char *datafrmt,
  * Author:   Michael Holst
  * ***************************************************************************
  */
-VPUBLIC int Vio_ctor2(Vio *thee, const char *socktype, const char *datafrmt, 
+VPUBLIC int Vio_ctor2(Vio *thee, const char *socktype, const char *datafrmt,
     const char *hostname, const char *filename, const char *rwkey)
 {
     int n, ival;
@@ -611,7 +612,7 @@ VPUBLIC int Vio_ctor2(Vio *thee, const char *socktype, const char *datafrmt,
 
                 /* determine structure size; AF_UNIX is variable length */
                 len = sizeof(((struct sockaddr_un *)
-                              (thee->name))->sun_family) 
+                              (thee->name))->sun_family)
                     + strlen(((struct sockaddr_un *)
                               (thee->name))->sun_path);
 
@@ -1350,7 +1351,7 @@ VPUBLIC int Vio_scanf(Vio *thee, char *parms, ... )
         } else if (thee->frmt == VIO_XDR) {
             VJMPERR1( xdr_setpos((XDR*)thee->axdr, 0) );
         } else { VASSERT( 0 ); }
- 
+
     /* if current point is more than halfway through buf, read in more data */
     } else if ( len > (VMAX_BUFSIZE/2) ) {
 
@@ -1471,7 +1472,12 @@ VPUBLIC int Vio_scanf(Vio *thee, char *parms, ... )
 
   VERROR1:
     va_end(ap);
-    fprintf(stderr,"Vio_scanf: Format problem with input.\n");
+    /*
+     * APBS-KTS: Check to see if we are here because of an EOF condition.  If
+     * so, then just quietly go away.
+     */
+    if (thee->frmt == VIO_ASC && ((ASC *)thee->axdr)->error != EOF)
+        fprintf(stderr,"Vio_scanf: Format problem with input.\n");
   VERROR2:
     thee->error = 1;
     return 0;
@@ -1909,6 +1915,7 @@ VPRIVATE void ascmem_create(ASC *thee, char *buf, int size, ASCmode mode)
     thee->buf  = buf;
     memset(thee->whiteChars, '\0', VMAX_ARGNUM);
     memset(thee->commChars,  '\0', VMAX_ARGNUM);
+    thee->error = 0;     /* APBS-KTS: initialize to "no error" */
 }
 
 /*
@@ -1928,6 +1935,7 @@ VPRIVATE void asc_destroy(ASC *thee)
     thee->buf  = VNULL;
     memset(thee->whiteChars, '\0', VMAX_ARGNUM);
     memset(thee->commChars,  '\0', VMAX_ARGNUM);
+    thee->error = 0;     /* APBS-KTS: reset to "no error" */
 }
 
 /*
@@ -2148,6 +2156,11 @@ VPRIVATE void asc_setCommChars(ASC *thee, char *commChars)
  */
 VPRIVATE char* asc_getToken(ASC *thee, char *tok, int toksize)
 {
+    /*
+     * APBS-KTS: In general all of the tests that check if we are less than
+     * thee->size are lame.  It should be checking against the amount of data
+     * in the buffer, not the size of the buffer.
+     */
     int i, ii, jj, done;
     if (thee->mode == ASC_DECODE) {
 
@@ -2183,6 +2196,13 @@ VPRIVATE char* asc_getToken(ASC *thee, char *tok, int toksize)
         jj = ii+1;
         done = 0;
         while ( !done ) {
+            /*
+             * APBS-KTS: The below line is sort of dumb.  It has the effect of
+             * requiring that there be a whiteChar or commChar character after
+             * the final token.  But only if the file data just happens to
+             * completely fill up thee->buf.  This would be unlikely, but if it
+             * did happen, it would be a pain to debug.
+             */
             VJMPERR1( jj < thee->size );
 
             /* if whiteChar then we are done */
@@ -2206,7 +2226,14 @@ VPRIVATE char* asc_getToken(ASC *thee, char *tok, int toksize)
         /* copy the characters between ii and jj to the output string */
         for (i=ii; i<jj; i++)
             tok[i-ii] = thee->buf[i];
-        tok[jj] = '\0';
+/*        tok[jj] = '\0';
+ *
+ * APBS-KTS: Strictly speaking the above line is a bug.  It's also unnecessary.
+ * It only works, and is redundant, because of the memset on tok above.
+ * For what it's worth, it should be, assuming you didn't have the memset,
+ *
+ * tok[jj-ii] = '\0';
+ */
 
         /* update the position pointer */
         thee->pos = jj;
@@ -2218,7 +2245,13 @@ VPRIVATE char* asc_getToken(ASC *thee, char *tok, int toksize)
     return tok;
 
   VERROR1:
-    fprintf(stderr,"asc_getToken: Error occurred (bailing out).\n");
+    /*
+     * APBS-KTS: Getting to the end of the buffer without a token should not be
+     * a big deal.  It's an EOF condition.  Mark it thus and get on with it.
+     *
+     * fprintf(stderr,"asc_getToken: Error occurred (bailing out).\n");
+     */
+    thee->error = EOF;
     return VNULL;
 }
 
@@ -2229,9 +2262,9 @@ VPRIVATE char* asc_getToken(ASC *thee, char *tok, int toksize)
  * Purpose:  A fixed-up file-descriptor read (for UNIX/INET).
  *
  * Notes:    Fixes the "short read" problem if the operating system
- *           is interrupted during the read.  Calls the usual 
- *           file-descriptor read repeatedly until n characters are 
- *           actually read in.  Returns the number of characters 
+ *           is interrupted during the read.  Calls the usual
+ *           file-descriptor read repeatedly until n characters are
+ *           actually read in.  Returns the number of characters
  *           actually read in.  Returns -1 on error.
  *
  *           Includes my WINSOCK fixes (err, rather hacks).
@@ -2278,9 +2311,9 @@ VPRIVATE int readn(int fd, void *vptr, unsigned int n)
  * Purpose:  A fixed-up file-descriptor write (for UNIX/INET).
  *
  * Notes:    Fixes the "short write" problem if the operating system
- *           has buffer overflow problems.  Calls the usual 
- *           file-descriptor write repeatedly until the input buffer 
- *           actually gets written out.  Returns the number of 
+ *           has buffer overflow problems.  Calls the usual
+ *           file-descriptor write repeatedly until the input buffer
+ *           actually gets written out.  Returns the number of
  *           characters actually written out.  Returns -1 on error.
  *
  * Author:   Michael Holst (second of two jewels from Rick Stevens' book)
@@ -2470,9 +2503,9 @@ VPUBLIC Vio *Vio_socketOpen(char *key,
     fprintf(stderr,"Vio_socketOpen: Vio library has not been started.\n");
     return VNULL;
 
-  VERROR2: 
+  VERROR2:
     fprintf(stderr,"Vio_socketOpen: bailing out.\n");
-    return VNULL; 
+    return VNULL;
 }
 
 /*
@@ -2512,8 +2545,8 @@ VPUBLIC void Vio_socketClose(Vio **sock)
     fprintf(stderr,"Vio_socketClose: Vio library has not been started.\n");
     return;
 
-  VERROR2: 
+  VERROR2:
     fprintf(stderr,"Vio_socketClose: bailing out.\n");
-    return; 
+    return;
 }
 
