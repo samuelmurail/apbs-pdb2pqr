@@ -1,8 +1,8 @@
-FETK-1.5.APBS
+FETK-1.5_APBS
 =============
-Welcome to a modified version of the FETK (The Finite Element Toolkit).
+Welcome to a *modified* version of the FETK (The Finite Element Toolkit).
 
-The reason that this exists is to deal with issues that we've discovered in the FETK.  The FETK is open source software (see http://www.fetk.org), yet it's not hosted in a manner that is conducive to forking and merge requests.
+The reason that this exists is to deal with issues that we've discovered in the FETK.  The FETK is open source software (see http://www.fetk.org), and yet it's not hosted in a manner that is conducive to forking and merge requests.  At least not to our knowledge.  Therefore we have created this *"fork"* until a more permanent solution presents itself.
 
 In this file is a list of the changes that were made to the FETK, by library, file, function, and line number, along with a brief description of why the change was made.  I have taken great pains to comment each modification in the code, describing the purpose for each update.  I have also prefaced each comment with "APBS-KTS", so that they may be easily located.
 
