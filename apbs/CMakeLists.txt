@@ -93,7 +93,11 @@ set(CMAKE_INCLUDE_PATH "${CMAKE_INCLUDE_PATH}")
 list(APPEND CMAKE_INCLUDE_PATH /usr/include)
 list(APPEND CMAKE_INCLUDE_PATH /usr/local/include)
 
-set(APBS_LIBS "-L${APBS_ROOT}/lib -lapbs_geoflow")
+if(WIN32)
+    set(APBS_LIBS "-LIBPATH:${APBS_ROOT}/lib -LIBPATH:apbs_geoflow")
+else()
+    set(APBS_LIBS "-L${APBS_ROOT}/lib -lapbs_geoflow")
+endif()
 
 ################################################################################
 # Enable ansi pedantic compiling                                               #
@@ -258,6 +262,8 @@ if(NOT (HAVE_MALOC_H AND MALOC_LIBRARY))
         SOURCE_DIR ${CONTRIB_PATH}/maloc
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${APBS_ROOT}
             -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     )
     include_directories(${APBS_ROOT}/include)
     if(BUILD_SHARED_LIBS)
@@ -271,7 +277,12 @@ if(NOT (HAVE_MALOC_H AND MALOC_LIBRARY))
     )
     set(MALOC_LIBRARY ${LIBRARY_OUTPUT_PATH}/${MALOC_LIBRARY_BASENAME})
 endif()
-list(APPEND APBS_LIBS -lmaloc)
+
+if(WIN32)
+    list(APPEND APBS_LIBS "${APBS_ROOT}/lib/maloc.lib")
+else()
+    list(APPEND APBS_LIBS -lmaloc)
+endif()
 
 
 ##############################################################################
