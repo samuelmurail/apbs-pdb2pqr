@@ -83,6 +83,10 @@ Section -Main SEC0000
     File ..\..\bin\dxmath.exe
     File ..\..\bin\multivalue.exe
     File "..\command-line support\apbs-cli.bat"
+    File "C:\Program Files (x86)\Intel\Composer XE 2013 SP1\redist\intel64\compiler\libmmd.dll"
+    File "C:\Program Files (x86)\Intel\Composer XE 2013 SP1\redist\intel64\compiler\svml_dispmd.dll"
+    File "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x64\Microsoft.VC120.CRT\msvcr120.dll"
+    File "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x64\Microsoft.VC120.CRT\msvcp120.dll"
     WriteRegStr HKLM "${REGKEY}\Components" Main 1
 SectionEnd
 
@@ -124,9 +128,14 @@ Section /o -un.Main UNSEC0000
     Delete $INSTDIR\dxmath.exe
     Delete $INSTDIR\coulomb.exe
     Delete $INSTDIR\benchmark.exe
-    Delete $INSTDIR\APBS.exe
+    Delete $INSTDIR\apbs.exe
     Delete $INSTDIR\analysis.exe
     Delete $INSTDIR\apbs-cli.bat
+    Delete $INSTDIR\libmmd.dll
+    Delete $INSTDIR\svml_dispmd.dll
+    Delete $INSTDIR\msvcr120.dll
+    Delete $INSTDIR\msvcp120.dll
+
     DeleteRegValue HKLM "${REGKEY}\Components" Main
 SectionEnd
 
