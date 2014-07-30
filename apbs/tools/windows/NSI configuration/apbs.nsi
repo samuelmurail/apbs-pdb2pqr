@@ -82,6 +82,7 @@ Section -Main SEC0000
     File ..\..\bin\coulomb.exe
     File ..\..\bin\dxmath.exe
     File ..\..\bin\multivalue.exe
+    File ..\..\manip\psize.py
     File "..\command-line support\apbs-cli.bat"
     File "C:\Program Files (x86)\Intel\Composer XE 2013 SP1\redist\intel64\compiler\libmmd.dll"
     File "C:\Program Files (x86)\Intel\Composer XE 2013 SP1\redist\intel64\compiler\svml_dispmd.dll"
@@ -135,6 +136,7 @@ Section /o -un.Main UNSEC0000
     Delete $INSTDIR\svml_dispmd.dll
     Delete $INSTDIR\msvcr120.dll
     Delete $INSTDIR\msvcp120.dll
+    Delete $INSTDIR\psize.py
 
     DeleteRegValue HKLM "${REGKEY}\Components" Main
 SectionEnd
