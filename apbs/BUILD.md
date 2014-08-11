@@ -1,8 +1,8 @@
-APBS 1.4.1-binary INSTALL:tada::clap:
+APBS 1.4.1-binary BUILD:tada::clap:
 =====================================
 
 Contained herein are the steps that went in to creating the 1.4.1-binary
-APBS release, and the branch upon which the release is based.  
+APBS release, and the branch upon which the release is based.
 
 First, a few notes are in order.
 
