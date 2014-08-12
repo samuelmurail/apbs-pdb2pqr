@@ -10,12 +10,14 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>APBS</string>
+	<key>CFBundleIconFile</key>
+	<string>apbs.icns</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.4.1</string>
 	<key>CFBundleVersion</key>
-	<string>1.4.1</string>
+	<string>1.4.1-binary</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.6</string>
 	<key>NSHumanReadableCopyright</key>
