@@ -13,6 +13,7 @@ Header files:
 %{
 #define APBS_SWIG 1
 #include "maloc/maloc.h"
+#include "apbscfg.h"
 #include "routines.h"
 #include "generic/valist.h"
 #include "generic/vatom.h"
