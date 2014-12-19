@@ -56,9 +56,10 @@ message(STATUS "Setting project paths")
 set(CMAKE_C_FLAGS -std=c99)
 
 set(APBS_ROOT ${PROJECT_SOURCE_DIR})
-set(EXECUTABLE_OUTPUT_PATH ${APBS_ROOT}/bin)
-set(LIBRARY_OUTPUT_PATH ${APBS_ROOT}/lib)
-set(TOOLS_PATH ${APBS_ROOT}/tools)
+set(APBS_BUILD ${PROJECT_BINARY_DIR})
+set(EXECUTABLE_OUTPUT_PATH ${APBS_BUILD}/bin)
+set(LIBRARY_OUTPUT_PATH ${APBS_BUILD}/lib)
+set(TOOLS_PATH ${APBS_BUILD}/tools)
 set(APBS_BINARY ${EXECUTABLE_OUTPUT_PATH}/apbs)
 
 set(LIBRARY_INSTALL_PATH lib)
@@ -94,9 +95,9 @@ list(APPEND CMAKE_INCLUDE_PATH /usr/include)
 list(APPEND CMAKE_INCLUDE_PATH /usr/local/include)
 
 if(WIN32)
-    set(APBS_LIBS "-LIBPATH:${APBS_ROOT}/lib -LIBPATH:apbs_geoflow")
+    set(APBS_LIBS "-LIBPATH:${LIBRARY_OUTPUT_PATH} -LIBPATH:apbs_geoflow")
 else()
-    set(APBS_LIBS "-L${APBS_ROOT}/lib -lapbs_geoflow")
+    set(APBS_LIBS "-L${LIBRARY_OUTPUT_PATH} -lapbs_geoflow")
 endif()
 
 ################################################################################
@@ -188,7 +189,7 @@ if(ENABLE_BEM)
     ExternalProject_add(
         ${TABI}
         URL file://${TABI_PATH}
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${APBS_ROOT}
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${APBS_BUILD}
             -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
     )
 
@@ -202,7 +203,7 @@ if(ENABLE_BEM)
         FILES ${LIBRARY_OUTPUT_PATH}/${TABI_LIBRARY_BASENAME} ${LIBRARY_OUTPUT_PATH}/*.mod
         DESTINATION ${LIBRARY_INSTALL_PATH}
     )
-    set(TABI_LIBRARY ${APBS_ROOT}/${LIBRARY_INSTALL_PATH}/${TABI_LIBRARY_BASENAME})
+set(TABI_LIBRARY ${APBS_BUILD}/${LIBRARY_INSTALL_PATH}/${TABI_LIBRARY_BASENAME})
 
     set(LIBGFORTRAN_NAME ${CMAKE_SHARED_LIBRARY_PREFIX}gfortran${CMAKE_SHARED_LIBRARY_SUFFIX})
     execute_process(COMMAND gfortran --print-file-name ${LIBGFORTRAN_NAME}
@@ -214,7 +215,7 @@ if(ENABLE_BEM)
     endif()
     get_filename_component(LIBGFORTRANPATH ${LIBGFORTRANPATH} PATH)
     find_path(LIBGFORTRAN_PATH ${LIBGFORTRAN_NAME} PATH ${LIBGFORTRANPATH})
-    list(APPEND APBS_LIBS "-L${APBS_ROOT}/${LIBRARY_INSTALL_PATH} -L${LIBGFORTRAN_PATH} -lgfortran -ltabipb" )
+    list(APPEND APBS_LIBS "-L${APBS_BUILD}/${LIBRARY_INSTALL_PATH} -L${LIBGFORTRAN_PATH} -lgfortran -ltabipb" )
 endif() # ENABLE_BEM
 
 find_file( # this should be find path...
@@ -259,13 +260,12 @@ if(NOT (HAVE_MALOC_H AND MALOC_LIBRARY))
     ExternalProject_add(
         "maloc"
         URL file://${CONTRIB_PATH}/maloc.tar.gz
-        SOURCE_DIR ${CONTRIB_PATH}/maloc
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${APBS_ROOT}
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${APBS_BUILD}
             -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     )
-    include_directories(${APBS_ROOT}/include)
+include_directories(${APBS_BUILD}/include)
     if(BUILD_SHARED_LIBS)
         set(MALOC_LIBRARY_BASENAME ${CMAKE_SHARED_LIBRARY_PREFIX}maloc${CMAKE_SHARED_LIBRARY_SUFFIX})
     else()
@@ -279,7 +279,7 @@ if(NOT (HAVE_MALOC_H AND MALOC_LIBRARY))
 endif()
 
 if(WIN32)
-    list(APPEND APBS_LIBS "${APBS_ROOT}/lib/maloc.lib")
+    list(APPEND APBS_LIBS "${APBS_BUILD}/lib/maloc.lib")
 else()
     list(APPEND APBS_LIBS -lmaloc)
 endif()
@@ -347,7 +347,7 @@ endif()
 
 try_compile(
     HAVE_EMBED
-    ${APBS_ROOT}/build
+    ${APBS_BUILD}/build
     ${APBS_ROOT}/src/.config/embed_test.c
 )
 
@@ -574,7 +574,7 @@ message("libs: " ${APBS_LIBS})
 # Build APBS sources                                                           #
 ################################################################################
 
-include_directories(${APBS_ROOT}/src)
+include_directories(${APBS_ROOT}/src ${APBS_BUILD}/src)
 add_subdirectory(src)
 
 
@@ -612,7 +612,19 @@ endif()
 install(
     DIRECTORY ${APBS_ROOT}/doc
     DESTINATION ${SHARE_INSTALL_PATH}
+    PATTERN "programmer" EXCLUDE
+    PATTERN "CMakeLists.txt" EXCLUDE
 )
+
+if(BUILD_DOC)
+	install(
+		DIRECTORY ${APBS_BUILD}/doc/programmer
+		DESTINATION ${SHARE_INSTALL_PATH}/doc
+		PATTERN "Doxyfile" EXCLUDE
+		PATTERN "latex" EXCLUDE
+		PATTERN "mainpage.h" EXCLUDE
+	)
+endif()
 
 install(
     DIRECTORY ${APBS_ROOT}/examples
@@ -633,10 +645,17 @@ install(
     PATTERN "CMakeLists.txt" EXCLUDE
 )
 
+if(NOT "${APBS_ROOT}" STREQUAL "${APBS_BUILD}")
+    install(
+        DIRECTORY ${APBS_BUILD}/tools/bin
+        DESTINATION ${SHARE_INSTALL_PATH}/tools
+    )
+endif()
+
 if(NOT HAVE_MALOC_H)
     message(STATUS "Installing maloc headers")
     install(
-        DIRECTORY ${APBS_ROOT}/include/maloc
+        DIRECTORY ${APBS_BUILD}/include/maloc
         DESTINATION ${HEADER_INSTALL_PATH}/..
     )
 endif()
