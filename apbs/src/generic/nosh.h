@@ -117,7 +117,8 @@ enum eNOsh_CalcType {
     NCT_FEM=1, /**< Finite element */
     NCT_APOL=2, /**< non-polar */
     NCT_BEM=3, /**< Boundary element (TABI)*/
-    NCT_GEOFLOW=4 /**< Geometric flow*/
+    NCT_GEOFLOW=4, /**< Geometric flow*/
+	NCT_AUTO=5 /**<SOR or Multigrid */
 };
 
 /**

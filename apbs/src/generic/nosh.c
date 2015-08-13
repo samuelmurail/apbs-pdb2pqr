@@ -339,9 +339,8 @@ VPUBLIC void NOsh_dtor2(NOsh *thee) {
 
 }
 
-VPUBLIC NOsh_calc* NOsh_calc_ctor(
-                                  NOsh_CalcType calctype
-                                  ) {
+VPUBLIC NOsh_calc* NOsh_calc_ctor(NOsh_CalcType calctype) {
+
     NOsh_calc *thee;
     thee = (NOsh_calc *)Vmem_malloc(VNULL, 1, sizeof(NOsh_calc));
     thee->calctype = calctype;
@@ -353,7 +352,6 @@ VPUBLIC NOsh_calc* NOsh_calc_ctor(
     thee->geoflowparm = VNULL;
 
     switch (calctype) {
-        case NCT_MG:
             thee->mgparm = MGparm_ctor(MCT_NONE);
             break;
         case NCT_FEM:
@@ -1193,6 +1191,12 @@ ELEC section!\n");
             (thee->nelec)++;
             calc->mgparm->type = MCT_DUMMY;
             return NOsh_parseMG(thee, sock, calc);
+        } else if(Vstring_strcasecmp(tok, "auto") == 0){
+        	thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_MG);
+        	calc = thee->elec[thee->nelec];
+			(thee->nelec)++;
+			calc->mgparm->type = MCT_AUTO;
+			return NOsh_parseMG(thee, sock, calc);
         } else if (Vstring_strcasecmp(tok, "fe-manual") == 0) {
             thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_FEM);
             calc = thee->elec[thee->nelec];
