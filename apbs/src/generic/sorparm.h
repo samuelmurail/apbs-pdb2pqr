@@ -115,11 +115,64 @@ struct sSORparm{
 					*not the positive definite integer specified by the user. */
 	int setgcent;
 
+	/* ***TYPE 1 PARAMETERS*** */
+	double cglen[3]; /**< Coarse grid side lengths */
+	int setcglen;
+	double fglen[3]; /**< Fine grid side lengths */
+	int setfglen[3];
 
+	int method; /** Solver method to be used */
+	int setmethod;
 
+	int useAqua; /** Enable the use of lpbe/aqua */
+	int setUseAqua;
 
 };
 
+/**
+ * @ingroup SORparm
+ * @typedef SORparm
+ * @brief Declaration of the SORparm class as the SORparm structure.
+ */
+typedef struct sSORparm SORparm;
+
+/**
+ * @ingroup SORparm
+ * @brief copies the relevant parameter from thee->mgparm
+ * @param thee Pointer to NOsh object
+ * @return 1 if successful 0 otherwise
+ */
+VEXTERNC int SORparm_copyMGparm(NOsh *thee);
+
+/**
+ * @ingroup SORparm
+ * @brief SOR object constructor
+ * @param void
+ * @returns Newly created and memory allocated SOR object
+ */
+VEXTERNC SORparm* SORparm_ctor();
+
+/**
+ * @ingroup SORparm
+ * @brief SOR object constructor
+ * @param pointer to locations of SORparm object
+ * @returns Success enumeration
+ */
+VEXTERNC Vrc_Codes SORparm_ctor2(SORparm *thee);
+
+/**
+ * @ingroup SORparm
+ * @brief Object destructor
+ * @param thee Pointer to memory location of SORparm object
+ */
+VEXTERNC void SORparm_dtor(SORparm **thee);
+
+/**
+ * @ingroup SORparm
+ * @brief Object destructor
+ * @param thee Pointer to SORparm object
+ */
+VEXTERNC void SORparm_dtor2(SORparm *thee);
 
 
 

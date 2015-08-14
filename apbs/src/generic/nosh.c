@@ -350,10 +350,16 @@ VPUBLIC NOsh_calc* NOsh_calc_ctor(NOsh_CalcType calctype) {
     thee->apolparm = VNULL;
     thee->bemparm = VNULL;
     thee->geoflowparm = VNULL;
+    thee->sorparm = VNULL;
 
     switch (calctype) {
+    	case NCT_MG:
             thee->mgparm = MGparm_ctor(MCT_NONE);
             break;
+    	case NCT_AUTO:
+    		thee->mgparm = MGparm_ctor(MCT_NONE);
+    		thee->sorparm = SORparm_ctor();
+    		break;
         case NCT_FEM:
             thee->femparm = FEMparm_ctor(FCT_NONE);
             break;
@@ -1192,11 +1198,13 @@ ELEC section!\n");
             calc->mgparm->type = MCT_DUMMY;
             return NOsh_parseMG(thee, sock, calc);
         } else if(Vstring_strcasecmp(tok, "auto") == 0){
-        	thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_MG);
+        	thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_AUTO);
         	calc = thee->elec[thee->nelec];
 			(thee->nelec)++;
 			calc->mgparm->type = MCT_AUTO;
-			return NOsh_parseMG(thee, sock, calc);
+			int pMG = NOsh_parseMG(thee, sock, calc);
+			int pSOr = SORparm_copyMGparm(thee);
+			return pMG;
         } else if (Vstring_strcasecmp(tok, "fe-manual") == 0) {
             thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_FEM);
             calc = thee->elec[thee->nelec];

@@ -305,7 +305,6 @@ VPUBLIC int loadDielMaps(NOsh *nosh,Vgrid *dielXMap[NOSH_MAXMOL], Vgrid *dielYMa
 
             //DX binary file (.dxbin)
             case VDF_DXBIN:
-            	//TODO: add this method and maybe change the if stmt.
             	if (Vgrid_readDXBIN(dielXMap[i], "FILE", "ASC", VNULL,
             	                                 nosh->dielXpath[i]) != 1) {
             	                    Vnm_tprint( 2, "Fatal error while reading from %s\n",
@@ -428,7 +427,6 @@ VPUBLIC int loadDielMaps(NOsh *nosh,Vgrid *dielXMap[NOSH_MAXMOL], Vgrid *dielYMa
                 break;
             //DX Binary file (.dxbin)
 			case VDF_DXBIN:
-				//TODO: add this funct/method and maybe change the if stmt.
 				if (Vgrid_readDXBIN(dielYMap[i], "FILE", "ASC", VNULL,
 								 nosh->dielYpath[i]) != 1) {
 					Vnm_tprint( 2, "Fatal error while reading from %s\n",
@@ -552,7 +550,6 @@ VPUBLIC int loadDielMaps(NOsh *nosh,Vgrid *dielXMap[NOSH_MAXMOL], Vgrid *dielYMa
                 break;
             //OpenDX Binary format (.dxbin)
             case VDF_DXBIN:
-            	//TODO: add this funct/method and maybe change the if stmt.
 				if (Vgrid_readDXBIN(dielZMap[i], "FILE", "ASC", VNULL,
 								 nosh->dielZpath[i]) != 1) {
 					Vnm_tprint( 2, "Fatal error while reading from %s\n",
@@ -711,7 +708,6 @@ VPUBLIC int loadKappaMaps(NOsh *nosh,
                 break;
                 // OpenDX Binary (.dxbin) format
 				case VDF_DXBIN:
-					//TODO: write method and possible change if stmt.
 					if (Vgrid_readDXBIN(map[i], "FILE", "ASC", VNULL,
 									 nosh->kappapath[i]) != 1) {
 						Vnm_tprint( 2, "Fatal error while reading from %s\n",
@@ -926,7 +922,6 @@ VPUBLIC int loadChargeMaps(NOsh *nosh,
                 Vnm_tprint(1, "  Charge map integral = %3.2e e\n", sum);
                 break;
             case VDF_DXBIN:
-            	//TODO: write Vgrid_readDXBIN and possibly change if stmt.
 				if (Vgrid_readDXBIN(map[i], "FILE", "ASC", VNULL,
 								 nosh->chargepath[i]) != 1) {
 					Vnm_tprint( 2, "Fatal error while reading from %s\n",

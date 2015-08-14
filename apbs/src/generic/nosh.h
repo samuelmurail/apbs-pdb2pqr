@@ -70,6 +70,7 @@
 #include "generic/vstring.h"
 #include "generic/pbeparm.h"
 #include "generic/mgparm.h"
+#include "generic/sorparm.h"
 #include "generic/apolparm.h"
 #include "generic/femparm.h"
 #include "generic/valist.h"
@@ -168,6 +169,7 @@ typedef enum eNOsh_PrintType NOsh_PrintType;
 */
 struct sNOsh_calc {
     MGparm *mgparm;         /**< Multigrid parameters */
+    SORparm *sorparm;		/**< SOR parameters */
     FEMparm *femparm;       /**< Finite element parameters */
     BEMparm *bemparm;       /**< boundary element (tabi) parameters */
     GEOFLOWparm *geoflowparm;
