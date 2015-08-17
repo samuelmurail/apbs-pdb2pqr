@@ -119,52 +119,7 @@ VPUBLIC void SORparm_dtor(SORparm **thee){
 
 VPUBLIC void SORparm_dtor2(SORparm *thee){ ; }
 
-VPUBLIC int SORparm_copyMGparm(NOsh *thee){
 
-	if(thee == VNULL){
-		Vnm_print(0,"SORparm_CopyMGparm: received null thee...\n");
-		return 0;
-	}
-
-	MGparm *mgcalc;
-	mgcalc = thee->calc->mgparm;
-	SORparm *sorcalc;
-	sorcalc = thee->calc->sorparm;
-
-	/* ***Generic Parameters*** */
-	int i;
-	for(i=0;i<3;i++){
-		sorcalc->dim[i] =  (mgcalc->dime)[i];
-	}
-	sorcalc->setdime = mgcalc->setdime;
-	sorcalc->chgm = mgcalc->chgm;
-	sorcalc->chgs = mgcalc->chgs;
-
-	/* ***TYPE 0 PARAMETERS*** */
-	sorcalc->etol = mgcalc->etol;
-	sorcalc->setetol = mgcalc->setetol;
-	for(i=0;i<3;i++){
-		sorcalc->grid[i] = (mgcalc->grid)[i];
-		sorcalc->glen[i] = (mgcalc->glen)[i];
-		sorcalc->center[i] = (mgcalc->center)[i];
-	}
-	sorcalc->setgrid = mgcalc->setgrid;
-	sorcalc->setglen = mgcalc->setglen;
-	sorcalc->cmeth = mgcalc->cmeth;
-	sorcalc->centmol = mgcalc->centmol;
-	sorcalc->setgcent = mgcalc->setgcent;
-
-	/* ***TYPE 1 PARAMETERS*** */
-	sorcalc->setcglen = mgcalc->setcglen;
-	sorcalc->setfglen = mgcalc->setfglen;
-	sorcalc->method = mgcalc->method;
-	sorcalc->setmethod = mgcalc->setmethod;
-	sorcalc->useAqua = mgcalc->useAqua;
-	sorcalc->setUseAqua = mgcalc->setUseAqua;
-
-
-	return 1;
-}
 
 
 

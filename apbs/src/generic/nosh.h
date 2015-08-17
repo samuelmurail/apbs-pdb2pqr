@@ -589,6 +589,24 @@ VEXTERNC int NOsh_setupApolCalc(
                                 NOsh *thee, /**< NOsh object */
                                 Valist *alist[NOSH_MAXMOL] /**< Atom list for calculation */
                                 );
+/**
+ * @ingroup Nosh
+ * @author Juan Brandi
+ * @param thee Pointer to NOsh object
+ * @param elec Ponter to NOsh_calc object
+ * @return 1 if MG 0 if SOR
+ */
+VEXTERNC int NOsh_MGorSOR(NOsh *thee, NOsh_calc *elec);
+
+/**
+ * @ingroup Nosh
+ * @author Juan Brandi
+ * @brief copies the relevant parameter from thee->mgparm
+ * @param thee Pointer to NOsh object
+ * @return 1 if successful 0 otherwise
+ */
+VEXTERNC int SORparm_copyMGparm(NOsh *thee);
+
 
 #endif
 

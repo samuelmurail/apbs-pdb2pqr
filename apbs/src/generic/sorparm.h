@@ -74,9 +74,9 @@
  * @brief Centering Method
  */
 enum eSORparm_CentMeth{
-	MCM_POINT=0, /**< Center on a point */
-	MCM_MOLECULE=1,  /**< Center on a molecule */
-	MCM_FOCUS=2  /**< Determined by focusing */
+	sMCM_POINT=0, /**< Center on a point */
+	sMCM_MOLECULE=1,  /**< Center on a molecule */
+	sMCM_FOCUS=2  /**< Determined by focusing */
 };
 
 /**
@@ -138,14 +138,6 @@ typedef struct sSORparm SORparm;
 
 /**
  * @ingroup SORparm
- * @brief copies the relevant parameter from thee->mgparm
- * @param thee Pointer to NOsh object
- * @return 1 if successful 0 otherwise
- */
-VEXTERNC int SORparm_copyMGparm(NOsh *thee);
-
-/**
- * @ingroup SORparm
  * @brief SOR object constructor
  * @param void
  * @returns Newly created and memory allocated SOR object
@@ -174,7 +166,7 @@ VEXTERNC void SORparm_dtor(SORparm **thee);
  */
 VEXTERNC void SORparm_dtor2(SORparm *thee);
 
-
+#endif
 
 
 

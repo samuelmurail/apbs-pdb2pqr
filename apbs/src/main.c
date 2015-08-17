@@ -90,6 +90,7 @@ int main(
 
     MGparm *mgparm = VNULL;
     FEMparm *feparm = VNULL;
+    SORparm *sorparm = VNULL;
 #ifdef ENABLE_BEM
     BEMparm *bemparm = VNULL;
 #endif

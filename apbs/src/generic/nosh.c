@@ -1203,8 +1203,11 @@ ELEC section!\n");
 			(thee->nelec)++;
 			calc->mgparm->type = MCT_AUTO;
 			int pMG = NOsh_parseMG(thee, sock, calc);
-			int pSOr = SORparm_copyMGparm(thee);
-			return pMG;
+			int pSOR = SORparm_copyMGparm(thee);
+			if (pMG == 1 && pSOR == 1)
+				return pMG;
+			else
+				return 0;
         } else if (Vstring_strcasecmp(tok, "fe-manual") == 0) {
             thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_FEM);
             calc = thee->elec[thee->nelec];
@@ -1364,6 +1367,45 @@ map is used!\n");
                 }
                 NOsh_setupCalcMG(thee, elec);
                 break;
+            case NCT_AUTO:
+            	if(NOsh_MGorSOR(thee,elec)){
+            		SORparm_dtor(thee->calc->sorparm);
+            		/* Center on the molecules, if requested */
+					mgparm = elec->mgparm;
+					VASSERT(mgparm != VNULL);
+					if (elec->mgparm->cmeth == MCM_MOLECULE) {
+						VASSERT(mgparm->centmol >= 0);
+						VASSERT(mgparm->centmol < thee->nmol);
+						mymol = thee->alist[mgparm->centmol];
+						VASSERT(mymol != VNULL);
+						for (i=0; i<3; i++) {
+							mgparm->center[i] = mymol->center[i];
+						}
+					}
+					if (elec->mgparm->fcmeth == MCM_MOLECULE) {
+						VASSERT(mgparm->fcentmol >= 0);
+						VASSERT(mgparm->fcentmol < thee->nmol);
+						mymol = thee->alist[mgparm->fcentmol];
+						VASSERT(mymol != VNULL);
+						for (i=0; i<3; i++) {
+							mgparm->fcenter[i] = mymol->center[i];
+						}
+					}
+					if (elec->mgparm->ccmeth == MCM_MOLECULE) {
+						VASSERT(mgparm->ccentmol >= 0);
+						VASSERT(mgparm->ccentmol < thee->nmol);
+						mymol = thee->alist[mgparm->ccentmol];
+						VASSERT(mymol != VNULL);
+						for (i=0; i<3; i++) {
+							mgparm->ccenter[i] = mymol->center[i];
+						}
+					}
+					NOsh_setupCalcMG(thee, elec);
+            	}
+            	else{
+
+            	}
+            	break;
             case NCT_FEM:
                 NOsh_setupCalcFEM(thee, elec);
                 break;
@@ -2814,4 +2856,64 @@ VPUBLIC int NOsh_parseGEOFLOW(
     }
 
     return 1;
+}
+
+VPUBLIC int NOsh_MGorSOR(NOsh *thee, NOsh_calc *elec){
+
+	if(elec->pbeparm->pbetype==PBE_LPBE){
+		return 1;
+	}
+	else if ((thee->elec->mgparm->dime)[0]*(thee->elec->mgparm->dime)[1]*(thee->elec->mgparm->dime)[2]>=1.0E6){
+		return 1;
+	}
+	else{
+		return 0;
+	}
+}
+
+VPUBLIC int SORparm_copyMGparm(NOsh *thee){
+
+	if(thee == VNULL){
+		Vnm_print(0,"SORparm_CopyMGparm: received null thee...\n");
+		return 0;
+	}
+
+	MGparm *mgcalc;
+	mgcalc = thee->calc->mgparm;
+	SORparm *sorcalc;
+	sorcalc = thee->calc->sorparm;
+
+	/* ***Generic Parameters*** */
+	int i;
+	for(i=0;i<3;i++){
+		sorcalc->dim[i] =  (mgcalc->dime)[i];
+	}
+	sorcalc->setdime = mgcalc->setdime;
+	sorcalc->chgm = mgcalc->chgm;
+	sorcalc->chgs = mgcalc->chgs;
+
+	/* ***TYPE 0 PARAMETERS*** */
+	sorcalc->etol = mgcalc->etol;
+	sorcalc->setetol = mgcalc->setetol;
+	for(i=0;i<3;i++){
+		sorcalc->grid[i] = (mgcalc->grid)[i];
+		sorcalc->glen[i] = (mgcalc->glen)[i];
+		sorcalc->center[i] = (mgcalc->center)[i];
+	}
+	sorcalc->setgrid = mgcalc->setgrid;
+	sorcalc->setglen = mgcalc->setglen;
+	sorcalc->cmeth = mgcalc->cmeth;
+	sorcalc->centmol = mgcalc->centmol;
+	sorcalc->setgcent = mgcalc->setgcent;
+
+	/* ***TYPE 1 PARAMETERS*** */
+	sorcalc->setcglen = mgcalc->setcglen;
+	sorcalc->setfglen = mgcalc->setfglen;
+	sorcalc->method = mgcalc->method;
+	sorcalc->setmethod = mgcalc->setmethod;
+	sorcalc->useAqua = mgcalc->useAqua;
+	sorcalc->setUseAqua = mgcalc->setUseAqua;
+
+
+	return 1;
 }
