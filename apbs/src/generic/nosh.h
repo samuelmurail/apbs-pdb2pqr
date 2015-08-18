@@ -605,7 +605,7 @@ VEXTERNC int NOsh_MGorSOR(NOsh *thee, NOsh_calc *elec);
  * @param thee Pointer to NOsh object
  * @return 1 if successful 0 otherwise
  */
-VEXTERNC int SORparm_copyMGparm(NOsh *thee);
+VEXTERNC int NOsh_copySORparmMGparm(NOsh_calc *thee);
 
 
 #endif

@@ -58,17 +58,17 @@
 
 VEMBED(rcsid = "$Id")
 
-#if !definine(VINLINE_SORPARM)
+#if !defined(VINLINE_SORPARM)
 
 #endif
 
 VPUBLIC SORparm* SORparm_ctor(){
 
 	/*set up structure*/
-	SORparm* thee = VNULL;
+	SORparm *thee = VNULL;
 	thee = (SORparm*)Vmem_malloc(VNULL,1,sizeof(SORparm));
 	VASSERT(thee!=VNULL);
-	VASSSERT(SORparm_ctor2(thee));
+	VASSERT(SORparm_ctor2(thee));
 
 	return thee;
 }

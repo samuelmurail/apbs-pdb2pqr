@@ -395,6 +395,10 @@ VPUBLIC void NOsh_calc_dtor(
         case NCT_MG:
             MGparm_dtor(&(calc->mgparm));
             break;
+        case NCT_AUTO:
+        	MGparm_dtor(&(calc->mgparm));
+        	SORparm_dtor(&(calc->sorparm));
+        	break;
         case NCT_FEM:
             FEMparm_dtor(&(calc->femparm));
             break;
@@ -1203,7 +1207,7 @@ ELEC section!\n");
 			(thee->nelec)++;
 			calc->mgparm->type = MCT_AUTO;
 			int pMG = NOsh_parseMG(thee, sock, calc);
-			int pSOR = SORparm_copyMGparm(thee);
+			int pSOR = NOsh_copySORparmMGparm(calc);
 			if (pMG == 1 && pSOR == 1)
 				return pMG;
 			else
@@ -1369,7 +1373,7 @@ map is used!\n");
                 break;
             case NCT_AUTO:
             	if(NOsh_MGorSOR(thee,elec)){
-            		SORparm_dtor(thee->calc->sorparm);
+            		SORparm_dtor(&(elec->sorparm));
             		/* Center on the molecules, if requested */
 					mgparm = elec->mgparm;
 					VASSERT(mgparm != VNULL);
@@ -1400,6 +1404,7 @@ map is used!\n");
 							mgparm->ccenter[i] = mymol->center[i];
 						}
 					}
+					elec->calctype = NCT_MG;
 					NOsh_setupCalcMG(thee, elec);
             	}
             	else{
@@ -2863,7 +2868,7 @@ VPUBLIC int NOsh_MGorSOR(NOsh *thee, NOsh_calc *elec){
 	if(elec->pbeparm->pbetype==PBE_LPBE){
 		return 1;
 	}
-	else if ((thee->elec->mgparm->dime)[0]*(thee->elec->mgparm->dime)[1]*(thee->elec->mgparm->dime)[2]>=1.0E6){
+	else if ((elec->mgparm->dime)[0]*(elec->mgparm->dime)[1]*(elec->mgparm->dime)[2]>=1.0E6){
 		return 1;
 	}
 	else{
@@ -2871,7 +2876,7 @@ VPUBLIC int NOsh_MGorSOR(NOsh *thee, NOsh_calc *elec){
 	}
 }
 
-VPUBLIC int SORparm_copyMGparm(NOsh *thee){
+VPUBLIC int NOsh_copySORparmMGparm(NOsh_calc *thee){
 
 	if(thee == VNULL){
 		Vnm_print(0,"SORparm_CopyMGparm: received null thee...\n");
@@ -2879,9 +2884,9 @@ VPUBLIC int SORparm_copyMGparm(NOsh *thee){
 	}
 
 	MGparm *mgcalc;
-	mgcalc = thee->calc->mgparm;
+	mgcalc = thee->mgparm;
 	SORparm *sorcalc;
-	sorcalc = thee->calc->sorparm;
+	sorcalc = thee->sorparm;
 
 	/* ***Generic Parameters*** */
 	int i;
@@ -2896,9 +2901,9 @@ VPUBLIC int SORparm_copyMGparm(NOsh *thee){
 	sorcalc->etol = mgcalc->etol;
 	sorcalc->setetol = mgcalc->setetol;
 	for(i=0;i<3;i++){
-		sorcalc->grid[i] = (mgcalc->grid)[i];
-		sorcalc->glen[i] = (mgcalc->glen)[i];
-		sorcalc->center[i] = (mgcalc->center)[i];
+		(sorcalc->grid)[i] = (mgcalc->grid)[i];
+		(sorcalc->glen)[i] = (mgcalc->glen)[i];
+		(sorcalc->center)[i] = (mgcalc->center)[i];
 	}
 	sorcalc->setgrid = mgcalc->setgrid;
 	sorcalc->setglen = mgcalc->setglen;

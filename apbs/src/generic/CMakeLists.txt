@@ -16,6 +16,7 @@ add_items(
     vstring.c
     vparam.c
     vgreen.c
+    sorparm.c
 )
 
 add_items(
@@ -39,6 +40,7 @@ add_items(
     vmatrix.h
     vhal.h
     vunit.h
+    sorparm.h
 )
 
 add_sublibrary(generic)

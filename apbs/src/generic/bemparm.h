@@ -149,7 +149,7 @@ VEXTERNC void     BEMparm_dtor2(BEMparm *thee);
  *  @param   thee   BEMparm object
  *  @returns Success enumeration
  */
-VEXTERNC Vrc_Codes      BEMparm_check(BEMparm *thee);
+VEXTERNC Vrc_Codes BEMparm_check(BEMparm *thee);
 
 /** @brief   Parse an MG keyword from an input file
  *  @ingroup BEMparm

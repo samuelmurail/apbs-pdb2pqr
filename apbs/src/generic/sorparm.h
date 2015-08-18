@@ -119,7 +119,7 @@ struct sSORparm{
 	double cglen[3]; /**< Coarse grid side lengths */
 	int setcglen;
 	double fglen[3]; /**< Fine grid side lengths */
-	int setfglen[3];
+	int setfglen;
 
 	int method; /** Solver method to be used */
 	int setmethod;
