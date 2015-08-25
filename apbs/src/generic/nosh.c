@@ -118,6 +118,11 @@ VPRIVATE int NOsh_setupCalcMGAUTO(
                                   NOsh_calc *elec
                                   );
 
+VPRIVATE int NOsh_setupCalcSOR(
+								 NOsh *thee,
+								 NOsh_calc *elec
+								 );
+
 VPRIVATE int NOsh_setupCalcMGMANUAL(
                                     NOsh *thee,
                                     NOsh_calc *elec
@@ -1316,6 +1321,7 @@ VPUBLIC int NOsh_setupElecCalc(
     int ielec, imol, i;
     NOsh_calc *elec = VNULL;
     MGparm *mgparm = VNULL;
+    SORparm *sorparm = VNULL;
     Valist *mymol = VNULL;
 
     VASSERT(thee != VNULL);
@@ -1408,7 +1414,20 @@ map is used!\n");
 					NOsh_setupCalcMG(thee, elec);
             	}
             	else{
-
+            		/*Center on the molecules, if requested*/
+            		sorparm = elec->sorparm;
+            		VASSERT(sorparm != VNULL);
+            		if(elec->sorparm->cmeth == MCM_MOLECULE){
+            			VASSERT(sorparm->centmol>= 0);
+            			VASSERT(sorparm->centmol < thee->nmol);
+            			mymol = thee->alist[sorparm->centmol];
+            			VASSERT(mymol != VNULL);
+            			for(i=0;i<3; i++){
+            				sorparm->center[i] = mymol->center[i];
+            			}
+            		}
+            		elec->calctype = NCT_AUTO;
+            		NOsh_setupCalcSOR(thee, elec);
             	}
             	break;
             case NCT_FEM:
@@ -2022,6 +2041,60 @@ fixing mesh max violation (%g in %d-direction).\n", __FILE__, __LINE__, ifocus,
 
 
     return 1;
+}
+
+/*Author: Juan Brandi (majority copied from Nathan Baker's code)*/
+VPUBLIC int NOsh_setupCalcSOR(
+								 NOsh *thee,
+								 NOsh_calc *elec
+								 ) {
+
+	/*TODO: some of this variables will no be uses remember to delete them*/
+	NOsh_calc *calcf = VNULL;
+	NOsh_calc *calcc = VNULL;
+	double fgrid[3], cgrid[3], grid[3];
+	double d[3], minf[3], maxf[3], minc[3], maxc[3];
+	double redfrac, redrat[3], td;
+	int ifocus, nfocus, tnfocus[3];
+	int j;
+	int icalc;
+	int dofix;
+
+	if(thee == VNULL){
+		Vnm_print(2, "NOsh_setupCalcSOR: Got NULL thee!\n");
+		return 0;
+	}
+	if(elec == VNULL){
+		Vnm_print(2, "NOsh_setupCalcSOR: Got NULL elec!\n");
+		return 0;
+	}
+	if(elec->sorparm == VNULL){
+		Vnm_print(2, "NOsh_setupCalcSOR: Got NULL sorparm!\n");
+		return 0;
+	}
+	if(elec->pbeparm == VNULL){
+		Vnm_print(2,"NOsh_setupCalcSOR: Got NULL pbeparm!\n");
+		return 0;
+	}
+
+	Vnm_print(0, "NOsh_setupCalcSOR(%s, %d): grid center = %g %g %g\n",
+			__FILE__, __LINE__,
+			elec->sorparm->center[0],
+			elec->sorparm->center[1],
+			elec->sorparm->center[2]);
+
+	/*using the fine grid level to calculate the grid spacing*/
+	for(j=0;j<3; j++){
+		grid[j] = (elec->sorparm->fglen[j])/((double)(elec->sorparm->dim[j]-1));
+	}
+
+	Vnm_print(0,"NOsh_setupCalcSOR(%s, %d): Grid spacing = %g %g %g\n",
+			__FILE__, __LINE__, grid[0], grid[1], grid[2]);
+
+	calcf->sorparm->parsed = 1;
+
+	return 1;
+
 }
 
 /* Author:   Nathan Baker and Todd Dolinsky */
