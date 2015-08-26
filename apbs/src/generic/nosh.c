@@ -1247,7 +1247,6 @@ ELEC section!\n");
             return 0;
         }
     }
-
     Vnm_print(2, "NOsh_parseELEC:  Ran out of tokens while reading ELEC section!\n");
     return 0;
 
@@ -1412,12 +1411,13 @@ map is used!\n");
 					}
 					elec->calctype = NCT_MG;
 					NOsh_setupCalcMG(thee, elec);
+					break;
             	}
             	else{
             		/*Center on the molecules, if requested*/
             		sorparm = elec->sorparm;
             		VASSERT(sorparm != VNULL);
-            		if(elec->sorparm->cmeth == MCM_MOLECULE){
+            		if(elec->sorparm->cmeth == sMCM_MOLECULE){
             			VASSERT(sorparm->centmol>= 0);
             			VASSERT(sorparm->centmol < thee->nmol);
             			mymol = thee->alist[sorparm->centmol];
@@ -1428,8 +1428,8 @@ map is used!\n");
             		}
             		elec->calctype = NCT_AUTO;
             		NOsh_setupCalcSOR(thee, elec);
+            		break;
             	}
-            	break;
             case NCT_FEM:
                 NOsh_setupCalcFEM(thee, elec);
                 break;
@@ -2938,10 +2938,10 @@ VPUBLIC int NOsh_parseGEOFLOW(
 
 VPUBLIC int NOsh_MGorSOR(NOsh *thee, NOsh_calc *elec){
 
-	if(elec->pbeparm->pbetype==PBE_LPBE){
+	if(elec->pbeparm->pbetype==PBE_NPBE){
 		return 1;
 	}
-	else if ((elec->mgparm->dime)[0]*(elec->mgparm->dime)[1]*(elec->mgparm->dime)[2]>=1.0E6){
+	else if ((elec->mgparm->dime)[0]*(elec->mgparm->dime)[1]*(elec->mgparm->dime)[2]>=1.5E6){
 		return 1;
 	}
 	else{
@@ -2976,11 +2976,19 @@ VPUBLIC int NOsh_copySORparmMGparm(NOsh_calc *thee){
 	for(i=0;i<3;i++){
 		(sorcalc->grid)[i] = (mgcalc->grid)[i];
 		(sorcalc->glen)[i] = (mgcalc->glen)[i];
-		(sorcalc->center)[i] = (mgcalc->center)[i];
+		(sorcalc->center)[i] = (mgcalc->fcenter)[i];
+		(sorcalc->fglen)[i] = (mgcalc->fglen)[i];
 	}
 	sorcalc->setgrid = mgcalc->setgrid;
 	sorcalc->setglen = mgcalc->setglen;
-	sorcalc->cmeth = mgcalc->cmeth;
+	if(mgcalc->fcmeth == MCM_MOLECULE){
+		sorcalc->cmeth = sMCM_MOLECULE;
+	} else if (mgcalc->fcmeth == MCM_POINT){
+		sorcalc->cmeth = sMCM_POINT;
+	}
+	else {
+		sorcalc->cmeth = sMCM_FOCUS;
+	}
 	sorcalc->centmol = mgcalc->centmol;
 	sorcalc->setgcent = mgcalc->setgcent;
 

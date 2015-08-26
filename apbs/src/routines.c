@@ -1449,6 +1449,47 @@ VPUBLIC int initMG(int icalc,
 
 }
 
+VPUBLIC int initSOR(
+					NOsh *nosh, /**< Object with parsed input file parameters */
+					SORparm *sorparm, /**< Object with SOR parameters */
+					PBEparm *pbeparm, /**< Object with generic PBE Parm */
+					double realCenter[3], /**< The actual center of the mesh. */
+					Vpbe *pbe[NOSH_MAXCALC], /**< Array of Vpbe objects (one for each calc) */
+					Valist *alist[NOSH_MAXMOL], /**< Array of atom lists */
+					Vgrid *dielXMap[NOSH_MAXMOL], /**< Array of x-shifted dielectric maps */
+					Vgrid *dielYMap[NOSH_MAXMOL], /**< Array of y-shifted dielectric maps */
+					Vgrid *dielZMap[NOSH_MAXMOL], /**< Array of z-shifted dielectric maps */
+					Vgrid *kappaMap[NOSH_MAXMOL], /**< Array of kappa maps */
+					Vgrid *chargeMap[NOSH_MAXMOL], /**< Array of charge maps */
+					Vgrid *potMap[NOSH_MAXMOL] /**< Array of potential maps. */
+					){
+
+	int j, iatom;
+	double q;
+	Valist *myalist = VNULL;
+	Vatom *atom = VNULL;
+
+	/* Update the grid center */
+	for(j=0; j<3; j++){
+		realCenter[j] = sorparm->center[j];
+	}
+
+	/* Check for completely-neutral molecule */
+	q = 0;
+	myalist = alist[pbeparm->molid - 1];
+	for(iatom=0; iatom<Valist_getNumberAtoms(myalist); iatom++){
+		atom = Valist_getAtom(myalist, iatom);
+		q += VSQR(Vatom_getCharge(atom));
+	}
+
+	/* Set up the PBE object */
+	printf("got here\n");
+	Vnm_print(0, "Setting up the PBE object...\n");
+
+
+
+};
+
 VPUBLIC void killMG(NOsh *nosh, Vpbe *pbe[NOSH_MAXCALC],
                     Vpmgp *pmgp[NOSH_MAXCALC], Vpmg *pmg[NOSH_MAXCALC]) {
 

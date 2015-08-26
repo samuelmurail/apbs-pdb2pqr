@@ -516,6 +516,7 @@ int main(
 
                 /* ***** Do SOR calculation ***** */
             case NCT_AUTO:
+            	printf("****\ngets to here\n****\n");
             	for(k=0; k<nosh->nelec; k++){
             		if(nosh->elec2calc[k] >= i)
             			break;
@@ -536,56 +537,56 @@ int main(
             	Vnm_tprint(1, "   Setting up problem...\n");
 
             	//TODO: need to write the initSOR(...) function in routines.c
-            	if(!initSOR(i, nosh, sorparm, pbeparm, realCenter, pbe, alist,
+            	if(!initSOR(nosh, sorparm, pbeparm, realCenter, pbe, alist,
             			dielXMap, dielYMap, dielZMap, kappaMap, chargeMap,
-						pmgp, pmg, potMap)){
+						potMap)){
             		Vnm_tprint(2, "Error setting up SOR calculation!\n");
             		VJMPERR1(0);
             	}
 
-            	/* print problem parameters */
-            	//TODO: need to write the printSORPARM(...) in routines
-            	printSORPARM(sorparm, realCenter);
-            	printPBEPARM(pbeparm);
-
-            	/* solve PDE */
-            	//TODO: need to write the solveSOR(...) function in routines.
-            	if(solveSOR(nosh, pmg[i], mgparm->type) != 1){
-            		Vnm_tprint(2,"Error solving PDE!\n");
-            		VJMPERR1(0);
-            	}
-
-            	/* Set partition information for observables and I/O */
-            	//TODO: need to write the setPartSOR(...) function in routines.
-            	if(setPartSOR(nosh, mgparm, pmg[i]) != 1){
-            		Vnm_print(2, "Error setting partition info!\n");
-            		VJMPERR1(0);
-            	}
-
-            	/* Write out energies */
-            	//TODO: write the function energySOR(...) function in routines.
-            	energySOR(nosh, i, pmg[i],
-            			&(nenergy[i]), &(totEnergy[i]), &(qfEnergy[i]),
-						&(qmEnergy[i]), &(dielEnergy[i]));
-
-            	/* Write out forces */
-            	//TODO: write function forceSOR(...) in routines.
-            	forceSOR(mem, nosh, pbeparm, sorparm, pmg[i], &(nforce[i]),
-            			&(atomForce[i]), alist);
-
-            	/* Write data folks might want */
-            	//TODO: write writedataSOR(...) in routines.
-            	writedataSOR(rank, nosh, pbeparm, pmg[i]);
-
-            	/* Write Matrix */
-            	//TODO: write writematSOR(...) in routines
-            	writematSOR(rank, nosh, pbeparm, pmg[i]);
-
-            	/*  If needed, cache atom energies */
-            	nenergy[i] = 0;
-            	if((pbeparm->calcenergy == PCE_COMPS) && (outputformat != OUTPUT_NULL)){
-            		storeAtomEnergy(pmg[i], i, &(atomEnergy[i]), &(nenergy[i]));
-            	}
+//            	/* print problem parameters */
+//            	//TODO: need to write the printSORPARM(...) in routines
+//            	printSORPARM(sorparm, realCenter);
+//            	printPBEPARM(pbeparm);
+//
+//            	/* solve PDE */
+//            	//TODO: need to write the solveSOR(...) function in routines.
+//            	if(solveSOR(nosh, pmg[i], mgparm->type) != 1){
+//            		Vnm_tprint(2,"Error solving PDE!\n");
+//            		VJMPERR1(0);
+//            	}
+//
+//            	/* Set partition information for observables and I/O */
+//            	//TODO: need to write the setPartSOR(...) function in routines.
+//            	if(setPartSOR(nosh, mgparm, pmg[i]) != 1){
+//            		Vnm_print(2, "Error setting partition info!\n");
+//            		VJMPERR1(0);
+//            	}
+//
+//            	/* Write out energies */
+//            	//TODO: write the function energySOR(...) function in routines.
+//            	energySOR(nosh, i, pmg[i],
+//            			&(nenergy[i]), &(totEnergy[i]), &(qfEnergy[i]),
+//						&(qmEnergy[i]), &(dielEnergy[i]));
+//
+//            	/* Write out forces */
+//            	//TODO: write function forceSOR(...) in routines.
+//            	forceSOR(mem, nosh, pbeparm, sorparm, pmg[i], &(nforce[i]),
+//            			&(atomForce[i]), alist);
+//
+//            	/* Write data folks might want */
+//            	//TODO: write writedataSOR(...) in routines.
+//            	writedataSOR(rank, nosh, pbeparm, pmg[i]);
+//
+//            	/* Write Matrix */
+//            	//TODO: write writematSOR(...) in routines
+//            	writematSOR(rank, nosh, pbeparm, pmg[i]);
+//
+//            	/*  If needed, cache atom energies */
+//            	nenergy[i] = 0;
+//            	if((pbeparm->calcenergy == PCE_COMPS) && (outputformat != OUTPUT_NULL)){
+//            		storeAtomEnergy(pmg[i], i, &(atomEnergy[i]), &(nenergy[i]));
+//            	}
 
             	fflush(stdout);
             	fflush(stderr);

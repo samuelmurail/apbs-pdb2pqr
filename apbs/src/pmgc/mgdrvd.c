@@ -110,7 +110,7 @@ VPUBLIC void Vmgdriv(int* iparm, double* rparm,
     // Perform some checks on input
     VASSERT_MSG1(nlev > 0, "nlev must be positive: %d", nlev);
     VASSERT_MSG1(  nx > 0, "nx must be positive: %d", nx);
-    VASSERT_MSG1(  ny > 0, "nv must be positive: %d", ny);
+    VASSERT_MSG1(  ny > 0, "ny must be positive: %d", ny);
     VASSERT_MSG1(  nz > 0, "nz must be positive: %d", nz);
 
     mxlv = Vmaxlev(nx, ny, nz);
