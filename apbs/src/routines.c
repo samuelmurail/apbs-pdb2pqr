@@ -1476,6 +1476,7 @@ VPUBLIC int initSOR(
 
 	/* Check for completely-neutral molecule */
 	q = 0;
+	printf("****\npbeparm->molid = %d\n*****\n", pbeparm->molid);
 	myalist = alist[pbeparm->molid - 1];
 	for(iatom=0; iatom<Valist_getNumberAtoms(myalist); iatom++){
 		atom = Valist_getAtom(myalist, iatom);
@@ -1486,7 +1487,7 @@ VPUBLIC int initSOR(
 	printf("got here\n");
 	Vnm_print(0, "Setting up the PBE object...\n");
 
-
+	return 1;
 
 };
 

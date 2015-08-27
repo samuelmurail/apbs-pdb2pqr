@@ -516,7 +516,7 @@ int main(
 
                 /* ***** Do SOR calculation ***** */
             case NCT_AUTO:
-            	printf("****\ngets to here\n****\n");
+
             	for(k=0; k<nosh->nelec; k++){
             		if(nosh->elec2calc[k] >= i)
             			break;

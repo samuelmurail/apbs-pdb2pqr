@@ -1382,6 +1382,8 @@ map is used!\n");
             		/* Center on the molecules, if requested */
 					mgparm = elec->mgparm;
 					VASSERT(mgparm != VNULL);
+					printf("****\nmgparm->centmol: %d\n****\n", elec->mgparm->centmol);
+					printf("****\nmgparm->ccentmol: %d\n****\n", elec->mgparm->ccentmol);
 					if (elec->mgparm->cmeth == MCM_MOLECULE) {
 						VASSERT(mgparm->centmol >= 0);
 						VASSERT(mgparm->centmol < thee->nmol);
@@ -2091,7 +2093,10 @@ VPUBLIC int NOsh_setupCalcSOR(
 	Vnm_print(0,"NOsh_setupCalcSOR(%s, %d): Grid spacing = %g %g %g\n",
 			__FILE__, __LINE__, grid[0], grid[1], grid[2]);
 
-	calcf->sorparm->parsed = 1;
+	elec->sorparm->parsed = 1;
+	icalc = thee->ncalc;
+	thee->calc[icalc] = NOsh_calc_ctor(NCT_AUTO);
+	(thee->ncalc)++;
 
 	return 1;
 
@@ -2941,7 +2946,7 @@ VPUBLIC int NOsh_MGorSOR(NOsh *thee, NOsh_calc *elec){
 	if(elec->pbeparm->pbetype==PBE_NPBE){
 		return 1;
 	}
-	else if ((elec->mgparm->dime)[0]*(elec->mgparm->dime)[1]*(elec->mgparm->dime)[2]>=1.5E6){
+	else if ((elec->mgparm->dime)[0]*(elec->mgparm->dime)[1]*(elec->mgparm->dime)[2]>=1.0E6){
 		return 1;
 	}
 	else{
