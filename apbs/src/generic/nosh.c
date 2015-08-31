@@ -1382,8 +1382,6 @@ map is used!\n");
             		/* Center on the molecules, if requested */
 					mgparm = elec->mgparm;
 					VASSERT(mgparm != VNULL);
-					printf("****\nmgparm->centmol: %d\n****\n", elec->mgparm->centmol);
-					printf("****\nmgparm->ccentmol: %d\n****\n", elec->mgparm->ccentmol);
 					if (elec->mgparm->cmeth == MCM_MOLECULE) {
 						VASSERT(mgparm->centmol >= 0);
 						VASSERT(mgparm->centmol < thee->nmol);

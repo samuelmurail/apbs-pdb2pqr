@@ -1464,8 +1464,8 @@ VPUBLIC int initSOR(
 					Vgrid *potMap[NOSH_MAXMOL] /**< Array of potential maps. */
 					){
 
-	int j, iatom;
-	double q;
+	int j, iatom, focusFlag;
+	double q, sparm, iparm;
 	Valist *myalist = VNULL;
 	Vatom *atom = VNULL;
 
@@ -1476,16 +1476,37 @@ VPUBLIC int initSOR(
 
 	/* Check for completely-neutral molecule */
 	q = 0;
-	printf("****\npbeparm->molid = %d\n*****\n", pbeparm->molid);
-	myalist = alist[pbeparm->molid - 1];
+	myalist = alist[0];
 	for(iatom=0; iatom<Valist_getNumberAtoms(myalist); iatom++){
 		atom = Valist_getAtom(myalist, iatom);
 		q += VSQR(Vatom_getCharge(atom));
 	}
 
 	/* Set up the PBE object */
-	printf("got here\n");
 	Vnm_print(0, "Setting up the PBE object...\n");
+	if(pbeparm->srfm == VSM_SPLINE){
+		sparm = pbeparm->swin;
+	} else {
+		sparm = pbeparm->srad;
+	}
+	if(pbeparm->nion > 0){
+		iparm = pbeparm->ionr[0];
+	} else {
+		iparm = 0.0;
+	}
+	if(pbeparm->bcfl == BCFL_FOCUS){
+		focusFlag = 1;
+	}
+
+	/* Construct Vpbe object */
+	pbe[0] = Vpbe_ctor(myalist, pbeparm->nion, pbeparm->ionc, pbeparm->ionr,
+			pbeparm->ionq, pbeparm->temp, pbeparm->pdie, pbeparm->sdie,
+			sparm, focusFlag, pbeparm->sdens, pbeparm->zmem,
+			pbeparm->Lmem, pbeparm->mdie, pbeparm->memv);
+
+	printf("pbeparm->pbetype: %ud", pbeparm->pbetype);
+
+	switch(pbeparm->pbetype)
 
 	return 1;
 
@@ -1891,10 +1912,10 @@ Poisson-Boltzmann operator matrix to %s...\n", outpath);
         }
 
         Vnm_tprint(0, "  Printing operator...\n");
+
         //Vpmg_printColComp(pmg, outpath, outpath, mxtype,
         //				  pbeparm->writematflag);
         return 0;
-
     }
 
     return 1;
