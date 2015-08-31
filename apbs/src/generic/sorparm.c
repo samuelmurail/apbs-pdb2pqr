@@ -119,6 +119,7 @@ VPUBLIC void SORparm_dtor(SORparm **thee){
 
 VPUBLIC void SORparm_dtor2(SORparm *thee){ ; }
 
+VPUBLIC int SORparm_fillco(Vpmg *thee)
 
 
 

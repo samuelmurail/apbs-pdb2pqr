@@ -1468,6 +1468,12 @@ VPUBLIC int initSOR(
 	double q, sparm, iparm;
 	Valist *myalist = VNULL;
 	Vatom *atom = VNULL;
+	Vgrid *theDielXMap = VNULL,
+		  *theDielYMap = VNULL,
+		  *theDielZMap = VNULL;
+	Vgrid *theKappaMap = VNULL,
+		  *thePotMap = VNULL,
+		  *theChargeMap = VNULL;
 
 	/* Update the grid center */
 	for(j=0; j<3; j++){
@@ -1496,6 +1502,8 @@ VPUBLIC int initSOR(
 	}
 	if(pbeparm->bcfl == BCFL_FOCUS){
 		focusFlag = 1;
+	} else {
+		focusFlag = 0;
 	}
 
 	/* Construct Vpbe object */
@@ -1504,13 +1512,79 @@ VPUBLIC int initSOR(
 			sparm, focusFlag, pbeparm->sdens, pbeparm->zmem,
 			pbeparm->Lmem, pbeparm->mdie, pbeparm->memv);
 
-	printf("pbeparm->pbetype: %ud", pbeparm->pbetype);
+	/* Set up PDE object */
+	Vnm_tprint(0, "Setting up PDE object...\n");
+	switch(pbeparm->pbetype){
+		case PBE_LPBE:
+			if(sorparm->useAqua == 1)
+				Vnm_print(0, "initSOR: useAqua not compatible with SOR.\n");
+			break;
+		default:
+			Vnm_tprint(2,"Error!, try to solve (%d) with SOR.\n", pbeparm->pbetype);
+			return 0;
+	}
 
-	switch(pbeparm->pbetype)
+	if(pbeparm->useDielMap){
+		if((pbeparm->dielMapID - 1) < nosh->ndiel){
+			theDielXMap = dielXMap[pbeparm->dielMapID - 1];
+		} else {
+			Vnm_print(2,"Error! %d is not a valid dielectric map ID! \n", pbeparm->dielMapID);
+			return 0;
+		}
+	}
+	if(pbeparm->useDielMap){
+		if((pbeparm->dielMapID - 1) < nosh->ndiel){
+			theDielYMap = dielYMap[pbeparm->dielMapID - 1];
+		} else {
+			Vnm_print(2, "Error! %d is not a valid dielectric map ID! \n", pbeparm->dielMapID);
+			return 0;
+		}
+	}
+	if(pbeparm->useDielMap){
+		if((pbeparm->dielMapID - 1) < nosh->ndiel){
+			theDielZMap = dielZMap[pbeparm->dielMapID - 1];
+		} else {
+			Vnm_print(2, "Error! %d is not a valid dielectric map ID! \n", pbeparm->dielMapID);
+		}
+	}
+	if(pbeparm->useKappaMap) {
+		if((pbeparm->kappaMapID -1) < nosh->nkappa){
+			theKappaMap = kappaMap[pbeparm->kappaMapID - 1];
+		} else {
+			Vnm_print(2, "Error! %d is not a valid kappa map ID!\n");
+			return 0;
+		}
+	}
+	if(pbeparm->usePotMap) {
+		if((pbeparm->potMapID -1) < nosh->npot) {
+			thePotMap = potMap[pbeparm->potMapID - 1];
+		} else {
+			Vnm_print(2, "Error! %d is not a valid kappa map!\n");
+			return 0;
+		}
+	}
+	if(pbeparm->useChargeMap) {
+		if((pbeparm->useChargeMapID - 1) < nosh->ncharge) {
+			theChargeMap = chargeMap[pbeparm->chargeMapID - 1];
+		} else {
+			Vnm_print(2, "Error! %d is not a valid potential map ID!\n");
+			return 0;
+		}
+	}
+	if(pbeparm->bcfl == BCFL_MAP && thePotMap == VNULL){
+		Vnm_print(2, "Warning: You specified 'bcfl map' in the input file, but no potential map was found.\n");
+		Vnm_print(2, "			You must specify 'usemap pot' statement in the APBS input file!\n");
+		Vnm_print(2, "Bailing out ...\n");
+		return 0;
+	}
+
+
 
 	return 1;
+}
 
-};
+
+
 
 VPUBLIC void killMG(NOsh *nosh, Vpbe *pbe[NOSH_MAXCALC],
                     Vpmgp *pmgp[NOSH_MAXCALC], Vpmg *pmg[NOSH_MAXCALC]) {

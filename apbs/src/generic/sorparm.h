@@ -63,6 +63,8 @@
 #ifndef _SORPARM_H_
 #define _SORPARM_H_
 
+#define SORmaxgrid 2000
+
 /*Generic header file*/
 #include "maloc/maloc.h"
 
@@ -135,6 +137,19 @@ struct sSORparm{
  * @brief Declaration of the SORparm class as the SORparm structure.
  */
 typedef struct sSORparm SORparm;
+
+
+struct sVSOR {
+
+	Vpbe *pbe; /** Information about the PBE system. */
+	double *epsx; /** X-shifted dielectric map. */
+	double *epsy; /** Y-shifted dielectric map. */
+	double *epsz; /** Z-shifted dielectric map. */
+	double *kappa; /** Ion accessibility map (0 <= kappa(x) <= 1) */
+
+
+
+
 
 /**
  * @ingroup SORparm
