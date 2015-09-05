@@ -69,6 +69,7 @@
 #include "generic/vhal.h"
 #include "generic/vatom.h"
 #include "generic/vparam.h"
+#include <string.h>
 
 /**
  *  @ingroup Valist

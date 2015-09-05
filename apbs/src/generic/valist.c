@@ -643,11 +643,13 @@ VPUBLIC Vrc_Codes Valist_readPQR(Valist *thee, Vparam *params, Vio *sock) {
 
     natoms = 0;
     /* Read until we run out of lines */
+    int count=0;
+
     while (Vio_scanf(sock, "%s", tok) == 1) {
 
         /* Parse only ATOM/HETATOM fields */
-        if ((Vstring_strcasecmp(tok, "ATOM") == 0) ||
-            (Vstring_strcasecmp(tok, "HETATM") == 0)) {
+        if (Vstring_strcasecmp(tok, "ATOM") == 0 ||
+            Vstring_strcasecmp(tok, "HETATM") == 0) {
 
             /* Read ATOM/HETATM field of PDB through the X/Y/Z fields */
             if (Valist_readPDB_throughXYZ(thee, sock, &serial, atomName,
@@ -697,14 +699,7 @@ atom = %s, residue = %s\n", atomName, resName);
 
         } /* if ATOM or HETATM */
         else {
-            /*
-             * nop
-             * Note that if we find a line that starts with something that's not
-             * ATOM or HETATM we'll just keep parsing strings until we find one
-             * of the acceptable keywords.
-             * Extraordinary measures are not necessary, and only add  to the
-             * befuddlement.
-             */
+        	Vio_findNewLine(sock);
         }
     } /* while we haven't run out of tokens */
 
