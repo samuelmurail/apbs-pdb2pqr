@@ -69,6 +69,7 @@
 /* Generic headers */
 #include "generic/nosh.h"
 #include "generic/mgparm.h"
+#include "generic/sorparm.h"
 #include "generic/pbeparm.h"
 #include "generic/femparm.h"
 #include "generic/bemparm.h"

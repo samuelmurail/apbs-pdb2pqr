@@ -70,11 +70,13 @@
 #include "generic/vstring.h"
 #include "generic/pbeparm.h"
 #include "generic/mgparm.h"
+#include "generic/sorparm.h"
 #include "generic/apolparm.h"
 #include "generic/femparm.h"
 #include "generic/valist.h"
 #include "generic/bemparm.h"
 #include "generic/geoflowparm.h"
+
 
 /** @brief Maximum number of molecules in a run
 *  @ingroup NOsh */
@@ -117,7 +119,8 @@ enum eNOsh_CalcType {
     NCT_FEM=1, /**< Finite element */
     NCT_APOL=2, /**< non-polar */
     NCT_BEM=3, /**< Boundary element (TABI)*/
-    NCT_GEOFLOW=4 /**< Geometric flow*/
+    NCT_GEOFLOW=4, /**< Geometric flow*/
+	NCT_AUTO=5 /**< SOR only or Multigrid*/
 };
 
 /**
@@ -167,6 +170,7 @@ typedef enum eNOsh_PrintType NOsh_PrintType;
 */
 struct sNOsh_calc {
     MGparm *mgparm;         /**< Multigrid parameters */
+    SORparm *sorparm;		/**< SOR parameters */
     FEMparm *femparm;       /**< Finite element parameters */
     BEMparm *bemparm;       /**< boundary element (tabi) parameters */
     GEOFLOWparm *geoflowparm;

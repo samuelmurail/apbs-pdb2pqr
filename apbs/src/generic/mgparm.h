@@ -103,6 +103,7 @@ enum eMGparm_CentMeth {
  * @ingroup  MGparm
  */
 typedef enum eMGparm_CentMeth MGparm_CentMeth;
+
 /**
  *  @ingroup MGparm
  *  @author  Nathan Baker and Todd Dolinsky
@@ -246,7 +247,7 @@ VEXTERNC double MGparm_getHy(MGparm *thee);
  *  @ingroup MGparm
  *  @author  Nathan Baker
  *  @param   thee  MGparm object
- *  @returns Grid spacing in the z direction
+ *  @returns Grid spacing in the x direction
  */
 VEXTERNC double MGparm_getHz(MGparm *thee);
 
