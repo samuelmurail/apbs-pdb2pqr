@@ -71,7 +71,6 @@
 #include "generic/vhal.h"
 #include "generic/vstring.h"
 #include "generic/mgparm.h"
-#include "generic/nosh.h"
 
 /**
  * @brief  Calculation type
@@ -95,8 +94,8 @@ typedef enum eSORparm_CalcType SORparm_CalcType;
  * @ingroup SORparm
  */
 enum eSORparm_CentMeth {
-    CM_POINT=0, /**< Center on a point */
-    CM_MOLECULE=1,  /**< Center on a molecule */
+    SCM_POINT=0, /**< Center on a point */
+    SCM_MOLECULE=1,  /**< Center on a molecule */
 };
 
 /**
@@ -145,32 +144,16 @@ struct sSORparm {
     int setgcent;  /**< Flag, @see cmeth */
 
     /* ******** TYPE 1 & 2 PARAMETERS (SEQUENTIAL & PARALLEL AUTO-FOCUS) *** */
-    double cglen[3];  /**< Coarse grid side lengths */
-    int setcglen;  /**< Flag, @see cglen */
     double fglen[3];  /**< Fine grid side lengths */
     int setfglen;  /**< Flag, @see fglen */
+    SORparm_CentMeth fcmeth;
+    int fcentmol;
+    double fcenter[3];
 
     /* ********* TYPE 2 PARAMETERS (PARALLEL AUTO-FOCUS) ******** */
-    /**todo: this sections is probably not going to work as is,
+    /**TODO: this sections is probably not going to work as is,
      * and will change later.
      */
-    double partDisjCenter[3];  /**< This gives the center
-                                     of the disjoint partitions */
-    double partDisjLength[3];  /**< This gives the lengths of the disjoint
-                                * partitions */
-    int partDisjOwnSide[6];  /**< Tells whether the boundary points are ours
-                              * (1) or not (0) */
-
-    int pdime[3];  /**< Grid of processors to be used in calculation */
-    int setpdime;  /**< Flag, @see pdime */
-    int proc_rank;  /**< Rank of this processor */
-    int setrank;  /**< Flag, @see proc_rank */
-    int proc_size;  /**< Total number of processors */
-    int setsize;  /**< Flag, @see proc_size */
-    double ofrac;  /**< Overlap fraction between procs */
-    int setofrac;  /**< Flag, @see ofrac */
-    int async; /**< Processor ID for asynchronous calculation */
-    int setasync; /**< Flag, @see asynch */
 
     int nonlintype; /**< Linearity Type Method to be used */
     int setnonlintype; /**< Flag, @see nonlintype */
@@ -178,7 +161,6 @@ struct sSORparm {
     int useAqua;  /**< Enable use of lpbe/aqua */
     int setUseAqua; /**< Flag, @see useAqua */
 };
-
 
 
 /** @typedef SORparm
@@ -195,7 +177,7 @@ VPUBLIC void SORparm_dtor(SORparm **thee);
 
 VPUBLIC void SORparm_dtor2(SORparm *thee);
 
-VPUBLIC int SORparm_copyMGparm(NOsh_calc *calc);
+VPUBLIC int SORparm_copyMGparm(MGparm *mgparm, SORparm *sorparm);
 
 #endif
 

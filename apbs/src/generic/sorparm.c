@@ -77,7 +77,6 @@ VPUBLIC Vrc_Codes SORparm_ctor2(SORparm *thee, SORparm_CalcType type) {
 
     for (i=0; i<3; i++) {
         thee->dime[i] = -1;
-        thee->pdime[i] = 1;
     }
 
     thee->parsed = 0;
@@ -95,16 +94,7 @@ VPUBLIC Vrc_Codes SORparm_ctor2(SORparm *thee, SORparm_CalcType type) {
     thee->setgcent = 0;
 
     /* *** TYPE 1 & 2 PARAMETERS *** */
-    thee->setcglen = 0;
     thee->setfglen = 0;
-
-    /* *** TYPE 2 PARAMETERS *** */
-    thee->setpdime = 0;
-    thee->setrank = 0;
-    thee->setsize = 0;
-    thee->setofrac = 0;
-    for (i=0; i<6; i++) thee->partDisjOwnSide[i] = 0;
-    thee->setasync = 0;
 
     /* *** Default parameters for TINKER *** */
     thee->chgs = VCM_CHARGE;
@@ -125,27 +115,17 @@ VPUBLIC void SORparm_dtor(SORparm **thee) {
 
 VPUBLIC void SORparm_dtor2(SORparm *thee) { ; }
 
-VPUBLIC int SORparm_copyMGparm(NOsh_calc *calc){
+VPUBLIC int SORparm_copyMGparm(MGparm *mgparm, SORparm *sorparm){
 
-	//useful variable pointers
-	MGparm *mgparm;
-	SORparm *sorparm;
-
-	if(calc == VNULL){
-		 Vnm_tprint( 2, "SORparm_copyMGparm: received null calc object.\n");
+	if(mgparm == VNULL || sorparm == VNULL){
+		 Vnm_tprint( 2, "SORparm_copyMGparm: received null object.\n");
 		 return 0;
 	}
 
-	mgparm = calc->mgparm;
-	sorparm = calc->sorparm;
-
 	//check for parallel status
 	if(mgparm->type == MCT_PARALLEL){
-		sorparm->type = mgparm->type;
-		sorparm->proc_rank = mgparm->proc_rank;
-		sorparm->proc_size = mgparm->proc_size;
-		sorparm->setrank = mgparm->setrank;
-		sorparm->setsize = mgparm->setsize;
+		/**TODO: SOR doesn't support parallel right now*/
+		return 0;
 	}
 
 	sorparm->parsed = mgparm->parsed;
@@ -153,7 +133,6 @@ VPUBLIC int SORparm_copyMGparm(NOsh_calc *calc){
 	int i;
 	for(i=0; i<3; i++){
 		sorparm->dime[i] = mgparm->dime[i];
-		sorparm->pdime[i] = mgparm->pdime[i];
 	}
 
 	//generic parameters
@@ -168,18 +147,9 @@ VPUBLIC int SORparm_copyMGparm(NOsh_calc *calc){
 	sorparm->setgcent = mgparm->setgcent;
 
 	/* *** TYPE 1 & 2 PARAMETERS *** */
-	sorparm->setcglen = mgparm->setcglen;
 	sorparm->setfglen = mgparm->setfglen;
-
-	/* *** TYPE 2 PARAMETERS *** */
-	sorparm->setpdime = mgparm->setpdime;
-	sorparm->setrank = mgparm->setrank;
-	sorparm->setsize = mgparm->setsize;
-	sorparm->setofrac = mgparm->setofrac;
-	for (i=0; i<6; i++){
-		sorparm->partDisjOwnSide[i] = mgparm->partDisjOwnSide[i];
-	}
-	sorparm->setasync = mgparm->setasync;
+	sorparm->fcmeth = mgparm->fcmeth;
+	sorparm->fcentmol = mgparm->fcentmol;
 
 	/* *** Default parameters for TINKER *** */
 	sorparm->chgs = mgparm->chgs;

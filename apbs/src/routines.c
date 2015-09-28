@@ -1454,6 +1454,17 @@ VPUBLIC int initMG(int icalc,
 
 }
 
+VPUBLIC int initSOR(
+		int icalc, NOsh *nosh, SORparm *sorparm, PBEparm *pbeparm, double realCenter[3], Vpbe *pbe[NOSH_MAXCALC],
+		Valist *alist[NOSH_MAXMOL], Vgrid *dielXMap[NOSH_MAXMOL],Vgrid *dielYMap[NOSH_MAXMOL], Vgrid *dielZMap[NOSH_MAXMOL],
+		Vgrid *kappaMap[NOSH_MAXMOL], Vgrid *chargeMap[NOSH_MAXMOL], Vpmgp *pmgp[NOSH_MAXCALC], Vpmg *pmg[NOSH_MAXCALC],
+		Vgrid *potMap[NOSH_MAXMOL]
+		){
+
+	return 0;
+}
+
+
 VPUBLIC void killMG(NOsh *nosh, Vpbe *pbe[NOSH_MAXCALC],
                     Vpmgp *pmgp[NOSH_MAXCALC], Vpmg *pmg[NOSH_MAXCALC]) {
 

@@ -244,6 +244,24 @@ VEXTERNC int initMG(
                     Vgrid *potMap[NOSH_MAXMOL]  /**< Array of potential maps  */
                     );
 
+VEXTERNC int initSOR(
+		int icalc, /**< Index of claculation in pmg/pmpg arrays */
+		NOsh *nosh, /**< Object with parsed input file parameters */
+		SORparm *sorparm, /**< Object with SOR-specific parameters */
+		PBEparm *pbeparm, /**< Object with generic PBE parameters */
+		double realCenter[3], /**< The actual center of the current mesh */
+		Vpbe *pbe[NOSH_MAXCALC], /**< Array of Vpbe objects (one for each calc) */
+		Valist *alist[NOSH_MAXMOL],  /**< Array of atoms list */
+		Vgrid *dielXMap[NOSH_MAXMOL], /**< Array of x-shifted dielectric maps */
+		Vgrid *dielYMap[NOSH_MAXMOL], /**< Array of y-shifted dielectric maps */
+		Vgrid *dielZMap[NOSH_MAXMOL], /**< Array of z-shifted dielectric maps */
+		Vgrid *kappaMap[NOSH_MAXMOL], /**< Array of kappa maps */
+		Vgrid *chargeMap[NOSH_MAXMOL], /**< Array of charge maps */
+		Vpmgp *pmgp[NOSH_MAXCALC],  /**TODO:< Probably not needed for the SOR calc */
+		Vpmg *pmg[NOSH_MAXCALC], /**TODO:< Probably not needed for the SOR calc */
+		Vgrid *potMap[NOSH_MAXMOL] /**< Array of potential maps */
+		);
+
 /**
  * @brief  Kill structures initialized during an MG calculation
  * @ingroup  Frontend

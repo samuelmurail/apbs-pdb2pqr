@@ -1200,7 +1200,7 @@ ELEC section!\n");
         	calc->mgparm->type = MCT_AUTO;
         	calc->sorparm->type = SCT_AUTO;
         	int r1 = NOsh_parseMG(thee,sock,calc);
-        	int r2 = SORparm_copyMGparm(calc);
+        	int r2 = SORparm_copyMGparm(calc->mgparm, calc->sorparm);
         	if(r1 == 0 || r2 == 0){
         		return 0;
         	}
@@ -1382,10 +1382,12 @@ map is used!\n");
             case NCT_AUTO:
             	/**
             	 *@TODO: write a function to decide weather to continue using
-            	 *@TODO: MG or just SOG. In the mean time will force it
+            	 *@TODO: MG or just SOR. In the mean time will force it
             	 *@TODO: to go the SOR way.
             	 */
             	if(0){//if going the MG way.
+            		/*destroy the SOR calc object*/
+            		SORparm_dtor(&(elec->sorparm));
 
                     /* Center on the molecules, if requested */
                     mgparm = elec->mgparm;
@@ -1420,9 +1422,11 @@ map is used!\n");
                     NOsh_setupCalcMG(thee, elec);
             	}
             	else {//going the SOR way
-
+            		/**@TODO: destroy the mgparm object once we know
+            		 * that we don't need it farther along the line.
+            		 */
             		sorparm = elec->sorparm;
-            		if(elec->sorparm->cmeth == CM_MOLECULE){
+            		if(elec->sorparm->cmeth == SCM_MOLECULE){
             			VASSERT(sorparm->centmol>=0);
             			VASSERT(sorparm->centmol < thee->nmol);
             			VASSERT(mymol != VNULL);
@@ -1430,6 +1434,15 @@ map is used!\n");
             				sorparm->center[i] = mymol->center[i];
             			}
             		}
+            		if (elec->sorparm->fcmeth == SCM_MOLECULE) {
+						VASSERT(sorparm->fcentmol >= 0);
+						VASSERT(sorparm->fcentmol < thee->nmol);
+						mymol = thee->alist[sorparm->fcentmol];
+						VASSERT(mymol != VNULL);
+						for (i=0; i<3; i++) {
+							sorparm->fcenter[i] = mymol->center[i];
+						}
+					}
             		NOsh_setupCalcSOR(thee, elec);
             	}
             	break;
@@ -1664,12 +1677,13 @@ VPRIVATE int NOsh_setupCalcSOR(
 		grid[i] = (elec->sorparm->fglen[i]) / ((double)(elec->sorparm->dime[i]-1));
 	}
 
-	Vnm_print(0, "NOsh_setupSOR(%s, %d): grid spacing = %g %g %g",
+	Vnm_print(0, "NOsh_setupSOR(%s, %d): grid spacing = %g %g %g\n",
 			__FILE__, __LINE__, grid[0], grid[1], grid[2]);
 
 	elec->sorparm->setgrid = 1;
 	elec->sorparm->setglen = 1;
 	elec->sorparm->parsed = 1;
+	(thee->ncalc)++;
 
 	return 1;
 
