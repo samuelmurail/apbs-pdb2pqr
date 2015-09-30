@@ -222,6 +222,14 @@ VEXTERNC void printPBEPARM(PBEparm *pbeparm);
 VEXTERNC void printMGPARM(MGparm *mgparm, double realCenter[3]);
 
 /**
+* @brief  Print out SOR-specific params loaded from input
+* @ingroup  Frontend
+* @author  Juan M. brandi
+* @param  realCenter  Center of mesh for actual calculation
+* @param  sorparm  SORparm object */
+VEXTERNC void printSORparm(SORparm *sorparm, double realCenter[3]);
+
+/**
  * @brief  Initialize an MG calculation
  * @ingroup  Frontend
  * @author  Nathan Baker

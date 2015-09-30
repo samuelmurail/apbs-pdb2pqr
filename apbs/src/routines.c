@@ -1210,6 +1210,29 @@ VPUBLIC void printMGPARM(MGparm *mgparm, double realCenter[3]) {
 
 }
 
+VPUBLIC void printSORparm(SORparm *sorparm, double realCenter[3]){
+
+	switch(sorparm->chgm){
+	case 0:
+		Vnm_tprint(1,"    Using linear spline charge discretization.\n");
+		break;
+	case 1:
+		Vnm_print(1, "    Using cubic spline charge discretization.\n");
+		break;
+	default:
+		break;
+	}
+
+	Vnm_tprint(1, "    Grid dimensions %d x %d x %d\n",
+			sorparm->dime[0], sorparm->dime[1], sorparm->dime[2]);
+	Vnm_tprint(1, "    Grid spacings: %4.3f x %4.3f x %4.3f\n",
+			sorparm->grid[0], sorparm->grid[1], sorparm->grid[2]);
+	Vnm_tprint(1, "    Grid lengths: %4.3f x %4.3f x %4.3f\n",
+			sorparm->glen[0], sorparm->glen[1], sorparm->glen[2]);
+	Vnm_tprint(1, "    Grid center: %4.3f x %4.3f x %4.3f\n",
+			realCenter[0], realCenter[1], realCenter[2]);
+}
+
 /**
  * Initialize a multigrid calculation.
  */
@@ -1481,8 +1504,41 @@ VPUBLIC int initSOR(
 		q+=VSQR(Vatom_getCharge(atom));
 	}
 
+	/*set up the PBE object*/
+	Vnm_tprint(0, "Setting up PBE object...\n");
+	double sparm, iparm;
+	int focusflag = 0;
+	if(pbeparm->srfm == VSM_SPLINE){
+		sparm = pbeparm->swin;
+	}
+	else {
+		sparm = pbeparm->srad;
+	}
+	if(pbeparm->nion > 0){
+		iparm = pbeparm->ionr[0];
+	}
+	else {
+		iparm = 0.0;
+	}
 
+	pbe[icalc] = Vpbe_ctor(myalist, pbeparm->nion, pbeparm->ionc, pbeparm->ionr, pbeparm->ionq,
+			pbeparm->temp, pbeparm->pdie, pbeparm->sdie, sparm, focusflag, pbeparm->sdens, pbeparm->zmem,
+			pbeparm->Lmem, pbeparm->mdie, pbeparm->memv);
 
+	/*print derived parameter*/
+	Vnm_tprint(1, "    Debye length: %g A\n", Vpbe_getDeblen(pbe[icalc]));
+
+	/**TODO: should not have to check in here but just in case. Maybe delete later*/
+	switch(pbeparm->pbetype){
+		case PBE_LPBE:
+			return 1;
+			break;
+		default:
+			Vnm_tprint(2, "Error! SOR does not support (%d).\n",pbeparm->pbetype);
+			return 0;
+	}
+
+	/*shouldn't get to here*/
 	return 0;
 }
 
@@ -1548,6 +1604,8 @@ solution array\n");
     return 1;
 
 }
+
+VPUBLIC int solveSOR(NOsh *nosh, SORparm *sorparm, PBEparm *parm)
 
 VPUBLIC int setPartMG(NOsh *nosh,
                       MGparm *mgparm,
