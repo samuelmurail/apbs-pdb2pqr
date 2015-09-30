@@ -400,6 +400,10 @@ VPUBLIC void NOsh_calc_dtor(
         case NCT_MG:
             MGparm_dtor(&(calc->mgparm));
             break;
+        case NCT_AUTO:
+        	MGparm_dtor(&(calc->mgparm));
+        	SORparm_dtor(&(calc->sorparm));
+        	break;
         case NCT_FEM:
             FEMparm_dtor(&(calc->femparm));
             break;
@@ -1193,7 +1197,6 @@ ELEC section!\n");
         } else if(Vstring_strcasecmp(tok, "auto") == 0){
         	thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_AUTO);
         	calc = thee->elec[thee->nelec];
-        	(thee->nelec++);
         	calc->mgparm->type = MCT_AUTO;
         	calc->sorparm->type = SCT_AUTO;
         	(thee->nelec)++;
@@ -1646,47 +1649,41 @@ VPRIVATE int NOsh_setupCalcSOR(
                               NOsh_calc *elec
                               ) {
 
-	double grid[3];
-	int i;
+    SORparm *sorparm = VNULL;
+    PBEparm *pbeparm = VNULL;
+    NOsh_calc *calc = VNULL;
 
-	if(thee == VNULL){
-		Vnm_print(2, "NOsh_setupCalcSOR: Got null thee!\n");
-		return 0;
-	}
-	if(elec == VNULL){
-		Vnm_print(2, "NOsh_setupCalcSOR: Got null elect!\n");
-		return 0;
-	}
-	if(elec->sorparm == VNULL){
-		Vnm_print(2, "NOsh_setupCalcSOR: Got null sorparm!\n");
-		return 0;
-	}
-	if(elec->pbeparm == VNULL){
-		Vnm_print(2, "NOsh_setupCalcSOR: Got null pbeparm!\n");
-		return 0;
-	}
+    VASSERT(thee != VNULL);
+    VASSERT(elec != VNULL);
+    sorparm = elec->sorparm;
+    VASSERT(sorparm != VNULL);
+    pbeparm = elec->pbeparm;
+    VASSERT(pbeparm);
 
-	Vnm_print(0, "NOsh_setupCalcSOR(%s, %d): grid center = %g %g %g\n",
-			__FILE__,__LINE__,
-			elec->sorparm->center[0],
-			elec->sorparm->center[1],
-			elec->sorparm->center[2]);
+    if(elec->sorparm->type == SCT_AUTO){
+		/* Check to see if he have any room left for this type of
+		 * calculation, if so: set the calculation type, update the number
+		 * of calculations of this type, and parse the rest of the section
+		 */
+		if (thee->ncalc >= NOSH_MAXCALC) {
+			Vnm_print(2, "NOsh:  Too many calculations in this run!\n");
+			Vnm_print(2, "NOsh:  Current max is %d; ignoring this calculation\n",
+					  NOSH_MAXCALC);
+			return 0;
+		}
+		thee->calc[thee->ncalc] = NOsh_calc_ctor(NCT_AUTO);
+		calc = thee->calc[thee->ncalc];
+		(thee->ncalc)++;
 
-	/* calculate the grid spacing */
-	for(i=0; i<3; i++){
-		grid[i] = (elec->sorparm->fglen[i]) / ((double)(elec->sorparm->dime[i]-1));
-	}
+		/* Copy over contents of ELEC */
+		NOsh_calc_copy(calc, elec);
 
-	Vnm_print(0, "NOsh_setupSOR(%s, %d): grid spacing = %g %g %g\n",
-			__FILE__, __LINE__, grid[0], grid[1], grid[2]);
-
-	elec->sorparm->setgrid = 1;
-	elec->sorparm->setglen = 1;
-	elec->sorparm->parsed = 1;
-	(thee->ncalc)++;
-
-	return 1;
-
+		return 1;
+    }
+    else {
+    	Vnm_print(2,"NOsh_setupCalcSOR: undefined SOR calculation type (%d)!\n", sorparm->type);
+    	return 0;
+    }
 }
 
 VPRIVATE int NOsh_setupCalcBEM(
