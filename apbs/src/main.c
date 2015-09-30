@@ -89,6 +89,7 @@ int main(
     NOsh *nosh = VNULL;
 
     MGparm *mgparm = VNULL;
+    SORparm *sorparm = VNULL;
     FEMparm *feparm = VNULL;
 #ifdef ENABLE_BEM
     BEMparm *bemparm = VNULL;
@@ -512,6 +513,34 @@ int main(
                 fflush(stderr);
 
                 break;
+
+                /* **** Do the SOR calculation **** */
+            case NCT_AUTO:
+
+            	for (k=0; k<nosh->nelec; k++) {
+					if (nosh->elec2calc[k] >= i) {
+						break;
+					}
+				}
+				if (Vstring_strcasecmp(nosh->elecname[k], "") == 0) {
+					Vnm_tprint( 1, "CALCULATION #%d: SOR\n", i+1);
+				} else {
+					Vnm_tprint( 1, "CALCULATION #%d (%s): SOR\n",
+								i+1, nosh->elecname[k]);
+				}
+				/* Useful local variables */
+				sorparm = nosh->calc[i]->sorparm;
+				pbeparm = nosh->calc[i]->pbeparm;
+
+				Vnm_tprint(1, "    Setting up the problem...\n");
+
+				if(!initSOR(i, nosh, sorparm, pbeparm, realCenter, pbe, alist, dielXMap, dielYMap, dielZMap, kappaMap,
+						chargeMap, pmgp, pmg, potMap)){
+					Vnm_tprint(2,"Error setting up SOR calculation!\n");
+					VJMPERR1(0);
+				}
+
+            	break;
 
                 /* ***** Do FEM calculation ***** */
             case NCT_FEM:
