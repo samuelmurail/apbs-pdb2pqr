@@ -1461,6 +1461,28 @@ VPUBLIC int initSOR(
 		Vgrid *potMap[NOSH_MAXMOL]
 		){
 
+	/*start timer*/
+	Vnm_tstart(APBS_TIMER_SETUP, "Setup timer");
+
+	/*update the grid center*/
+	int i;
+	for(i=0; i<3; i++){
+		realCenter[i] = sorparm->center[i];
+	}
+
+	/*check for a completely-neutral molecule*/
+	int iatom;
+	double q=0;
+	Vatom *atom;
+	Valist *myalist = VNULL;
+	myalist = alist[pbeparm->molid - 1];
+	for(iatom=0; iatom<Valist_getNumberAtoms(myalist); iatom++){
+		atom = Valist_getAtom(myalist, iatom);
+		q+=VSQR(Vatom_getCharge(atom));
+	}
+
+
+
 	return 0;
 }
 

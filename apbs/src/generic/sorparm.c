@@ -133,6 +133,8 @@ VPUBLIC int SORparm_copyMGparm(MGparm *mgparm, SORparm *sorparm){
 	int i;
 	for(i=0; i<3; i++){
 		sorparm->dime[i] = mgparm->dime[i];
+		sorparm->fglen[i] = mgparm->fglen[i];
+		sorparm->center[i] = mgparm->fcenter[i];
 	}
 
 	//generic parameters
