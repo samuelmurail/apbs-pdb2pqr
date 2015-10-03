@@ -1296,7 +1296,7 @@ VPUBLIC int initMG(int icalc,
                            pbeparm->zmem, pbeparm->Lmem, pbeparm->mdie,
                            pbeparm->memv);
 
-    /* Set up PDE object */
+    /* Set up PBE object */
     Vnm_tprint(0, "Setting up PDE object...\n");
     switch (pbeparm->pbetype) {
         case PBE_NPBE:

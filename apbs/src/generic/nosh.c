@@ -1754,6 +1754,8 @@ VPUBLIC int NOsh_setupCalcMGAUTO(
     Vnm_print(0, "NOsh_setupCalcMGAUTO (%s, %d):  Displacement between fine and \
 coarse grids = %g, %g, %g\n", __FILE__, __LINE__, d[0], d[1], d[2]);
 
+
+
     /* Now calculate the number of focusing levels, never reducing the grid
         spacing by more than redfrac at each level */
     for (j=0; j<3; j++) {

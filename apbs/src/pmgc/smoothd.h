@@ -57,6 +57,7 @@
 #include "generic/vmatrix.h"
 #include "pmgc/gsd.h"
 #include "pmgc/cgd.h"
+#include "pmgc/sor.h"
 
 /** @brief   call the appropriate linear smoothing routine.
  *  @ingroup PMGC

@@ -506,7 +506,8 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
                         &nu1, &nu2, &mgsmoo,
                         ipc, rpc, pc, ac, cc, fc, tcf);
 
-            } else {
+            }
+            else {
                 VABORT_MSG1("Bad mgkey given: %d", mgkey);
             }
     }

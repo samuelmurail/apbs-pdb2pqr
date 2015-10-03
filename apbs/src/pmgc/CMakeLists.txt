@@ -18,6 +18,7 @@ add_items(
     powerd.c
     smoothd.c
     mgfasd.c
+    sor.c
 )
 
 add_items(
@@ -40,6 +41,7 @@ add_items(
     powerd.h
     smoothd.h
     mgfasd.h
+    sor.h
 )
 
 add_sublibrary(pmgc)

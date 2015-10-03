@@ -476,6 +476,17 @@ VPUBLIC int Vpmg_solve(Vpmg *thee) {
             if (thee->pmgp->iinfo > 1)
                 Vnm_print(2, "Driving with MGDRIV\n");
 
+//            if(thee->pmgp->ipkey == -1 && thee->pbe->alist->number < 2000000){
+//            	thee->pmgp->nlev = 1;
+//            	VAT(thee->iparm, 6) = 1;
+//
+//            	thee->pmgp->n_iz = 50*(thee->pmgp->nlev+1);
+//            	thee->pmgp->n_ipc = 100*(thee->pmgp->nlev+1);
+//				thee->pmgp->niwk = thee->pmgp->n_iz + thee->pmgp->n_ipc;
+//
+//				VAT(thee->iparm, 2) = thee->pmgp->niwk;
+//            }
+
             Vmgdriv(thee->iparm, thee->rparm, thee->iwork, thee->rwork,
                                         thee->u, thee->xf, thee->yf, thee->zf, thee->gxcf, thee->gycf,
                                         thee->gzcf, thee->a1cf, thee->a2cf, thee->a3cf, thee->ccf,

@@ -171,6 +171,16 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
      * *** solve directly if nlev = 1
      * *********************************************************************/
 
+    /**todo: decide how to change these parameters using the problem size, etc...)*/
+    int sorFlag = 0;
+    if((nxf*nyf*nzf) < 500000){
+    	itmax_s = *nlev*100;
+    	*nlev=1;
+		*mgsolv =0;
+		sorFlag = 1;
+    }
+
+
     // Solve directly if on the coarse grid
     if (*nlev == 1) {
 
@@ -183,7 +193,10 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
             itmax_s  = 100;
             iters_s  = 0;
             errtol_s = *epsiln;
-            mgsmoo_s = 4;
+            if(!sorFlag)
+            	mgsmoo_s = 4;
+            else
+            	mgsmoo_s = 2;
 
             Vazeros(&nxf, &nyf, &nzf, RAT(x, VAT2(iz, 1,lev)));
 
