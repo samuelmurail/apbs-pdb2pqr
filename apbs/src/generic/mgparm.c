@@ -139,6 +139,7 @@ VPUBLIC Vrc_Codes MGparm_ctor2(MGparm *thee, MGparm_CalcType type) {
     /* *** GENERIC PARAMETERS *** */
     thee->setdime = 0;
     thee->setchgm = 0;
+    thee->sorNable = 0;
 
     /* *** TYPE 0 PARAMETERS *** */
     thee->nlev = VMGNLEV;
@@ -345,7 +346,6 @@ VPUBLIC void MGparm_copy(MGparm *thee, MGparm *parm) {
     VASSERT(thee != VNULL);
     VASSERT(parm != VNULL);
 
-
     thee->type = parm->type;
     thee->parsed = parm->parsed;
 
@@ -355,6 +355,7 @@ VPUBLIC void MGparm_copy(MGparm *thee, MGparm *parm) {
     thee->chgm = parm->chgm;
     thee->setchgm = parm->setchgm;
     thee->chgs = parm->chgs;
+    thee->sorNable = parm->sorNable;
 
     /* *** TYPE 0 PARMS *** */
     thee->nlev = parm->nlev;
@@ -938,6 +939,10 @@ VPUBLIC Vrc_Codes MGparm_parseToken(MGparm *thee, char tok[VMAX_BUFSIZE],
     } else if (Vstring_strcasecmp(tok, "nlev") == 0) {
         Vnm_print(2, "Warning: The 'nlev' keyword is now deprecated!\n");
         return MGparm_parseNLEV(thee, sock);
+    } else if(Vstring_strcasecmp(tok, "sor") == 0) {
+    	Vnm_print(2, "Enabling SOR if possible.\n");
+    	thee->sorNable = 1;
+    	return VRC_SUCCESS;
     } else if (Vstring_strcasecmp(tok, "etol") == 0) {
         return MGparm_parseETOL(thee, sock);
     } else if (Vstring_strcasecmp(tok, "grid") == 0) {

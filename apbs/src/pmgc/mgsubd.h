@@ -304,7 +304,8 @@ VEXTERNC void Vpackmg(
         double *omegal,
         double *omegan,
         int *irite,
-        int *iperf
+        int *iperf,
+		int *sorNable
         );
 
 

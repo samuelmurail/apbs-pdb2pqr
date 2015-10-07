@@ -551,7 +551,7 @@ VPUBLIC void Vpackmg(int *iparm, double *rparm, size_t *nrwk, int *niwk,
         int *nx, int *ny, int *nz, int *nlev, int *nu1, int *nu2, int *mgkey,
         int *itmax, int *istop, int *ipcon, int *nonlin, int *mgsmoo, int *mgprol,
         int *mgcoar, int *mgsolv, int *mgdisc, int *iinfo, double *errtol,
-        int *ipkey, double *omegal, double *omegan, int *irite, int *iperf) {
+        int *ipkey, double *omegal, double *omegan, int *irite, int *iperf, int *sorNable) {
 
     /// @todo  Convert this into a struct
 
@@ -578,6 +578,7 @@ VPUBLIC void Vpackmg(int *iparm, double *rparm, size_t *nrwk, int *niwk,
     VAT(iparm, 20) = *mgsmoo;
     VAT(iparm, 21) = *mgsolv;
     VAT(iparm, 22) = *iperf;
+    VAT(iparm, 23) = *sorNable;
 
     // Encode rparm parameters
     VAT(rparm, 1)  = *errtol;

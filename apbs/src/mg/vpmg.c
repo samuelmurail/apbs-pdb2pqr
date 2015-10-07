@@ -325,7 +325,7 @@ VPUBLIC int Vpmg_ctor2(Vpmg *thee, Vpmgp *pmgp, Vpbe *pbe, int focusFlag,
             &(thee->pmgp->mgprol), &(thee->pmgp->mgcoar), &(thee->pmgp->mgsolv),
             &(thee->pmgp->mgdisc), &(thee->pmgp->iinfo), &(thee->pmgp->errtol),
             &(thee->pmgp->ipkey), &(thee->pmgp->omegal), &(thee->pmgp->omegan),
-            &(thee->pmgp->irite), &(thee->pmgp->iperf));
+            &(thee->pmgp->irite), &(thee->pmgp->iperf), &(thee->pmgp->sorNable));
 
 
 

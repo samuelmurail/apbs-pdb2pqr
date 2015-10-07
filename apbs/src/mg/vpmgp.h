@@ -91,6 +91,7 @@ struct sVpmgp {
                   * \li 0: linear
                   * \li 1: nonlinear
                   * \li 2: linear then nonlinear */
+    int sorNable; /**< Enable solving PBE using SOR method in one level if conditions are met */
 
     /* ********** DERIVED PARAMETERS ********** */
     int nxc;  /**< Coarse level grid x dimensions */

@@ -251,6 +251,7 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
     int nzc   = 0;
     int level = 0;
     int nlevd = 0;
+    int sorNable = 0;
 
 
 
@@ -276,6 +277,7 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
     mgsmoo = VAT(iparm, 20);
     mgsolv = VAT(iparm, 21);
     iperf  = VAT(iparm, 22);
+    sorNable = VAT(iparm,23);
 
     // Decode real parameters from the rparm array
     errtol = VAT(rparm,  1);

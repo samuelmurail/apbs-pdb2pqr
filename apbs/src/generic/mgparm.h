@@ -123,6 +123,7 @@ struct sMGparm {
     int setchgm;  /**< Flag, @see chgm */
     Vchrg_Src  chgs; /**< Charge source (Charge, Multipole, Induced Dipole,
                       * NL Induced */
+    int sorNable; /**Use for fast calculations. Disabled by default. */
 
     /* *** TYPE 0 PARAMETERS (SEQUENTIAL MANUAL) *** */
     int nlev;  /**< Levels in multigrid hierarchy

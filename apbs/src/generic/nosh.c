@@ -1499,6 +1499,10 @@ VPUBLIC int NOsh_parseMG(
         }
     }
 
+    if(pbeparm->pbetype != PBE_LPBE){
+    	mgparm->sorNable = 0;
+    }
+
     /* Handle various errors arising in the token-snarfing loop -- these all
         just result in simple returns right now */
     if (rc == -1) return 0;

@@ -106,6 +106,7 @@ VPUBLIC int Vpmgp_ctor2(Vpmgp *thee,MGparm *mgparm) {
 
     thee->nonlin = mgparm->nonlintype;
     thee->meth = mgparm->method;
+    thee->sorNable = mgparm->sorNable;
 
 #ifdef DEBUG_MAC_OSX_OCL
 #include "mach_chud.h"
