@@ -48,6 +48,7 @@
  */
 
 #include "mgcsd.h"
+#define MAX_SOR_GRID_SIZE 500000
 
 VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
         double *x,
@@ -60,7 +61,7 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
         int *nu1, int *nu2,
         int *mgsmoo,
         int *ipc, double *rpc,
-        double *pc, double *ac, double *cc, double *fc, double *tru) {
+        double *pc, double *ac, double *cc, double *fc, double *tru, int *sorNable) {
 
     int level;       // @todo: doc
     int lev;         // @todo: doc
@@ -87,6 +88,7 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
     double xden;     // @todo: doc
     double xdamp;    // @todo: doc
     int lda;         // @todo: doc
+    int sorFlag;     /* flag to determine if we can use SOR in one level if conditions are met */
 
     double alpha;     // A utility variable used to pass a parameter to xaxpy
     int numlev;       // A utility variable used to pass a parameter to mkcors
@@ -102,6 +104,12 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
     nyf = *ny;
     nzf = *nz;
     numlev = *nlev - 1;
+    if (sorNable == NULL){
+    	sorFlag = 0;
+    }
+    else{
+    	sorFlag =  *sorNable;
+    }
     Vmkcors(&numlev, &nxf, &nyf, &nzf, &nxc, &nyc, &nzc);
 
     // Do some i/o if requested
@@ -171,14 +179,15 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
      * *** solve directly if nlev = 1
      * *********************************************************************/
 
-    /**todo: decide how to change these parameters using the problem size, etc...)*/
-    int sorFlag = 0;
-    if((nxf*nyf*nzf) < 500000){
-    	itmax_s = *nlev*100;
-    	*nlev=1;
-		*mgsolv =0;
-		sorFlag = 1;
-    }
+    /**todo: write a function to decide this */
+	if(sorFlag) {
+		if((nxf*nyf*nzf) < MAX_SOR_GRID_SIZE){
+			itmax_s = *nlev*100;
+			*nlev=1;
+			*mgsolv =0;
+		}
+	}
+
 
 
     // Solve directly if on the coarse grid
@@ -195,8 +204,10 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
             errtol_s = *epsiln;
             if(!sorFlag)
             	mgsmoo_s = 4;
-            else
+            else {
             	mgsmoo_s = 2;
+            	errtol_s = 1.0E-9;
+            }
 
             Vazeros(&nxf, &nyf, &nzf, RAT(x, VAT2(iz, 1,lev)));
 

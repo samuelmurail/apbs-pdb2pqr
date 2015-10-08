@@ -341,7 +341,7 @@ VPUBLIC void Vnewton(int *nx, int *ny, int *nz,
                 &iok_s, &iinfo_s,
                 epsiln, &errtol_s, omega,
                 nu1, nu2, mgsmoo,
-                ipc, rpc, pc, ac, cprime, rhs, tru);
+                ipc, rpc, pc, ac, cprime, rhs, tru, 0);
 
         /**************************************************************
          *** note: rhs and cprime are now available as temp vectors ***

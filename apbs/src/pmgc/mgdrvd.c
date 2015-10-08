@@ -496,7 +496,7 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
                         &ilev, &nlev_real, &mgsolv,
                         &iok, &iinfo, &epsiln, &errtol, &omegal,
                         &nu1, &nu2, &mgsmoo,
-                        ipc, rpc, pc, ac, cc, fc, tcf);
+                        ipc, rpc, pc, ac, cc, fc, tcf, &sorNable);
 
             } else if (mgkey == 1) {
 
@@ -506,7 +506,7 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
                         &ilev, &nlev_real, &mgsolv,
                         &iok, &iinfo, &epsiln, &errtol, &omegal,
                         &nu1, &nu2, &mgsmoo,
-                        ipc, rpc, pc, ac, cc, fc, tcf);
+                        ipc, rpc, pc, ac, cc, fc, tcf, &sorNable);
 
             }
             else {

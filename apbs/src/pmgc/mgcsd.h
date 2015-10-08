@@ -104,38 +104,44 @@
  *  @note    Replaces mvcs from mgcsd.f
  */
 VEXTERNC void Vmvcs(
-        int    *nx,        ///< @todo: doc
-        int    *ny,        ///< @todo: doc
-        int    *nz,        ///< @todo: doc
+        int    *nx,        /**< Grid dimensions in the x-direction */
+        int    *ny,        /**< Grid dimensions in the y-direction */
+        int    *nz,        /**< Grid dimensions in the z-direction */
         double *x,         ///< @todo: doc
         int    *iz,        ///< @todo: doc
         double *w0,        ///< @todo: doc
         double *w1,        ///< @todo: doc
         double *w2,        ///< @todo: doc
         double *w3,        ///< @todo: doc
-        int    *istop,     ///< @todo: doc
-        int    *itmax,     ///< @todo: doc
-        int    *iters,     ///< @todo: doc
+        int    *istop,     /**< Stopping criterion */
+        int    *itmax,     /**< Maximum number of iterations */
+        int    *iters,     /**< Number of iterations */
         int    *ierror,    ///< @todo: doc
-        int    *nlev,      ///< @todo: doc
-        int    *ilev,      ///< @todo: doc
+        int    *nlev,      /**< Number of mesh levels */
+        int    *ilev,      /**< Level counter */
         int    *nlev_real, ///< @todo: doc
-        int    *mgsolv,    ///< @todo: doc
+        int    *mgsolv,    /**< Coarse equation solve method */
         int    *iok,       ///< @todo: doc
-        int    *iinfo,     ///< @todo: doc
+        int    *iinfo,     /**< Run time status messages */
         double *epsiln,    ///< @todo: doc
-        double *errtol,    ///< @todo: doc
+        double *errtol,    /**< Desired error tolerance [default 1e-9] */
         double *omega,     ///< @todo: doc
-        int    *nu1,       ///< @todo: doc
-        int    *nu2,       ///< @todo: doc
-        int    *mgsmoo,    ///< @todo: doc
+        int    *nu1,       /**< Number of pre-smoothings [default = 2] */
+        int    *nu2,       /**< Number of post-smoothings [default = 2] */
+        int    *mgsmoo,    /**< Smoothing methods [default = 1]
+        	                * \li 0: Weighted Jacobi
+        	                * \li 1: Gauss-Seidel
+        	                * \li 2: SOR
+        	                * \li 3: Richardson
+        	                * \li 4: CGHS*/
         int    *ipc,       ///< @todo: doc
         double *rpc,       ///< @todo: doc
         double *pc,        ///< @todo: doc
         double *ac,        ///< @todo: doc
         double *cc,        ///< @todo: doc
         double *fc,        ///< @todo: doc
-        double *tru        ///< @todo: doc
+        double *tru,        ///< @todo: doc
+        int *sorNable      /**< Flag to deccide if we can use SOR if able [default 0]*/
         );
 
 #endif /* _MGCSD_H_ */

@@ -238,7 +238,7 @@ VPUBLIC void Vipower(int *nx,int *ny,int *nz,
                     nlev, ilev, nlev_real, mgsolv,
                     &iok_s, &iinfo_s, epsiln,
                     &errtol_s, omega, &nu1_s, &nu2_s, &mgsmoo_s,
-                    ipc, rpc, pc, ac, cc, w0, tru);
+                    ipc, rpc, pc, ac, cc, w0, tru, 0);
             Vxcopy(nx, ny, nz, RAT(u, VAT2(iz, 1, lev)), w1);
 
             // Normalize the new vector
@@ -339,7 +339,7 @@ VEXTERNC void Vmpower(int *nx, int *ny, int *nz,
             &iok_s, &iinfo_s,
             epsiln, errtol, omega, nu1, nu2, mgsmoo,
             ipc, rpc,
-            pc, ac, cc, fc, tru);
+            pc, ac, cc, fc, tru, 0);
     oldrho = Vxdot(nx, ny, nz, w1, RAT(u, VAT2(iz, 1, lev)));
 
     // I/O
@@ -371,7 +371,7 @@ VEXTERNC void Vmpower(int *nx, int *ny, int *nz,
                    &iok_s, &iinfo_s,
                    epsiln, errtol, omega, nu1, nu2, mgsmoo,
                    ipc, rpc,
-                   pc, ac, cc, fc, tru);
+                   pc, ac, cc, fc, tru, 0);
            Vxcopy(nx, ny, nz, RAT(u, VAT2(iz, 1, lev)), w1);
 
            // Normalize the new vector
@@ -394,7 +394,7 @@ VEXTERNC void Vmpower(int *nx, int *ny, int *nz,
                    &iok_s, &iinfo_s,
                    epsiln, errtol, omega, nu1, nu2, mgsmoo,
                    ipc, rpc,
-                   pc, ac, cc, fc, tru);
+                   pc, ac, cc, fc, tru, 0);
            Vxcopy(nx, ny, nz, RAT(u, VAT2(iz, 1, lev)), w2);
            rho = Vxdot(nx, ny, nz, w1, w2);
 

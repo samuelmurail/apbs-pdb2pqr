@@ -52,6 +52,7 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+#define MAX_COUNTER 1000000
 
 VPRIVATE double eroot(double x);
 
@@ -99,7 +100,7 @@ VPRIVATE double eroot(double x){
 	    else{
 	    	double a = 1.0;
 	    	double b = x;
-			while (abs(a-b)>1.0E-6){
+			while (abs(a-b)>1.0E-9){
 				a = (a+b)/2;
 				b = x/a;
 			}
@@ -132,7 +133,9 @@ VPUBLIC void Vsor7x(int *nx,int *ny,int *nz,
 
 //    double om = 1 - 1.0/eroot((*nx * *nx) + (*ny * *ny) + (*nz * *nz));
     double om = 1.5;
-    double counter = 0;
+    int counter = 0;
+    double tol = 0;
+//  double tolold = 0;
 
 
     printf("    Problem estimated to be small enough for using only one level with SOR....\n");
@@ -183,7 +186,7 @@ VPUBLIC void Vsor7x(int *nx,int *ny,int *nz,
 
 		Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
 
-		double tol = 0;
+		tol = 0;
 		for (k=2; k<=*nz-1; k++) {
 		   for (j=2; j<=*ny-1; j++) {
 			   for(i=2; i<=*nx-1; i++) {
@@ -193,20 +196,24 @@ VPUBLIC void Vsor7x(int *nx,int *ny,int *nz,
 		   }
 		}
 
-		//printf("Residual square is: %g\n", eroot(tol));
+		//printf("%d: tol= %g, x1 = %g\n", counter,tol, VAT3(x,2,2,2));
 
-		if(eroot(tol) < *errtol || counter == 2000){
+		if( tol < *errtol || counter == MAX_COUNTER){
+			/*if(counter == MAX_COUNTER){
+				printf("    Vsor: Max number of iterations reached.\n");
+			}*/
 			break;
 		}
 		else if(*iters == *itmax-1 && eroot(tol) > *errtol  * 2){
 			*iters = 1;
 		}
 		counter ++;
+		//tolold = tol;
 	} /*end for*/
 
 
-    if (*iresid == 1)
-        Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
+    //if (*iresid == 1)
+      //  Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
 }
 
 
