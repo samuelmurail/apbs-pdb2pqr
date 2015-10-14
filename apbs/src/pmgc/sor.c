@@ -137,9 +137,9 @@ VPUBLIC void Vsor7x(int *nx,int *ny,int *nz,
     double tol = 0;
 
 
-    printf("Problem estimated to be small enough for using only one level with SOR....\n");
-    printf("omega = %g\n", om);
-    printf("error tolerance = %4.3E\n", *errtol);
+    printf("  Problem estimated to be small enough for using only one level with SOR....\n");
+    printf("  omega = %g\n", om);
+    printf("  error tolerance = %4.3E\n", *errtol);
 
 	for (*iters=1; *iters<=*itmax; (*iters)++) {
 
@@ -197,7 +197,7 @@ VPUBLIC void Vsor7x(int *nx,int *ny,int *nz,
 
 		if( tol < *errtol || counter == MAX_COUNTER){
 			if(counter == MAX_COUNTER){
-				printf("Vsor: Max number of iterations reached.\n");
+				printf("  Vsor: Max number of iterations reached.\n");
 			}
 			break;
 		}
