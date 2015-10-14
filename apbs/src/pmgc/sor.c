@@ -54,7 +54,7 @@
 #endif
 #define MAX_COUNTER 1000000
 
-VPRIVATE double eroot(double x);
+//VPRIVATE double eroot(double x);
 
 VPUBLIC void Vsor(int *nx, int *ny, int *nz,
         int *ipc, double *rpc,
@@ -64,7 +64,7 @@ VPUBLIC void Vsor(int *nx, int *ny, int *nz,
         double *errtol, double *omega,
         int *iresid, int *iadjoint) {
 
-    int numdia; /**number of nonzero diagonal bands in the matrix */
+    int numdia; /**<number of nonzero diagonal bands in the matrix */
 
     MAT2(ac, *nx * *ny * *nz, 1);
 
@@ -92,21 +92,21 @@ VPUBLIC void Vsor(int *nx, int *ny, int *nz,
         Vnm_print(2, "SOR: invalid stencil type given...\n");
     }
 }
-
-VPRIVATE double eroot(double x){
-
-	    if(x < 0)
-			return 0;
-	    else{
-	    	double a = 1.0;
-	    	double b = x;
-			while (abs(a-b)>1.0E-9){
-				a = (a+b)/2;
-				b = x/a;
-			}
-			return a;
-	    }
-}
+//
+//VPRIVATE double eroot(double x){
+//
+//	    if(x < 0)
+//			return 0;
+//	    else{
+//	    	double a = 1.0;
+//	    	double b = x;
+//			while (abs(a-b)>1.0E-9){
+//				a = (a+b)/2;
+//				b = x/a;
+//			}
+//			return a;
+//	    }
+//}
 
 VPUBLIC void Vsor7x(int *nx,int *ny,int *nz,
         int *ipc, double *rpc,
@@ -131,16 +131,15 @@ VPUBLIC void Vsor7x(int *nx,int *ny,int *nz,
     MAT3(uC, *nx, *ny, *nz);
     MAT3(oC, *nx, *ny, *nz);
 
-//    double om = 1 - 1.0/eroot((*nx * *nx) + (*ny * *ny) + (*nz * *nz));
+
     double om = 1.5;
     int counter = 0;
     double tol = 0;
-//  double tolold = 0;
 
 
-    printf("    Problem estimated to be small enough for using only one level with SOR....\n");
-    printf("    omega = %g\n", om);
-    printf("    error tolerance = %4.3E\n", *errtol);
+    printf("Problem estimated to be small enough for using only one level with SOR....\n");
+    printf("omega = %g\n", om);
+    printf("error tolerance = %4.3E\n", *errtol);
 
 	for (*iters=1; *iters<=*itmax; (*iters)++) {
 
@@ -190,30 +189,25 @@ VPUBLIC void Vsor7x(int *nx,int *ny,int *nz,
 		for (k=2; k<=*nz-1; k++) {
 		   for (j=2; j<=*ny-1; j++) {
 			   for(i=2; i<=*nx-1; i++) {
-				   tol += VAT3(r, i,j,k)*VAT3(r, i,j,k);
-
+				   //tol += VAT3(r, i,j,k)*VAT3(r, i,j,k);
+				   tol += abs(VAT3(r,i,j,k));
 			   }
 		   }
 		}
 
-		//printf("%d: tol= %g, x1 = %g\n", counter,tol, VAT3(x,2,2,2));
-
 		if( tol < *errtol || counter == MAX_COUNTER){
-			/*if(counter == MAX_COUNTER){
-				printf("    Vsor: Max number of iterations reached.\n");
-			}*/
+			if(counter == MAX_COUNTER){
+				printf("Vsor: Max number of iterations reached.\n");
+			}
 			break;
 		}
-		else if(*iters == *itmax-1 && eroot(tol) > *errtol  * 2){
+		else if(*iters == *itmax-1 && tol > *errtol  * 2){
 			*iters = 1;
 		}
 		counter ++;
-		//tolold = tol;
+
 	} /*end for*/
 
-
-    //if (*iresid == 1)
-      //  Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
 }
 
 
@@ -229,168 +223,6 @@ VPUBLIC void Vsor27x(int *nx,int *ny,int *nz,
         double *errtol, double *omega,
         int *iresid, int *iadjoint) {
 
-//    int  i,  j,  k;
-//    int i1, j1, k1;
-//    int i2, j2, k2;
-//    int ioff;
-//    int istep;
-//
-//    double tmpO, tmpU, tmpD;
-//
-//    MAT3( cc, *nx, *ny, *nz);
-//    MAT3(fc, *nx, *ny, *nz);
-//    MAT3( x, *nx, *ny, *nz);
-//    MAT3(w1, *nx, *ny, *nz);
-//    MAT3(w2, *nx, *ny, *nz);
-//    MAT3( r, *nx, *ny, *nz);
-//
-//    MAT3(oE, *nx, *ny, *nz);
-//    MAT3(oN, *nx, *ny, *nz);
-//    MAT3(uC, *nx, *ny, *nz);
-//    MAT3(oC, *nx, *ny, *nz);
-//
-//    MAT3(oNE, *nx, *ny, *nz);
-//    MAT3(oNW, *nx, *ny, *nz);
-//
-//    MAT3( uE, *nx, *ny, *nz);
-//    MAT3( uW, *nx, *ny, *nz);
-//    MAT3( uN, *nx, *ny, *nz);
-//    MAT3( uS, *nx, *ny, *nz);
-//    MAT3(uNE, *nx, *ny, *nz);
-//    MAT3(uNW, *nx, *ny, *nz);
-//    MAT3(uSE, *nx, *ny, *nz);
-//    MAT3(uSW, *nx, *ny, *nz);
-//
-//    // Do the gauss-seidel iteration itmax times
-//
-//    /*
-//    i1    = (1 - *iadjoint) *   2  + (    *iadjoint) * (*nx - 1);
-//    i2    = (    *iadjoint) *   2  + (1 - *iadjoint) * (*nx - 1);
-//    j1    = (1 - *iadjoint) *   2  + (    *iadjoint) * (*ny - 1);
-//    j2    = (    *iadjoint) *   2  + (1 - *iadjoint) * (*ny - 1);
-//    k1    = (1 - *iadjoint) *   2  + (    *iadjoint) * (*nz - 1);
-//    k2    = (    *iadjoint) *   2  + (1 - *iadjoint) * (*nz - 1);
-//    istep = (    *iadjoint) * (-1) + (1 - *iadjoint) * (1);
-//    */
-//
-//    i1 = (1-*iadjoint) * 2 + *iadjoint     * (*nx-1);
-//    i2 = *iadjoint     * 2 + (1-*iadjoint) * (*nx-1);
-//    j1 = (1-*iadjoint) * 2 + *iadjoint     * (*ny-1);
-//    j2 = *iadjoint     * 2 + (1-*iadjoint) * (*ny-1);
-//    k1 = (1-*iadjoint) * 2 + *iadjoint     * (*nz-1);
-//    k2 = *iadjoint     * 2 + (1-*iadjoint) * (*nz-1);
-//    istep = *iadjoint*(-1) + (1-*iadjoint)*(1);
-//
-//    for (*iters=1; *iters<=*itmax; (*iters)++) {
-//
-//        //#pragma omp parallel for private(i, j, k, ioff, tmpO, tmpU, tmpD)
-//        for (k=2; k<=*nz-1; k++) {
-//
-//            for (j=2; j<=*ny-1; j++) {
-//
-//                ioff = (1 - *iadjoint) * (    (j + k + 2) % 2)
-//                     + (    *iadjoint) * (1 - (j + k + 2) % 2);
-//
-//                for (i=2+ioff; i<=*nx-1; i+=2) {
-//
-//                    tmpO =
-//                         + VAT3(  oN,   i,   j,   k) * VAT3(x,   i, j+1,   k)
-//                         + VAT3(  oN,   i, j-1,   k) * VAT3(x,   i, j-1,   k)
-//                         + VAT3(  oE,   i,   j,   k) * VAT3(x, i+1,   j,   k)
-//                         + VAT3(  oE, i-1,   j,   k) * VAT3(x, i-1,   j,   k)
-//                         + VAT3( oNE,   i,   j,   k) * VAT3(x, i+1, j+1,   k)
-//                         + VAT3( oNW,   i,   j,   k) * VAT3(x, i-1, j+1,   k)
-//                         + VAT3( oNW, i+1, j-1,   k) * VAT3(x, i+1, j-1,   k)
-//                         + VAT3( oNE, i-1, j-1,   k) * VAT3(x, i-1, j-1,   k);
-//
-//                   tmpU =
-//                         + VAT3(  uC,   i,   j,   k) * VAT3(x,   i,   j, k+1)
-//                         + VAT3(  uN,   i,   j,   k) * VAT3(x,   i, j+1, k+1)
-//                         + VAT3(  uS,   i,   j,   k) * VAT3(x,   i, j-1, k+1)
-//                         + VAT3(  uE,   i,   j,   k) * VAT3(x, i+1,   j, k+1)
-//                         + VAT3(  uW,   i,   j,   k) * VAT3(x, i-1,   j, k+1)
-//                         + VAT3( uNE,   i,   j,   k) * VAT3(x, i+1, j+1, k+1)
-//                         + VAT3( uNW,   i,   j,   k) * VAT3(x, i-1, j+1, k+1)
-//                         + VAT3( uSE,   i,   j,   k) * VAT3(x, i+1, j-1, k+1)
-//                         + VAT3( uSW,   i,   j,   k) * VAT3(x, i-1, j-1, k+1);
-//
-//                   tmpD =
-//                         + VAT3(  uC,   i,   j, k-1) * VAT3(x,   i,   j, k-1)
-//                         + VAT3(  uS,   i, j+1, k-1) * VAT3(x,   i, j+1, k-1)
-//                         + VAT3(  uN,   i, j-1, k-1) * VAT3(x,   i, j-1, k-1)
-//                         + VAT3(  uW, i+1,   j, k-1) * VAT3(x, i+1,   j, k-1)
-//                         + VAT3(  uE, i-1,   j, k-1) * VAT3(x, i-1,   j, k-1)
-//                         + VAT3( uSW, i+1, j+1, k-1) * VAT3(x, i+1, j+1, k-1)
-//                         + VAT3( uSE, i-1, j+1, k-1) * VAT3(x, i-1, j+1, k-1)
-//                         + VAT3( uNW, i+1, j-1, k-1) * VAT3(x, i+1, j-1, k-1)
-//                         + VAT3( uNE, i-1, j-1, k-1) * VAT3(x, i-1, j-1, k-1);
-//
-//                       VAT3(x, i,j,k) = (VAT3(fc, i, j, k) + (tmpO + tmpU + tmpD))
-//                                / (VAT3(oC, i, j, k) + VAT3(cc, i, j, k));
-//
-//                }
-//            }
-//        }
-//
-//        //#pragma omp parallel for private(i, j, k, ioff, tmpO, tmpU, tmpD)
-//        for (k=2; k<=*nz-1; k++) {
-//
-//            for (j=2; j<=*ny-1; j++) {
-//
-//                ioff = (    *iadjoint) * (    (j + k + 2) % 2)
-//                     + (1 - *iadjoint) * (1 - (j + k + 2) % 2);
-//
-//                for (i=2+ioff; i<=*nx-1; i+=2) {
-//
-//                    tmpO =
-//                         + VAT3(  oN,   i,   j,   k) * VAT3(x,   i, j+1,   k)
-//                         + VAT3(  oN,   i, j-1,   k) * VAT3(x,   i, j-1,   k)
-//                         + VAT3(  oE,   i,   j,   k) * VAT3(x, i+1,   j,   k)
-//                         + VAT3(  oE, i-1,   j,   k) * VAT3(x, i-1,   j,   k)
-//                         + VAT3( oNE,   i,   j,   k) * VAT3(x, i+1, j+1,   k)
-//                         + VAT3( oNW,   i,   j,   k) * VAT3(x, i-1, j+1,   k)
-//                         + VAT3( oNW, i+1, j-1,   k) * VAT3(x, i+1, j-1,   k)
-//                         + VAT3( oNE, i-1, j-1,   k) * VAT3(x, i-1, j-1,   k);
-//
-//                    tmpU =
-//                         + VAT3(  uC,   i,   j,   k) * VAT3(x,   i,   j, k+1)
-//                         + VAT3(  uN,   i,   j,   k) * VAT3(x,   i, j+1, k+1)
-//                         + VAT3(  uS,   i,   j,   k) * VAT3(x,   i, j-1, k+1)
-//                         + VAT3(  uE,   i,   j,   k) * VAT3(x, i+1,   j, k+1)
-//                         + VAT3(  uW,   i,   j,   k) * VAT3(x, i-1,   j, k+1)
-//                         + VAT3( uNE,   i,   j,   k) * VAT3(x, i+1, j+1, k+1)
-//                         + VAT3( uNW,   i,   j,   k) * VAT3(x, i-1, j+1, k+1)
-//                         + VAT3( uSE,   i,   j,   k) * VAT3(x, i+1, j-1, k+1)
-//                         + VAT3( uSW,   i,   j,   k) * VAT3(x, i-1, j-1, k+1);
-//
-//                   tmpD =
-//                         + VAT3(  uC,   i,   j, k-1) * VAT3(x,   i,   j, k-1)
-//                         + VAT3(  uS,   i, j+1, k-1) * VAT3(x,   i, j+1, k-1)
-//                         + VAT3(  uN,   i, j-1, k-1) * VAT3(x,   i, j-1, k-1)
-//                         + VAT3(  uW, i+1,   j, k-1) * VAT3(x, i+1,   j, k-1)
-//                         + VAT3(  uE, i-1,   j, k-1) * VAT3(x, i-1,   j, k-1)
-//                         + VAT3( uSW, i+1, j+1, k-1) * VAT3(x, i+1, j+1, k-1)
-//                         + VAT3( uSE, i-1, j+1, k-1) * VAT3(x, i-1, j+1, k-1)
-//                         + VAT3( uNW, i+1, j-1, k-1) * VAT3(x, i+1, j-1, k-1)
-//                         + VAT3( uNE, i-1, j-1, k-1) * VAT3(x, i-1, j-1, k-1);
-//
-//                   VAT3(x, i,j,k) = (VAT3(fc, i, j, k) + (tmpO + tmpU + tmpD))
-//                            / (VAT3(oC, i, j, k) + VAT3(cc, i, j, k));
-//                }
-//            }
-//        }
-//    }
-//
-//    // If specified, return the new residual as well
-//    if (*iresid == 1)
-//        Vmresid27_1s(nx, ny, nz,
-//                     ipc, rpc,
-//                      oC,  cc,  fc,
-//                      oE,  oN,  uC,
-//                     oNE, oNW,
-//                     uE,   uW,  uN,  uS,
-//                     uNE, uNW, uSE, uSW,
-//                       x,   r);
 }
 
 

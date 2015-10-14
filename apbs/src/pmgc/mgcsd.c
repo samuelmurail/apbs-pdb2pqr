@@ -179,7 +179,7 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
      * *** solve directly if nlev = 1
      * *********************************************************************/
 
-    /**todo: write a function to decide this */
+    /**todo: write a function to decide this better*/
 	if(sorFlag) {
 		if((nxf*nyf*nzf) < MAX_SOR_GRID_SIZE){
 			itmax_s = *nlev*100;
