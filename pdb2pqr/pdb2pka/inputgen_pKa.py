@@ -301,7 +301,7 @@ class inputGen:
                     grid.append(ideal_grid_dim)
                     break
 
-                #cap test_dime at 129
+                #cap test_dime at 161
                 if c == 5:
                     dimension.append(test_dime)
                     new_grid = coarsedim / float(test_dime)
