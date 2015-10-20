@@ -41,7 +41,7 @@ class inputGen:
         # Make the coarse grid twice as big as the protein
         #
         for axis in extent:
-            defaults['coarsedim'].append(axis*2.0)
+            defaults['coarsedim'].append(axis*3.0)
         #
         # Center coarse grid on the center of the molecule
         #
@@ -315,7 +315,7 @@ class inputGen:
         text += "end\n"
         text += "elec\n"
         text += "    mg-manual\n"
-        text += "    dime %i %i %i\n" % (dimension[0], dimension[1], dimension[1])
+        text += "    dime %i %i %i\n" % (dimension[0], dimension[1], dimension[2])
         text += "    grid %.2f %.2f %.2f\n" % (grid[0], grid[1], grid[2])
         text += "    gcent %.3f %.3f %.3f\n" % (self.finecent[0],self.finecent[1],self.finecent[2])
         text += "    mol 1\n"
