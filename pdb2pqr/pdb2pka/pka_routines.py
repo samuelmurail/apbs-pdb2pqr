@@ -2076,9 +2076,10 @@ class pKaRoutines:
             charge, radius = self.forcefield.getParams1(residue, atomname)
             initialmap[atomname] = charge
             if charge is None:
-                print atomname,charge
+                print residue
+                print atomname
                 print residue.isCterm
-                PDB2PKAError('Charge on atom is None')
+                raise PDB2PKAError('Charge on atom is None')
             sum+=charge
         if abs(sum)<0.001:
             neutral_state=start_state
