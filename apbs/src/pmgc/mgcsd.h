@@ -59,7 +59,7 @@
 #include "pmgc/mgsubd.h"
 #include "pmgc/mikpckd.h"
 #include "pmgc/smoothd.h"
-#include "pmgc/gsd.h"
+#include "pmgc/gsd.hu"
 #include "pmgc/matvecd.h"
 #include "pmgc/mlinpckd.h"
 

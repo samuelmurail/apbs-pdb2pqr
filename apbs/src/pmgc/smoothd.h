@@ -55,7 +55,7 @@
 
 #include "generic/vhal.h"
 #include "generic/vmatrix.h"
-#include "pmgc/gsd.h"
+#include "pmgc/gsd.hu"
 #include "pmgc/cgd.h"
 
 /** @brief   call the appropriate linear smoothing routine.

@@ -5,7 +5,7 @@ add_items(
     buildGd.c
     buildPd.c
     cgd.c
-    gsd.c
+    gsd.cu
     matvecd.c
     mgcsd.c
     mgdrvd.c
@@ -27,7 +27,7 @@ add_items(
     buildGd.h
     buildPd.h
     cgd.h
-    gsd.h
+    gsd.hu
     matvecd.h
     mgcsd.h
     mgdrvd.h
