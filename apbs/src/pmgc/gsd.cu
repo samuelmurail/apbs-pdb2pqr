@@ -48,7 +48,7 @@
  */
 
 #include "gsd.hu"
-#include<cuda.h>
+#include <cuda.h>
 
 #define N 8
 
@@ -122,7 +122,7 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
 
     //initialize the host array
     for(int e=0; e<N; ++e){
-      host[e] = e*10+1;
+      host_a[e] = e*10+1;
     }
 
     printf("***************************************************\n");
@@ -133,17 +133,17 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     printf("***************************************************\n");
     
     //allocate the gpu memory
-    HANDLE_ERROR(cudaMalloc((void**)&dev_a, sizeOf(int)*N));
+    HANDLE_ERROR(cudaMalloc((void**)&dev_a, sizeof(int)*N));
 
     //copy host array to device array;
-    HANDLE_ERROR(cudaMemcpy(dev_a, host_a, sizeOf(int)*N, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(dev_a, host_a, sizeof(int)*N, cudaMemcpyHostToDevice));
 
     //call the cuda kernel
-    cudaTest<<<N,1>>>(dev_a);
+    cuTest<<<N,1>>>(dev_a);
 
     //sync threads and copy device array back to host
     HANDLE_ERROR(cudaThreadSynchronize());
-    HANDLE_ERROR(cudaMemcpy(host_a, dev_a, sizeOf(int)*N, cudaMemcptDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(host_a, dev_a, sizeof(int)*N, cudaMemcpyDeviceToHost));
 
     printf("***************************************************\n");
     printf("After Cuda Test:\n\n");

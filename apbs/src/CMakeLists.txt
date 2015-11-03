@@ -42,11 +42,9 @@ macro(add_sublibrary LIBRARY)
 endmacro()
 
 FIND_PACKAGE(CUDA REQUIRED)
-INCLUDE(FindCUDA)
+include_directories(${CUDA_INCLUDE_DIRS})
 
-INCLUDE_DIRECTORIES(/usr/local/cuda/include)
-FILE(GLOB SOURCES "*.cu" "*.c" "*.cpp" "*.h")
-LIST(APPEND CUDA_NVCC_FLAGS --gencode arch=compute_11, code=sm_11)
+LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
 
 
 add_subdirectory(generic)
@@ -59,13 +57,12 @@ endif(ENABLE_FETK)
 
 message(STATUS ${EXTERNAL_HEADERS})
 
-cuda_add_executable(apbs main.c apbs.h routines.c routines.h)
+cuda_add_executable(apbs main.c apbs.h routines.c routines.h ${APBS_ROOT}/src/pmgc/gsd.cu)
 message(STATUS " ")
 message(STATUS "${APBS_LIBS} ${APBS_INTERNAL_LIBS}")
 message(STATUS " ")
 
 target_link_libraries(apbs ${CUDA_LIBRARIES} ${APBS_LIBS} ${APBS_INTERNAL_LIBS} ${APBS_LIBS})
-#add_library(${CUDA_LIBRARIES})
 
 configure_file(
     ${APBS_ROOT}/src/.config/apbscfg.h.in
