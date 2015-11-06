@@ -44,8 +44,7 @@ endmacro()
 FIND_PACKAGE(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
 
-LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
-
+LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_11,code=sm_11)
 
 add_subdirectory(generic)
 add_subdirectory(pmgc)
