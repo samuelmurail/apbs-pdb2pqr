@@ -51,17 +51,25 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<math.h>
 
 #define HANDLE_ERROR(x){									\
 	cudaError_t _err = x;									\
 	if(_err != cudaSuccess){								\
-		printf("Cuda error: %s", cudaGetErrorString(_err));	\
+		printf("Cuda error: %s\n", cudaGetErrorString(_err));	\
 		exit(-1);											\
 	}														\
 }
 
-__global__ void cuTest(int *dev_a){
+__global__ void cuTest(double *x, double *fc, double *cc, double *oC, double *uC, double *oE, double *oN, int N, int dx, int dy, int dz){
 
+	int ind = blockDim.x*blockIdx.x + threadIdx.x;
+	int lb = (dx*dy) + dx + 1;
+	int ub = (dz-2)*(dx*dy)+(dy-2)*dx+(dx-2);
+	if(ind >= lb && ind <= ub ){
+		x[ind] = ( (fc[ind] + oN[ind]*x[ind+dx] + oN[ind-dx]*x[ind-dx] + oE[ind]*x[ind+1] + oE[ind-1]*x[ind-1]
+				   + uC[ind]*x[ind+dx*dy] + uC[ind-dx*dy]*x[ind-dx*dy] ) / oC[ind] ) + cc[ind];
+	}
 
 }
 
@@ -114,6 +122,8 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
 
     int i, j, k, ioff;
     int sz = *nx * *ny * *nz;
+    int threads = 512;
+    int blocks = (int)ceil(sz/(float)threads);
 
     //intialize cuda arrays
     double *d_x;  HANDLE_ERROR(cudaMalloc((void**)&d_x,  sizeof(double) * sz));
@@ -129,11 +139,10 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     HANDLE_ERROR(cudaMemcpy(d_cc, cc, sizeof(double)*sz, cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_fc, fc, sizeof(double)*sz, cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_oC, oC, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_oC, oC, sizeof(double)*sz, cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_uC, uC, sizeof(double)*sz, cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_oN, oN, sizeof(double)*sz, cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_oE, oE, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    
+
     MAT3(cc, *nx, *ny, *nz);
     MAT3(fc, *nx, *ny, *nz);
     MAT3( x, *nx, *ny, *nz);
@@ -148,7 +157,8 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
 
     for (*iters=1; *iters<=*itmax; (*iters)++) {
 
-
+    	cuTest<<<blocks, threads>>>(d_x, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+    	HANDLE_ERROR(cudaThreadSynchronize());
 
         // Do the red points ***
 //        #pragma omp parallel for private(i, j, k, ioff)
@@ -190,12 +200,19 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
 //            }
 //        }
     }
-
+    //copy data from host to device
+	HANDLE_ERROR(cudaMemcpy(x,   d_x, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(cc, d_cc, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(fc, d_fc, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(oC, d_oC, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(uC, d_uC, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(oN, d_oN, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(oE, d_oE, sizeof(double)*sz, cudaMemcpyDeviceToHost));
 
     //release cuda memory
-    cudaFree(d_x); cudaFree(d_cc); cudaFree(d_fc);
-    cudaFree(d_oC); cudaFree(d_uC); cudaFree(d_oE);
-    cudaFree(d_oN);
+    HANDLE_ERROR(cudaFree(d_x)); HANDLE_ERROR(cudaFree(d_cc)); HANDLE_ERROR(cudaFree(d_fc));
+    HANDLE_ERROR(cudaFree(d_oC)); HANDLE_ERROR(cudaFree(d_uC)); HANDLE_ERROR(cudaFree(d_oE));
+    HANDLE_ERROR(cudaFree(d_oN));
 
     if (*iresid == 1)
         Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
