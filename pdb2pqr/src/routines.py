@@ -1153,6 +1153,8 @@ class Routines:
         anglenum = -1
         currentConflictNames = conflictnames
 
+        EPSILON = 0.0000001
+
         # Try (up to 10 times) to find a workable solution
 
         for _ in range(ANGLE_TEST_COUNT):
@@ -1186,11 +1188,13 @@ class Routines:
                         break
 
                 # Set the best angle
-
                 elif score < bestscore:
-                    bestscore = score
-                    bestangle = newangle
-                    foundImprovement = True
+                    diff = abs(bestscore - score)
+                    #Don't update if it's effectively a tie
+                    if diff > EPSILON:
+                        bestscore = score
+                        bestangle = newangle
+                        foundImprovement = True
 
             self.setDihedralAngle(residue, anglenum, bestangle)
             currentConflictNames = self.findResidueConflicts(residue)
