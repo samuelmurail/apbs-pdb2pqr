@@ -56,21 +56,29 @@
 #define HANDLE_ERROR(x){									\
 	cudaError_t _err = x;									\
 	if(_err != cudaSuccess){								\
-		printf("Cuda error: %s\n", cudaGetErrorString(_err));	\
+		printf("(%s:%d)Cuda error: %s\n", __FILE__, __LINE__, cudaGetErrorString(_err));	\
 		exit(-1);											\
 	}														\
 }
 
-__global__ void cuTest(double *x, double *fc, double *cc, double *oC, double *uC, double *oE, double *oN, int N, int dx, int dy, int dz){
+__global__ void cuTest(float *x, float *x2, float *fc, float *cc, float *oC, float *uC, float *oE, float *oN, int N, int dx, int dy, int dz){
 
 	int ind = blockDim.x*blockIdx.x + threadIdx.x;
+	
 	int lb = (dx*dy) + dx + 1;
 	int ub = (dz-2)*(dx*dy)+(dy-2)*dx+(dx-2);
-	if(ind >= lb && ind <= ub ){
-		x[ind] = ( (fc[ind] + oN[ind]*x[ind+dx] + oN[ind-dx]*x[ind-dx] + oE[ind]*x[ind+1] + oE[ind-1]*x[ind-1]
-				   + uC[ind]*x[ind+dx*dy] + uC[ind-dx*dy]*x[ind-dx*dy] ) / oC[ind] ) + cc[ind];
+	
+	if(ind >= lb && ind <= ub && oC[ind] != 0){
+		x2[ind] = ( (fc[ind] 
+			+ oN[ind]	* x[ind+dx] 
+			+ oN[ind-dx]	* x[ind-dx] 
+			+ oE[ind]	* x[ind+1] 
+			+ oE[ind-1]	* x[ind-1]
+			+ uC[ind]	* x[ind+dx*dy] 
+			+ uC[ind-dx*dy]	* x[ind-dx*dy] ) 
+			/ oC[ind] ) 
+			+ cc[ind];
 	}
-
 }
 
 VPUBLIC void Vgsrb(int *nx, int *ny, int *nz,
@@ -124,25 +132,7 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     int sz = *nx * *ny * *nz;
     int threads = 512;
     int blocks = (int)ceil(sz/(float)threads);
-
-    //intialize cuda arrays
-    double *d_x;  HANDLE_ERROR(cudaMalloc((void**)&d_x,  sizeof(double) * sz));
-    double *d_cc; HANDLE_ERROR(cudaMalloc((void**)&d_cc, sizeof(double) * sz));
-    double *d_fc; HANDLE_ERROR(cudaMalloc((void**)&d_fc, sizeof(double) * sz));
-    double *d_oC; HANDLE_ERROR(cudaMalloc((void**)&d_oC, sizeof(double) * sz));
-    double *d_uC; HANDLE_ERROR(cudaMalloc((void**)&d_uC, sizeof(double) * sz));
-    double *d_oN; HANDLE_ERROR(cudaMalloc((void**)&d_oN, sizeof(double) * sz));
-    double *d_oE; HANDLE_ERROR(cudaMalloc((void**)&d_oE, sizeof(double) * sz));
-
-    //copy data from host to device
-    HANDLE_ERROR(cudaMemcpy(d_x,x,    sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_cc, cc, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_fc, fc, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_oC, oC, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_uC, uC, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_oN, oN, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_oE, oE, sizeof(double)*sz, cudaMemcpyHostToDevice));
-
+    
     MAT3(cc, *nx, *ny, *nz);
     MAT3(fc, *nx, *ny, *nz);
     MAT3( x, *nx, *ny, *nz);
@@ -154,12 +144,76 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     MAT3(oN, *nx, *ny, *nz);
     MAT3(uC, *nx, *ny, *nz);
     MAT3(oC, *nx, *ny, *nz);
+    MAT3(write,*nx, *ny, *nz);   
 
+    //intialize cuda arrays
+    float *d_x;  HANDLE_ERROR(cudaMalloc((void**)&d_x,  sizeof(float) * sz));
+    float *d_x2; HANDLE_ERROR(cudaMalloc((void**)&d_x2, sizeof(float) * sz));
+    float *d_xtemp; HANDLE_ERROR(cudaMalloc((void**)&d_xtemp, sizeof(float) * sz));
+    float *d_cc; HANDLE_ERROR(cudaMalloc((void**)&d_cc, sizeof(float) * sz));
+    float *d_fc; HANDLE_ERROR(cudaMalloc((void**)&d_fc, sizeof(float) * sz));
+    float *d_oC; HANDLE_ERROR(cudaMalloc((void**)&d_oC, sizeof(float) * sz));
+    float *d_uC; HANDLE_ERROR(cudaMalloc((void**)&d_uC, sizeof(float) * sz));
+    float *d_oN; HANDLE_ERROR(cudaMalloc((void**)&d_oN, sizeof(float) * sz));
+    float *d_oE; HANDLE_ERROR(cudaMalloc((void**)&d_oE, sizeof(float) * sz));
+    
+    //float arrays
+    float *fx;  fx  = (float*)malloc(sizeof(float)*sz);
+    float *ffc; ffc = (float*)malloc(sizeof(float)*sz);
+    float *fcc; fcc = (float*)malloc(sizeof(float)*sz);
+    float *foC; foC = (float*)malloc(sizeof(float)*sz);
+    float *fuC; fuC = (float*)malloc(sizeof(float)*sz);
+    float *foN; foN = (float*)malloc(sizeof(float)*sz);
+    float *foE; foE = (float*)malloc(sizeof(float)*sz);
+    //initialize them to 0
+    for(i=0; i<sz; i++){
+    	fx[i]  = 0; ffc[i] = 0; fcc[i] = 0;
+    	foC[i] = 0; fuC[i] = 0; foN[i] = 0;
+    	foE[i] = 0;
+    }
+    
+    MAT3(fx, *nx,*ny,*nz);
+    MAT3(ffc, *nx,*ny,*nz);
+    MAT3(fcc, *nx,*ny,*nz);
+    MAT3(foC, *nx,*ny,*nz);
+    MAT3(fuC, *nx,*ny,*nz);
+    MAT3(foN, *nx,*ny,*nz);
+    MAT3(foE, *nx,*ny,*nz);
+    
+    for(k=2; k<=*nz-1; k++){
+    	for(j=2; j<=*ny-1; j++){
+    		for(i=2; i<=*nx-1; i++){
+    			VAT3(fx,i,j,k) 	= (float)VAT3(x,i,j,k);
+    			VAT3(ffc,i,j,k)	= (float)VAT3(fc,i,j,k);
+    			VAT3(fcc,i,j,k) = (float)VAT3(cc,i,j,k);
+    			VAT3(foC,i,j,k) = (float)VAT3(oC,i,j,k);
+    			VAT3(fuC,i,j,k) = (float)VAT3(uC,i,j,k);
+    			VAT3(foN,i,j,k) = (float)VAT3(oN,i,j,k);
+    			VAT3(foE,i,j,k) = (float)VAT3(oE,i,j,k);
+    		}
+    	}
+    }
+    
+    //copy data from host to device
+    HANDLE_ERROR(cudaMemcpy(d_x,  fx,  sizeof(float)*sz, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_x2, fx,  sizeof(float)*sz, cudaMemcpyHostToDevice));
+    //HANDLE_ERROR(cudaMemcpy(d_xtemp, fx,  sizeof(float)*sz, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_cc, fcc, sizeof(float)*sz, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_fc, ffc, sizeof(float)*sz, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_oC, foC, sizeof(float)*sz, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_uC, fuC, sizeof(float)*sz, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_oN, foN, sizeof(float)*sz, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_oE, foE, sizeof(float)*sz, cudaMemcpyHostToDevice));
+  
     for (*iters=1; *iters<=*itmax; (*iters)++) {
 
-    	cuTest<<<blocks, threads>>>(d_x, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
-    	HANDLE_ERROR(cudaThreadSynchronize());
-
+    	cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+	HANDLE_ERROR(cudaGetLastError());
+    	float *temp = d_x;
+    	d_x = d_x2;
+    	d_x2 = temp;
+    	
+    	
         // Do the red points ***
 //        #pragma omp parallel for private(i, j, k, ioff)
 //        for (k=2; k<=*nz-1; k++) {
@@ -200,19 +254,59 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
 //            }
 //        }
     }
+    
+    HANDLE_ERROR(cudaThreadSynchronize());
     //copy data from host to device
-	HANDLE_ERROR(cudaMemcpy(x,   d_x, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(cc, d_cc, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(fc, d_fc, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(oC, d_oC, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(uC, d_uC, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(oN, d_oN, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(oE, d_oE, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(fx,   d_x, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(fcc, d_cc, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(ffc, d_fc, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(foC, d_oC, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(fuC, d_uC, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(foN, d_oN, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(foE, d_oE, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+	
+    for(k=2; k<=*nz-1; k++){
+    	for(j=2; j<=*ny-1; j++){
+    		for(i=2; i<=*nx-1; i++){
+    			VAT3(x,i,j,k) 	= (double)VAT3(fx,i,j,k);
+    			VAT3(fc,i,j,k)	= (double)VAT3(ffc,i,j,k);
+    			VAT3(cc,i,j,k) = (double)VAT3(fcc,i,j,k);
+    			VAT3(oC,i,j,k) = (double)VAT3(foC,i,j,k);
+    			VAT3(uC,i,j,k) = (double)VAT3(fuC,i,j,k);
+    			VAT3(oN,i,j,k) = (double)VAT3(foN,i,j,k);
+    			VAT3(oE,i,j,k) = (double)VAT3(foE,i,j,k);
+    		}
+    	}
+    }
 
     //release cuda memory
-    HANDLE_ERROR(cudaFree(d_x)); HANDLE_ERROR(cudaFree(d_cc)); HANDLE_ERROR(cudaFree(d_fc));
+    HANDLE_ERROR(cudaFree(d_x));  HANDLE_ERROR(cudaFree(d_cc)); HANDLE_ERROR(cudaFree(d_fc));
     HANDLE_ERROR(cudaFree(d_oC)); HANDLE_ERROR(cudaFree(d_uC)); HANDLE_ERROR(cudaFree(d_oE));
-    HANDLE_ERROR(cudaFree(d_oN));
+    HANDLE_ERROR(cudaFree(d_oN)); HANDLE_ERROR(cudaFree(d_x2)); 
+    
+    //release float arrays
+    free(fx);  free(ffc); free(fcc);
+    free(foC); free(fuC); free(foN);
+    free(foE); 
+
+    /*
+    FILE *fd;
+    fd = fopen("oC.txt", "w+");
+    for(i=0; i<sz; i++){
+    	fprintf(fd, "(%d):  oC=%f oE=%f oN=%f uC=%f fc=%f cc=%f x=%f write=%d\n", i, oC[i], oE[i], oN[i], uC[i], fc[i], cc[i], x[i], write[i]);
+    }
+    for(k=2; k<=*nz-1; k++){
+    	for(j=2; j<=*ny-1; j++){
+    		for(i=2; i<=*nx-1; i++){
+    			fprintf(fd, "(index:%d,i=%d,j=%d,k=%d):  oC=%f oE=%f oN=%f uC=%f fc=%f cc=%f x=%f write=%d\n", (k-1)*(*nx)*(*ny) + (j-1)*(*nx) + (i-1),i,j,k,
+    			VAT3(oC,i,j,k), VAT3(oE,i,j,k), VAT3(oN,i,j,k), VAT3(uC,i,j,k), VAT3(fc,i,j,k), VAT3(cc,i,j,k), VAT3(x,i,j,k), VAT3(write,i,j,k));
+		}
+	}
+    }
+    fclose(fd);
+    free(write);
+    exit(0);
+    */  
 
     if (*iresid == 1)
         Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
