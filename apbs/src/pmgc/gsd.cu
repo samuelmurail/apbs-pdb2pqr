@@ -52,6 +52,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<math.h>
+#include<time.h>
 
 #define HANDLE_ERROR(x){									\
 	cudaError_t _err = x;									\
@@ -128,6 +129,9 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
         double *errtol, double *omega,
         int *iresid, int *iadjoint) {
 	
+	clock_t start1, start2, diff1, diff2;
+	start1 = clock();
+	
 	
     int i, j, k, ioff;
     int sz = *nx * *ny * *nz; 					//<--- grid dimensions
@@ -135,31 +139,24 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     int blocks = (int)ceil(sz/(float)threads); 	//<--- number of block of size threads needed to cover sz grid points
     
     //initialize the cuda timing variables
-    cudaEvent_t start, stop;
-    float time;
+    //cudaEvent_t start, stop;
+    //float time;
     
     
     //create cuda event timers
-    HANDLE_ERROR(cudaEventCreate(&start));
-    HANDLE_ERROR(cudaEventCreate(&stop));
+    //HANDLE_ERROR(cudaEventCreate(&start));
+    //HANDLE_ERROR(cudaEventCreate(&stop));
     
     //set the cuda device
     //HANDLE_ERROR(cudaSetDevice(0)); //<------if there is more that one card however when I run it with only one card it seems to affect the results
     
     //initialize a file to write the different running times
-    FILE *fd;
-    fd = fopen("cudaTimes.txt", "a");
-    if(fd == NULL){
-    	printf("Failed to create file to print CUDA running times!\n");
-    	exit(-1);
-    }
-    
-    //Print some parameter for this run into the file
-    fprintf(fd, "******************************************************************\n");
-    fprintf(fd, "Number of threads per block: %d\n", threads);
-    fprintf(fd, "Number of blocks: %d\n", blocks);
-    fprintf(fd, "Grid Dimesions %d %d %d\n", *nx, *ny, *nz);
-    
+//    FILE *fd;
+//    fd = fopen("cudaTimes.txt", "a");
+//    if(fd == NULL){
+//    	printf("Failed to create file to print CUDA running times!\n");
+//    	exit(-1);
+//    }   
     
     //this macro creates variable dx_<arr>, dy_<arr>, and dz_<arr> with values nx, ny, and nz respectively
     MAT3(cc, *nx, *ny, *nz);
@@ -226,7 +223,7 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     }
     
     //start timer for cuda memcpy
-    HANDLE_ERROR(cudaEventRecord(start,0))
+    //HANDLE_ERROR(cudaEventRecord(start,0))
     //copy data from host to device
     HANDLE_ERROR(cudaMemcpy(d_x,  fx,  sizeof(float)*sz, cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_x2, fx,  sizeof(float)*sz, cudaMemcpyHostToDevice));
@@ -237,23 +234,43 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     HANDLE_ERROR(cudaMemcpy(d_oN, foN, sizeof(float)*sz, cudaMemcpyHostToDevice));
     HANDLE_ERROR(cudaMemcpy(d_oE, foE, sizeof(float)*sz, cudaMemcpyHostToDevice));
     //stop timer for cuda memcpy
-    HANDLE_ERROR(cudaEventRecord(stop,0))
-    HANDLE_ERROR(cudaEventSynchronize(stop));
-    HANDLE_ERROR(cudaEventElapsedTime(&time,start,stop));
-    fprintf(fd, "Memory copy from host to device time: %3.1f ms\n", time);
+    //HANDLE_ERROR(cudaEventRecord(stop,0))
+    //HANDLE_ERROR(cudaEventSynchronize(stop));
+    //HANDLE_ERROR(cudaEventElapsedTime(&time,start,stop));
     
-    fprintf(fd, "*iters max: %d\n", *itmax);
+    
+    //fprintf(fd, "*iters max: %d\n", *itmax);
     
     //start timing for kernel
-    HANDLE_ERROR(cudaEventRecord(start,0));
+    //HANDLE_ERROR(cudaEventRecord(start,0));
+    start2 = clock();
     for (*iters=1; *iters<=*itmax; (*iters)++) {
-
-	cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
-	HANDLE_ERROR(cudaGetLastError());
-    	float *temp = d_x;
+    	
+    	float *temp;
+    	
+    	cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+    	HANDLE_ERROR(cudaGetLastError());
+    	temp = d_x;
     	d_x = d_x2;
     	d_x2 = temp;
     	
+    	cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+		HANDLE_ERROR(cudaGetLastError());
+		temp = d_x;
+		d_x = d_x2;
+		d_x2 = temp;
+		
+		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+		HANDLE_ERROR(cudaGetLastError());
+		temp = d_x;
+		d_x = d_x2;
+		d_x2 = temp;
+    	
+		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+		HANDLE_ERROR(cudaGetLastError());
+		temp = d_x;
+		d_x = d_x2;
+		d_x2 = temp;
     	
         // Do the red points ***
 //        #pragma omp parallel for private(i, j, k, ioff)
@@ -296,14 +313,16 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
 //        }
     }
     HANDLE_ERROR(cudaThreadSynchronize());
+    diff2= clock() -start2;
+    //printf(    "Kernel execution: %d ms\n", diff2 * 1000 / CLOCKS_PER_SEC);
     //stop cuda timer
-    HANDLE_ERROR(cudaEventRecord(stop,0));
-    HANDLE_ERROR(cudaEventSynchronize(stop));
-    HANDLE_ERROR(cudaEventElapsedTime(&time, start, stop));
+    //HANDLE_ERROR(cudaEventRecord(stop,0));
+    //HANDLE_ERROR(cudaEventSynchronize(stop));
+    //HANDLE_ERROR(cudaEventElapsedTime(&time, start, stop));
     
-    fprintf(fd,"Kernel Iteration time: %3.1f ms\n", time);
+    //fprintf(fd,"Kernel Iteration time: %3.1f ms\n", time);
     //start timer for copy from device to host
-    HANDLE_ERROR(cudaEventRecord(start,0));
+    //HANDLE_ERROR(cudaEventRecord(start,0));
     //copy data from host to device
     HANDLE_ERROR(cudaMemcpy(fx,   d_x, sizeof(float)*sz, cudaMemcpyDeviceToHost));
     HANDLE_ERROR(cudaMemcpy(fcc, d_cc, sizeof(float)*sz, cudaMemcpyDeviceToHost));
@@ -313,10 +332,10 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     HANDLE_ERROR(cudaMemcpy(foN, d_oN, sizeof(float)*sz, cudaMemcpyDeviceToHost));
     HANDLE_ERROR(cudaMemcpy(foE, d_oE, sizeof(float)*sz, cudaMemcpyDeviceToHost));
 	//stop timer
-    HANDLE_ERROR(cudaEventRecord(stop,0));
-    HANDLE_ERROR(cudaEventSynchronize(stop));
-    HANDLE_ERROR(cudaEventElapsedTime(&time, start, stop));
-    fprintf(fd, "Memory copy from device to host time: %3.1f ms\n", time);
+    //HANDLE_ERROR(cudaEventRecord(stop,0));
+    //HANDLE_ERROR(cudaEventSynchronize(stop));
+    //HANDLE_ERROR(cudaEventElapsedTime(&time, start, stop));
+    
     
     
     for(k=2; k<=*nz-1; k++){
@@ -333,9 +352,9 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     	}
     }
     
-    fprintf(fd, "******************************************************************\n");
+    
     //close file
-    fclose(fd);
+    //fclose(fd);
 
     //release cuda memory
     HANDLE_ERROR(cudaFree(d_x));  HANDLE_ERROR(cudaFree(d_cc)); HANDLE_ERROR(cudaFree(d_fc));
@@ -348,14 +367,17 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     free(foE); 
 
     //destroy cuda timing variables
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
+    //cudaEventDestroy(start);
+    //cudaEventDestroy(stop);
 
     //reset the cuda device
     HANDLE_ERROR(cudaDeviceReset());
     
     if (*iresid == 1)
         Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
+    
+    diff1 = clock() - start1;
+    printf("GS execution: %d ms\n", diff1 * 1000 / CLOCKS_PER_SEC);
 }
 
 
