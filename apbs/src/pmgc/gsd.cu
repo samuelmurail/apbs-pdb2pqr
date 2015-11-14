@@ -52,6 +52,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<math.h>
+#include<time.h>
 
 #define HANDLE_ERROR(x){									\
 	cudaError_t _err = x;									\
@@ -300,7 +301,11 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
         double *errtol, double *omega,
         int *iresid, int *iadjoint) {
 	
+	clock_t start1, start2, diff1, diff2;
+	start1 = clock();
 	
+	
+
     int i, j, k, ioff;    
     
     //this macro creates variable dx_<arr>, dy_<arr>, and dz_<arr> with values nx, ny, and nz respectively
@@ -374,10 +379,12 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
 //        fclose(fd);
 //        exit(-1);
     }
+
     
     printf("****\n");
     //printf("*iresid = %d\n", *iresid);
  
+
 }
 
 

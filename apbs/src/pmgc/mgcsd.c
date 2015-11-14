@@ -556,5 +556,6 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
         }
     } while (*iters<*itmax && (rsnrm/rsden) > *errtol);
 
+
     *ierror = *iters < *itmax ? 0 : 1;
 }
