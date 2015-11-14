@@ -163,6 +163,9 @@ struct sVpmgp {
                   * \li   2: SOR
                   * \li   3: richardson
                   * \li   4: cghs */
+    int gpu; /**< Flag to use gpu code [default = 0]
+     	 	 	 * \li 0: do NOT use gpu code
+     	 	 	 * \li 1: use gpu code */
     int mgprol;  /**< Prolongation method [default = 0]
                   * \li   0: trilinear
                   * \li   1: operator-based

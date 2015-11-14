@@ -55,7 +55,7 @@ VEXTERNC void Vsmooth(int *nx, int *ny, int *nz,
         double *x, double *w1, double *w2, double *r,
         int *itmax, int *iters,
         double *errtol, double *omega,
-        int *iresid, int *iadjoint, int *meth) {
+        int *iresid, int *iadjoint, int *meth, int *gpu) {
 
     // Do in one step
     if (*meth == 0) {
@@ -68,7 +68,7 @@ VEXTERNC void Vsmooth(int *nx, int *ny, int *nz,
                 x, w1, w2, r,
                 itmax, iters,
                 errtol, omega,
-                iresid, iadjoint);
+                iresid, iadjoint, gpu);
     } else if (*meth == 2) {
         VABORT_MSG0( "sor not yet translated" );
         //sor(nx,ny,nz,ipc,rpc,ac,cc,fc,x,w1,w2,r,itmax,iters,errtol,omega,iresid,iadjoint);

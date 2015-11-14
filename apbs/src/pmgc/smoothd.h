@@ -83,7 +83,8 @@ VEXTERNC void Vsmooth(
         double *omega,    ///< @todo: Doc
         int    *iresid,   ///< @todo: Doc
         int    *iadjoint, ///< @todo: Doc
-        int    *meth      ///< @todo: Doc
+        int    *meth,     ///< @todo: Doc
+		int    *gpu       /**< flag whether or not to use gpu code */
         );
 
 /** @brief   call the appropriate non-linear smoothing routine.

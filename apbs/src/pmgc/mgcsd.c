@@ -55,7 +55,7 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
         double *w0, double *w1, double *w2, double *w3,
         int *istop, int *itmax, int *iters, int *ierror,
         int *nlev, int *ilev, int *nlev_real,
-        int *mgsolv, int *iok, int *iinfo,
+        int *mgsolv, int *gpu, int *iok, int *iinfo,
         double *epsiln, double *errtol, double *omega,
         int *nu1, int *nu2,
         int *mgsmoo,
@@ -192,7 +192,7 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
                      RAT(ac, VAT2(iz, 7,lev)), RAT(cc, VAT2(iz, 1,lev)), RAT(fc, VAT2(iz, 1,lev)),
                       RAT(x, VAT2(iz, 1,lev)), w1, w2, w3,
                       &itmax_s, &iters_s, &errtol_s, omega,
-                      &iresid, &iadjoint, &mgsmoo_s);
+                      &iresid, &iadjoint, &mgsmoo_s, gpu);
 
             // Check for trouble on the coarse grid
             VWARN_MSG2(iters_s <= itmax_s,
@@ -326,7 +326,7 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
                   RAT(x, VAT2(iz, 1,lev)), w2, w3, w1,
                 &nuuu, &iters_s,
                 &errtol_s, omega,
-                &iresid, &iadjoint, mgsmoo);
+                &iresid, &iadjoint, mgsmoo, gpu);
 
         Vxcopy(&nxf, &nyf, &nzf, w1, RAT(w0, VAT2(iz, 1,lev)));
 
@@ -372,7 +372,7 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
                         RAT(x, VAT2(iz, 1,lev)), w2, w3, w1,
                         &nuuu, &iters_s,
                         &errtol_s, omega ,
-                        &iresid, &iadjoint, mgsmoo);
+                        &iresid, &iadjoint, mgsmoo, gpu);
             }
             // End of cycling down to coarse grid loop
         }
@@ -404,7 +404,7 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
                        RAT(x, VAT2(iz, 1,lev)), w1, w2, w3,
                     &itmax_s, &iters_s,
                     &errtol_s, omega,
-                    &iresid, &iadjoint, &mgsmoo_s);
+                    &iresid, &iadjoint, &mgsmoo_s, gpu);
 
             // Check for trouble on the coarse grid
             VWARN_MSG2(iters_s <= itmax_s,
@@ -491,14 +491,14 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
                          RAT(ac, VAT2(iz, 7,lev)), RAT(cc, VAT2(iz, 1,lev)), RAT(fc, VAT2(iz, 1,lev)),
                           RAT(x, VAT2(iz, 1,lev)),w1,w2,w3,
                          &nuuu, &iters_s, &errtol_s, omega,
-                         &iresid, &iadjoint, mgsmoo);
+                         &iresid, &iadjoint, mgsmoo, gpu);
             } else {
                 Vsmooth(&nxf, &nyf, &nzf,
                         RAT(ipc, VAT2(iz, 5,lev)), RAT(rpc, VAT2(iz, 6,lev)),
                          RAT(ac, VAT2(iz, 7,lev)),  RAT(cc, VAT2(iz, 1,lev)), RAT(w0, VAT2(iz, 1,lev)),
                           RAT(x, VAT2(iz, 1,lev)), w1, w2, w3,
                          &nuuu, &iters_s, &errtol_s, omega,
-                         &iresid, &iadjoint, mgsmoo);
+                         &iresid, &iadjoint, mgsmoo, gpu);
             }
         }
 
