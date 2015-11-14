@@ -282,6 +282,7 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
 
     // Decode real parameters from the rparm array
     errtol = VAT(rparm,  1);
+    //errtol = 1.0e-5;
     omegal = VAT(rparm,  9);
     omegan = VAT(rparm, 10);
 

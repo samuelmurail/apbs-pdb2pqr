@@ -70,7 +70,7 @@ __global__ void cuTest(float *x, float *x2, float *fc, float *cc, float *oC, flo
 	int ub = (dz-2)*(dx*dy)+(dy-2)*dx+(dx-2);
 	
 	if(ind >= lb && ind <= ub && oC[ind] != 0){
-		x2[ind] = ( (fc[ind] 
+		x2[ind] = (2.0/3.0)*( (fc[ind] 
 			+ oN[ind]	* x[ind+dx] 
 			+ oN[ind-dx]	* x[ind-dx] 
 			+ oE[ind]	* x[ind+1] 
@@ -78,7 +78,7 @@ __global__ void cuTest(float *x, float *x2, float *fc, float *cc, float *oC, flo
 			+ uC[ind]	* x[ind+dx*dy] 
 			+ uC[ind-dx*dy]	* x[ind-dx*dy] ) 
 			/ oC[ind] ) 
-			+ cc[ind];
+			+ cc[ind] + (1.0/3.0)*x[ind];
 	}
 }
 
@@ -233,6 +233,12 @@ VPUBLIC void Vgsrb7xGpu(int *nx,int *ny,int *nz,
 		temp = d_x;
 		d_x = d_x2;
 		d_x2 = temp;
+		
+		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+		HANDLE_ERROR(cudaGetLastError());
+		temp = d_x;
+		d_x = d_x2;
+		d_x2 = temp;
 
 	}
 	HANDLE_ERROR(cudaThreadSynchronize());
@@ -288,8 +294,7 @@ VPUBLIC void Vgsrb7xGpu(int *nx,int *ny,int *nz,
 //		fclose(fd);
 //		exit(-1);
 	}
-    printf("****\n");
-    printf("*iresid = %d\n", *iresid);
+
 }
 
 VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
@@ -300,9 +305,6 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
         int *itmax, int *iters,
         double *errtol, double *omega,
         int *iresid, int *iadjoint) {
-	
-	clock_t start1, diff1;
-	
 
     int i, j, k, ioff;    
     
@@ -378,7 +380,6 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
 //        fclose(fd);
 //        exit(-1);
     }
-
 }
 
 

@@ -554,6 +554,8 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
             }
             Vprtstp(*iok, *iters, rsnrm, rsden, orsnrm);
         }
+
+        //printf("rsnrm/rsden = (%f/%f) = %f\n",rsnrm,rsden, (rsnrm/rsden));
     } while (*iters<*itmax && (rsnrm/rsden) > *errtol);
 
 
