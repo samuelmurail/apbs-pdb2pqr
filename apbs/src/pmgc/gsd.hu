@@ -81,9 +81,33 @@ VEXTERNC void Vgsrb(
         double *errtol,  ///< @todo:  Doc
         double *omega,   ///< @todo:  Doc
         int    *iresid,  ///< @todo:  Doc
+        int    *iadjoint,///< @todo:  Doc
+        int    *gpu      /**< Flag whether or not to use gpu code */
+        );
+VEXTERNC void Vgsrb7xGpu(
+        int    *nx,      ///< @todo:  Doc
+        int    *ny,      ///< @todo:  Doc
+        int    *nz,      ///< @todo:  Doc
+        int    *ipc,     ///< @todo:  Doc
+        double *rpc,     ///< @todo:  Doc
+        double *oC,      ///< @todo:  Doc
+        double *cc,      ///< @todo:  Doc
+        double *fc,      ///< @todo:  Doc
+        double *oE,      ///< @todo:  Doc
+        double *oN,      ///< @todo:  Doc
+        double *uC,      ///< @todo:  Doc
+        double *x,       ///< @todo:  Doc
+        double *w1,      ///< @todo:  Doc
+        double *w2,      ///< @todo:  Doc
+        double *r,       ///< @todo:  Doc
+        int    *itmax,   ///< @todo:  Doc
+        int    *iters,   ///< @todo:  Doc
+        double *errtol,  ///< @todo:  Doc
+        double *omega,   ///< @todo:  Doc
+        int    *iresid,  ///< @todo:  Doc
         int    *iadjoint ///< @todo:  Doc
         );
-
+        
 VEXTERNC void Vgsrb7x(
         int    *nx,      ///< @todo:  Doc
         int    *ny,      ///< @todo:  Doc

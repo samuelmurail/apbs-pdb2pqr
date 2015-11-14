@@ -121,6 +121,7 @@ VEXTERNC void Vmvcs(
         int    *ilev,      ///< @todo: doc
         int    *nlev_real, ///< @todo: doc
         int    *mgsolv,    ///< @todo: doc
+	    int    *gpu,       /**< flag whether or not to use gpu code */
         int    *iok,       ///< @todo: doc
         int    *iinfo,     ///< @todo: doc
         double *epsiln,    ///< @todo: doc

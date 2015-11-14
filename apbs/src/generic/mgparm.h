@@ -194,6 +194,9 @@ struct sMGparm {
 
     int useAqua;  /**< Enable use of lpbe/aqua */
     int setUseAqua; /**< Flag, @see useAqua */
+
+    int useGpu; /**< Enable use of gpu */
+    int setUseGpu; /**< Flag */
 };
 
 /** @typedef MGparm
