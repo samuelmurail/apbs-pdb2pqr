@@ -332,12 +332,12 @@ VPUBLIC void Vnewton(int *nx, int *ny, int *nz,
         iok_s = 2;
 
         // End of NAB hack.
-
+        int dummy_gpu = 0;
         Vmvcs(nx, ny, nz,
                 xtmp, iz,
                 w0, w1, w2, w3,
                 &istop_s, &itmax_s, &iters_s, &ierror_s,
-                nlev, ilev, nlev_real, mgsolv,
+                nlev, ilev, nlev_real, mgsolv, &dummy_gpu,
                 &iok_s, &iinfo_s,
                 epsiln, &errtol_s, omega,
                 nu1, nu2, mgsmoo,

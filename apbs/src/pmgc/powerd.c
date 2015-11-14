@@ -232,10 +232,11 @@ VPUBLIC void Vipower(int *nx,int *ny,int *nz,
             errtol_s = *epsiln;
 
             Vxcopy(nx, ny, nz, w1, RAT(w0, VAT2(iz, 1,lev)));
+            int dummy_gpu = 0;
             Vmvcs(nx, ny, nz, u, iz,
                     w1, w2, w3, w4,
                     &istop_s, &itmax_s, &iters_s, &ierror_s,
-                    nlev, ilev, nlev_real, mgsolv,
+                    nlev, ilev, nlev_real, mgsolv, &dummy_gpu,
                     &iok_s, &iinfo_s, epsiln,
                     &errtol_s, omega, &nu1_s, &nu2_s, &mgsmoo_s,
                     ipc, rpc, pc, ac, cc, w0, tru);
@@ -332,10 +333,11 @@ VEXTERNC void Vmpower(int *nx, int *ny, int *nz,
     iok_s = 0;
     iinfo_s = 0;
     istop_s = 1;
+    int dummy_gpu = 0;
     Vmvcs(nx, ny, nz,
             u, iz, w0, w2, w3, w4,
             &istop_s, &itmax_s, &iters_s, &ierror_s,
-            nlev, ilev, nlev_real, mgsolv,
+            nlev, ilev, nlev_real, mgsolv, &dummy_gpu,
             &iok_s, &iinfo_s,
             epsiln, errtol, omega, nu1, nu2, mgsmoo,
             ipc, rpc,
@@ -367,7 +369,7 @@ VEXTERNC void Vmpower(int *nx, int *ny, int *nz,
            Vmvcs(nx, ny, nz,
                    u, iz, w1, w2, w3, w4,
                    &istop_s, &itmax_s, &iters_s, &ierror_s,
-                   nlev, ilev, nlev_real, mgsolv,
+                   nlev, ilev, nlev_real, mgsolv, &dummy_gpu,
                    &iok_s, &iinfo_s,
                    epsiln, errtol, omega, nu1, nu2, mgsmoo,
                    ipc, rpc,
@@ -390,7 +392,7 @@ VEXTERNC void Vmpower(int *nx, int *ny, int *nz,
            Vmvcs(nx, ny, nz,
                    u, iz, w0, w2, w3, w4,
                    &istop_s, &itmax_s, &iters_s, &ierror_s,
-                   nlev, ilev, nlev_real, mgsolv,
+                   nlev, ilev, nlev_real, mgsolv, &dummy_gpu,
                    &iok_s, &iinfo_s,
                    epsiln, errtol, omega, nu1, nu2, mgsmoo,
                    ipc, rpc,

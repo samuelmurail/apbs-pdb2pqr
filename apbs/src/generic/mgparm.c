@@ -169,6 +169,9 @@ VPUBLIC Vrc_Codes MGparm_ctor2(MGparm *thee, MGparm_CalcType type) {
     thee->useAqua = 0;
     thee->setUseAqua = 0;
 
+    thee->useGpu = 0;
+    thee->setUseGpu = 0;
+
     return VRC_SUCCESS;
 }
 
@@ -410,6 +413,9 @@ VPUBLIC void MGparm_copy(MGparm *thee, MGparm *parm) {
 
     thee->useAqua = parm->useAqua;
     thee->setUseAqua = parm->setUseAqua;
+
+    thee->useGpu = parm->useGpu;
+    thee->setUseGpu = parm->setUseGpu;
 }
 
 VPRIVATE Vrc_Codes MGparm_parseDIME(MGparm *thee, Vio *sock) {
@@ -916,6 +922,13 @@ VPRIVATE Vrc_Codes MGparm_parseUSEAQUA(MGparm *thee, Vio *sock) {
     return VRC_SUCCESS;
 }
 
+VPRIVATE Vrc_Codes MGparm_parseUSEGPU(MGparm *thee, Vio *sock) {
+    Vnm_print(0, "NOsh: parsed usegpu\n");
+    thee->useGpu = 1;
+    thee->setUseGpu = 1;
+    return VRC_SUCCESS;
+}
+
 VPUBLIC Vrc_Codes MGparm_parseToken(MGparm *thee, char tok[VMAX_BUFSIZE],
   Vio *sock) {
 
@@ -964,7 +977,9 @@ VPUBLIC Vrc_Codes MGparm_parseToken(MGparm *thee, char tok[VMAX_BUFSIZE],
         return MGparm_parseGAMMA(thee, sock);
     } else if (Vstring_strcasecmp(tok, "useaqua") == 0) {
         return MGparm_parseUSEAQUA(thee, sock);
-    } else {
+    } else if(Vstring_strcasecmp(tok, "usegpu") == 0){
+    	return MGparm_parseUSEGPU(thee, sock);
+    }else {
         Vnm_print(2, "parseMG:  Unrecognized keyword (%s)!\n", tok);
         return VRC_WARNING;
     }

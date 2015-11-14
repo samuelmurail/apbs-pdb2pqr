@@ -70,7 +70,7 @@ __global__ void cuTest(double *x, double *x2, double *fc, double *cc, double *oC
 	int ub = (dz-2)*(dx*dy)+(dy-2)*dx+(dx-2);
 	
 	if(ind >= lb && ind <= ub && oC[ind] != 0){
-		x2[ind] = ( (fc[ind] 
+		x2[ind] = (2.0/3.0)*( (fc[ind] 
 			+ oN[ind]	* x[ind+dx] 
 			+ oN[ind-dx]	* x[ind-dx] 
 			+ oE[ind]	* x[ind+1] 
@@ -78,7 +78,7 @@ __global__ void cuTest(double *x, double *x2, double *fc, double *cc, double *oC
 			+ uC[ind]	* x[ind+dx*dy] 
 			+ uC[ind-dx*dy]	* x[ind-dx*dy] ) 
 			/ oC[ind] ) 
-			+ cc[ind];
+			+ cc[ind] + (1.0/3.0)*x[ind];
 	}
 }
 
@@ -88,7 +88,7 @@ VPUBLIC void Vgsrb(int *nx, int *ny, int *nz,
         double *x, double *w1, double *w2, double *r,
         int *itmax, int *iters,
         double *errtol, double *omega,
-        int *iresid, int *iadjoint) {
+        int *iresid, int *iadjoint, int *gpu) {
 
     int numdia; /// @todo: doc
 
@@ -97,12 +97,23 @@ VPUBLIC void Vgsrb(int *nx, int *ny, int *nz,
     // Do in one step ***
     numdia = VAT(ipc, 11);
     if (numdia == 7) {
-        Vgsrb7x(nx, ny, nz,
-                ipc, rpc,
-                RAT2(ac, 1,1), cc, fc,
-                RAT2(ac, 1,2), RAT2(ac, 1,3), RAT2(ac, 1,4),
-                x, w1, w2, r,
-                itmax, iters, errtol, omega, iresid, iadjoint);
+       if(*gpu == 0){
+			Vgsrb7x(nx, ny, nz,
+					ipc, rpc,
+					RAT2(ac, 1,1), cc, fc,
+					RAT2(ac, 1,2), RAT2(ac, 1,3), RAT2(ac, 1,4),
+					x, w1, w2, r,
+					itmax, iters, errtol, omega, iresid, iadjoint);
+       }
+       else
+       {
+    		Vgsrb7xGpu(nx, ny, nz,
+				ipc, rpc,
+				RAT2(ac, 1,1), cc, fc,
+				RAT2(ac, 1,2), RAT2(ac, 1,3), RAT2(ac, 1,4),
+				x, w1, w2, r,
+				itmax, iters, errtol, omega, iresid, iadjoint);
+       }
     } else if (numdia == 27) {
         Vgsrb27x(nx, ny, nz,
                  ipc, rpc,
@@ -118,7 +129,160 @@ VPUBLIC void Vgsrb(int *nx, int *ny, int *nz,
     }
 }
 
+VPUBLIC void Vgsrb7xGpu(int *nx,int *ny,int *nz,
+        int *ipc, double *rpc,
+        double *oC, double *cc, double *fc,
+        double *oE, double *oN, double *uC,
+        double *x, double *w1, double *w2, double *r,
+        int *itmax, int *iters,
+        double *errtol, double *omega,
+        int *iresid, int *iadjoint){
+	
+	int i, j, k;
+	int sz = *nx * *ny * *nz; 					//<--- grid dimensions
+	int threads = 384;							//<--- number of cuda threads per block (max 512) 
+	int blocks = (int)ceil(sz/(float)threads); 	//<--- number of block of size threads needed to cover sz grid points
 
+	//this macro creates variable dx_<arr>, dy_<arr>, and dz_<arr> with values nx, ny, and nz respectively
+	MAT3(cc, *nx, *ny, *nz);
+	MAT3(fc, *nx, *ny, *nz);
+	MAT3( x, *nx, *ny, *nz);
+	MAT3(w1, *nx, *ny, *nz);
+	MAT3(w2, *nx, *ny, *nz);
+	MAT3( r, *nx, *ny, *nz);
+	MAT3(oE, *nx, *ny, *nz);
+	MAT3(oN, *nx, *ny, *nz);
+	MAT3(uC, *nx, *ny, *nz);
+	MAT3(oC, *nx, *ny, *nz);
+
+	//intialize cuda arrays and allocate the device memory
+	double *d_x;  HANDLE_ERROR(cudaMalloc((void**)&d_x,  sizeof(double) * sz));
+	double *d_x2; HANDLE_ERROR(cudaMalloc((void**)&d_x2, sizeof(double) * sz));
+	double *d_cc; HANDLE_ERROR(cudaMalloc((void**)&d_cc, sizeof(double) * sz));
+	double *d_fc; HANDLE_ERROR(cudaMalloc((void**)&d_fc, sizeof(double) * sz));
+	double *d_oC; HANDLE_ERROR(cudaMalloc((void**)&d_oC, sizeof(double) * sz));
+	double *d_uC; HANDLE_ERROR(cudaMalloc((void**)&d_uC, sizeof(double) * sz));
+	double *d_oN; HANDLE_ERROR(cudaMalloc((void**)&d_oN, sizeof(double) * sz));
+	double *d_oE; HANDLE_ERROR(cudaMalloc((void**)&d_oE, sizeof(double) * sz));
+	
+	//since any cuda card of capability <= sm_13 can't handle double data type we need to deprecate the matrix values to floats.
+	//initialize  and allocate the memory for the float arrays
+	/*float *fx;  fx  = (float*)malloc(sizeof(float)*sz);
+	float *ffc; ffc = (float*)malloc(sizeof(float)*sz);
+	float *fcc; fcc = (float*)malloc(sizeof(float)*sz);
+	float *foC; foC = (float*)malloc(sizeof(float)*sz);
+	float *fuC; fuC = (float*)malloc(sizeof(float)*sz);
+	float *foN; foN = (float*)malloc(sizeof(float)*sz);
+	float *foE; foE = (float*)malloc(sizeof(float)*sz);
+	    
+	//initialize them to 0
+	for(i=0; i<sz; i++){
+		fx[i]  = 0; ffc[i] = 0; fcc[i] = 0;
+		foC[i] = 0; fuC[i] = 0; foN[i] = 0;
+		foE[i] = 0;
+	}
+
+	//create the the corresponding dx,dy, and dz variable used in the VAT3 macro
+	MAT3(fx,  *nx,*ny,*nz);
+	MAT3(ffc, *nx,*ny,*nz);
+	MAT3(fcc, *nx,*ny,*nz);
+	MAT3(foC, *nx,*ny,*nz);
+	MAT3(fuC, *nx,*ny,*nz);
+	MAT3(foN, *nx,*ny,*nz);
+	MAT3(foE, *nx,*ny,*nz);
+	
+	//copy values from double arrays to the float arrays.
+	for(k=2; k<=*nz-1; k++){
+		for(j=2; j<=*ny-1; j++){
+			for(i=2; i<=*nx-1; i++){
+				VAT3(fx,i,j,k) 	= (float)VAT3(x,i,j,k);
+				VAT3(ffc,i,j,k)	= (float)VAT3(fc,i,j,k);
+				VAT3(fcc,i,j,k) = (float)VAT3(cc,i,j,k);
+				VAT3(foC,i,j,k) = (float)VAT3(oC,i,j,k);
+				VAT3(fuC,i,j,k) = (float)VAT3(uC,i,j,k);
+				VAT3(foN,i,j,k) = (float)VAT3(oN,i,j,k);
+				VAT3(foE,i,j,k) = (float)VAT3(oE,i,j,k);
+			}
+		}
+	}*/
+	    
+
+	//copy data from host to device
+	HANDLE_ERROR(cudaMemcpy(d_x,  x,  sizeof(double)*sz, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMemcpy(d_x2, x,  sizeof(double)*sz, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMemcpy(d_cc, cc, sizeof(double)*sz, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMemcpy(d_fc, fc, sizeof(double)*sz, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMemcpy(d_oC, oC, sizeof(double)*sz, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMemcpy(d_uC, uC, sizeof(double)*sz, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMemcpy(d_oN, oN, sizeof(double)*sz, cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMemcpy(d_oE, oE, sizeof(double)*sz, cudaMemcpyHostToDevice));
+	    
+	for (*iters=1; *iters<=*itmax; (*iters)++) {
+
+		double *temp;
+		
+		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+		HANDLE_ERROR(cudaGetLastError());
+		temp = d_x;
+		d_x = d_x2;
+		d_x2 = temp;
+		
+		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+		HANDLE_ERROR(cudaGetLastError());
+		temp = d_x;
+		d_x = d_x2;
+		d_x2 = temp;
+		
+		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+		HANDLE_ERROR(cudaGetLastError());
+		temp = d_x;
+		d_x = d_x2;
+		d_x2 = temp;
+
+	}
+	HANDLE_ERROR(cudaThreadSynchronize());
+	
+	//copy data from device to host
+	HANDLE_ERROR(cudaMemcpy(x,   d_x, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(cc, d_cc, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(fc, d_fc, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(oC, d_oC, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(uC, d_uC, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(oN, d_oN, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+	HANDLE_ERROR(cudaMemcpy(oE, d_oE, sizeof(float)*sz, cudaMemcpyDeviceToHost));
+	
+	/*for(k=2; k<=*nz-1; k++){
+		for(j=2; j<=*ny-1; j++){
+			for(i=2; i<=*nx-1; i++){
+				VAT3(x,i,j,k) 	= (double)VAT3(fx,i,j,k);
+				VAT3(fc,i,j,k)	= (double)VAT3(ffc,i,j,k);
+				VAT3(cc,i,j,k) = (double)VAT3(fcc,i,j,k);
+				VAT3(oC,i,j,k) = (double)VAT3(foC,i,j,k);
+				VAT3(uC,i,j,k) = (double)VAT3(fuC,i,j,k);
+				VAT3(oN,i,j,k) = (double)VAT3(foN,i,j,k);
+				VAT3(oE,i,j,k) = (double)VAT3(foE,i,j,k);
+			}
+		}
+	}*/
+
+	//release cuda memory
+	HANDLE_ERROR(cudaFree(d_x));  HANDLE_ERROR(cudaFree(d_cc)); HANDLE_ERROR(cudaFree(d_fc));
+	HANDLE_ERROR(cudaFree(d_oC)); HANDLE_ERROR(cudaFree(d_uC)); HANDLE_ERROR(cudaFree(d_oE));
+	HANDLE_ERROR(cudaFree(d_oN)); HANDLE_ERROR(cudaFree(d_x2)); 
+	
+	//release float arrays
+	/*free(fx);  free(ffc); free(fcc);
+	free(foC); free(fuC); free(foN);
+	free(foE); */
+	
+	//reset the cuda device
+	HANDLE_ERROR(cudaDeviceReset());
+	
+	if (*iresid == 1){
+		Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
+	}
+
+}
 
 VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
         int *ipc, double *rpc,
@@ -128,35 +292,8 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
         int *itmax, int *iters,
         double *errtol, double *omega,
         int *iresid, int *iadjoint) {
-	
-	clock_t start1, start2, diff1, diff2;
-	start1 = clock();
-	
-	
-    int i, j, k, ioff;
-    int sz = *nx * *ny * *nz; 					//<--- grid dimensions
-    int threads = 384;							//<--- number of cuda threads per block (max 512) 
-    int blocks = (int)ceil(sz/(float)threads); 	//<--- number of block of size threads needed to cover sz grid points
-    
-    //initialize the cuda timing variables
-    //cudaEvent_t start, stop;
-    //float time;
-    
-    
-    //create cuda event timers
-    //HANDLE_ERROR(cudaEventCreate(&start));
-    //HANDLE_ERROR(cudaEventCreate(&stop));
-    
-    //set the cuda device
-    //HANDLE_ERROR(cudaSetDevice(0)); //<------if there is more that one card however when I run it with only one card it seems to affect the results
-    
-    //initialize a file to write the different running times
-//    FILE *fd;
-//    fd = fopen("cudaTimes.txt", "a");
-//    if(fd == NULL){
-//    	printf("Failed to create file to print CUDA running times!\n");
-//    	exit(-1);
-//    }   
+
+    int i, j, k, ioff;    
     
     //this macro creates variable dx_<arr>, dy_<arr>, and dz_<arr> with values nx, ny, and nz respectively
     MAT3(cc, *nx, *ny, *nz);
@@ -165,201 +302,58 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     MAT3(w1, *nx, *ny, *nz);
     MAT3(w2, *nx, *ny, *nz);
     MAT3( r, *nx, *ny, *nz);
-
     MAT3(oE, *nx, *ny, *nz);
     MAT3(oN, *nx, *ny, *nz);
     MAT3(uC, *nx, *ny, *nz);
     MAT3(oC, *nx, *ny, *nz);
 
-    //intialize cuda arrays and allocate the device memory
-    double *d_x;  HANDLE_ERROR(cudaMalloc((void**)&d_x,  sizeof(double) * sz));
-    double *d_x2; HANDLE_ERROR(cudaMalloc((void**)&d_x2, sizeof(double) * sz));
-    double *d_cc; HANDLE_ERROR(cudaMalloc((void**)&d_cc, sizeof(double) * sz));
-    double *d_fc; HANDLE_ERROR(cudaMalloc((void**)&d_fc, sizeof(double) * sz));
-    double *d_oC; HANDLE_ERROR(cudaMalloc((void**)&d_oC, sizeof(double) * sz));
-    double *d_uC; HANDLE_ERROR(cudaMalloc((void**)&d_uC, sizeof(double) * sz));
-    double *d_oN; HANDLE_ERROR(cudaMalloc((void**)&d_oN, sizeof(double) * sz));
-    double *d_oE; HANDLE_ERROR(cudaMalloc((void**)&d_oE, sizeof(double) * sz));
     
-    //since any cuda card of capability <= sm_13 can't handle double data type we need to deprecate the matrix values to floats.
-    //initialize  and allocate the memory for the float arrays
-//    float *fx;  fx  = (float*)malloc(sizeof(float)*sz);
-//    float *ffc; ffc = (float*)malloc(sizeof(float)*sz);
-//    float *fcc; fcc = (float*)malloc(sizeof(float)*sz);
-//    float *foC; foC = (float*)malloc(sizeof(float)*sz);
-//    float *fuC; fuC = (float*)malloc(sizeof(float)*sz);
-//    float *foN; foN = (float*)malloc(sizeof(float)*sz);
-//    float *foE; foE = (float*)malloc(sizeof(float)*sz);
-//    
-//    //initialize them to 0
-//    for(i=0; i<sz; i++){
-//    	fx[i]  = 0; ffc[i] = 0; fcc[i] = 0;
-//    	foC[i] = 0; fuC[i] = 0; foN[i] = 0;
-//    	foE[i] = 0;
-//    }
-//    
-//    //create the the corresponding dx,dy, and dz variable used in the VAT3 macro
-//    MAT3(fx,  *nx,*ny,*nz);
-//    MAT3(ffc, *nx,*ny,*nz);
-//    MAT3(fcc, *nx,*ny,*nz);
-//    MAT3(foC, *nx,*ny,*nz);
-//    MAT3(fuC, *nx,*ny,*nz);
-//    MAT3(foN, *nx,*ny,*nz);
-//    MAT3(foE, *nx,*ny,*nz);
-//    
-//    //copy values from double arrays to the float arrays.
-//    for(k=2; k<=*nz-1; k++){
-//    	for(j=2; j<=*ny-1; j++){
-//    		for(i=2; i<=*nx-1; i++){
-//    			VAT3(fx,i,j,k) 	= (float)VAT3(x,i,j,k);
-//    			VAT3(ffc,i,j,k)	= (float)VAT3(fc,i,j,k);
-//    			VAT3(fcc,i,j,k) = (float)VAT3(cc,i,j,k);
-//    			VAT3(foC,i,j,k) = (float)VAT3(oC,i,j,k);
-//    			VAT3(fuC,i,j,k) = (float)VAT3(uC,i,j,k);
-//    			VAT3(foN,i,j,k) = (float)VAT3(oN,i,j,k);
-//    			VAT3(foE,i,j,k) = (float)VAT3(oE,i,j,k);
-//    		}
-//    	}
-//    }
-    
-    //start timer for cuda memcpy
-    //HANDLE_ERROR(cudaEventRecord(start,0))
-    //copy data from host to device
-    HANDLE_ERROR(cudaMemcpy(d_x,  x,  sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_x2, x,  sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_cc, cc, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_fc, fc, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_oC, oC, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_uC, uC, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_oN, oN, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    HANDLE_ERROR(cudaMemcpy(d_oE, oE, sizeof(double)*sz, cudaMemcpyHostToDevice));
-    //stop timer for cuda memcpy
-    //HANDLE_ERROR(cudaEventRecord(stop,0))
-    //HANDLE_ERROR(cudaEventSynchronize(stop));
-    //HANDLE_ERROR(cudaEventElapsedTime(&time,start,stop));
-    
-    
-    //fprintf(fd, "*iters max: %d\n", *itmax);
-    
-    //start timing for kernel
-    //HANDLE_ERROR(cudaEventRecord(start,0));
-    start2 = clock();
     for (*iters=1; *iters<=*itmax; (*iters)++) {
-    	
-    	double *temp;
-    	
-    	cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
-    	HANDLE_ERROR(cudaGetLastError());
-    	temp = d_x;
-    	d_x = d_x2;
-    	d_x2 = temp;
-    	
+    		
         // Do the red points ***
-//        #pragma omp parallel for private(i, j, k, ioff)
-//        for (k=2; k<=*nz-1; k++) {
-//            for (j=2; j<=*ny-1; j++) {
-//                ioff = (1 - *iadjoint) * (    (j + k + 2) % 2)
-//                     + (    *iadjoint) * (1 - (j + k + 2) % 2);
-//                for (i=2+ioff; i<=*nx-1; i+=2) {
-//                    VAT3(x, i, j, k) = (
-//                            VAT3(fc,   i,  j,  k)
-//                         +  VAT3(oN,   i,   j,   k) * VAT3(x,   i, j+1,   k)
-//                         +  VAT3(oN,   i, j-1,   k) * VAT3(x,   i, j-1,   k)
-//                         +  VAT3(oE,   i,   j,   k) * VAT3(x, i+1,   j,   k)
-//                         +  VAT3(oE, i-1,   j,   k) * VAT3(x, i-1,   j,   k)
-//                         + VAT3( uC,   i,   j, k-1) * VAT3(x,   i,   j, k-1)
-//                         + VAT3( uC,   i,   j,   k) * VAT3(x,   i,   j, k+1)
-//                         ) / (VAT3(oC, i, j, k) + VAT3(cc, i, j, k));
-//                }
-//            }
-//        }
-//
-//        // Do the black points
-//        #pragma omp parallel for private(i, j, k, ioff)
-//        for (k=2; k<=*nz-1; k++) {
-//            for (j=2; j<=*ny-1; j++) {
-//                ioff =   (    *iadjoint) * (    (j + k + 2) % 2 )
-//                       + (1 - *iadjoint) * (1 - (j + k + 2) % 2 );
-//                for (i=2+ioff;i<=*nx-1; i+=2) {
-//                    VAT3(x, i, j, k) = (
-//                            VAT3(fc,   i,   j,   k)
-//                         +  VAT3(oN,   i,   j,   k) * VAT3(x,   i,j+1,  k)
-//                         +  VAT3(oN,   i, j-1,   k) * VAT3(x,   i,j-1,  k)
-//                         +  VAT3(oE,   i,   j,   k) * VAT3(x, i+1,  j,  k)
-//                         +  VAT3(oE, i-1,   j,   k) * VAT3(x, i-1,  j,  k)
-//                         + VAT3( uC,   i,   j, k-1) * VAT3(x,   i,  j,k-1)
-//                         + VAT3( uC,   i,   j,   k) * VAT3(x,   i,  j,k+1)
-//                         ) / (VAT3(oC, i, j, k) + VAT3(cc, i, j, k));
-//                }
-//            }
-//        }
+        #pragma omp parallel for private(i, j, k, ioff)
+        for (k=2; k<=*nz-1; k++) {
+            for (j=2; j<=*ny-1; j++) {
+                ioff = (1 - *iadjoint) * (    (j + k + 2) % 2)
+                     + (    *iadjoint) * (1 - (j + k + 2) % 2);
+                for (i=2+ioff; i<=*nx-1; i+=2) {
+                    VAT3(x, i, j, k) = (
+                            VAT3(fc,   i,  j,  k)
+                         +  VAT3(oN,   i,   j,   k) * VAT3(x,   i, j+1,   k)
+                         +  VAT3(oN,   i, j-1,   k) * VAT3(x,   i, j-1,   k)
+                         +  VAT3(oE,   i,   j,   k) * VAT3(x, i+1,   j,   k)
+                         +  VAT3(oE, i-1,   j,   k) * VAT3(x, i-1,   j,   k)
+                         + VAT3( uC,   i,   j, k-1) * VAT3(x,   i,   j, k-1)
+                         + VAT3( uC,   i,   j,   k) * VAT3(x,   i,   j, k+1)
+                         ) / (VAT3(oC, i, j, k) + VAT3(cc, i, j, k));
+                }
+            }
+        }
+
+        // Do the black points
+        #pragma omp parallel for private(i, j, k, ioff)
+        for (k=2; k<=*nz-1; k++) {
+            for (j=2; j<=*ny-1; j++) {
+                ioff =   (    *iadjoint) * (    (j + k + 2) % 2 )
+                       + (1 - *iadjoint) * (1 - (j + k + 2) % 2 );
+                for (i=2+ioff;i<=*nx-1; i+=2) {
+                    VAT3(x, i, j, k) = (
+                            VAT3(fc,   i,   j,   k)
+                         +  VAT3(oN,   i,   j,   k) * VAT3(x,   i,j+1,  k)
+                         +  VAT3(oN,   i, j-1,   k) * VAT3(x,   i,j-1,  k)
+                         +  VAT3(oE,   i,   j,   k) * VAT3(x, i+1,  j,  k)
+                         +  VAT3(oE, i-1,   j,   k) * VAT3(x, i-1,  j,  k)
+                         + VAT3( uC,   i,   j, k-1) * VAT3(x,   i,  j,k-1)
+                         + VAT3( uC,   i,   j,   k) * VAT3(x,   i,  j,k+1)
+                         ) / (VAT3(oC, i, j, k) + VAT3(cc, i, j, k));
+                }
+            }
+        }
     }
-    HANDLE_ERROR(cudaThreadSynchronize());
-    diff2= clock() - start2;
-    //printf(    "Kernel execution: %d ms\n", diff2 * 1000 / CLOCKS_PER_SEC);
-    //stop cuda timer
-    //HANDLE_ERROR(cudaEventRecord(stop,0));
-    //HANDLE_ERROR(cudaEventSynchronize(stop));
-    //HANDLE_ERROR(cudaEventElapsedTime(&time, start, stop));
-    
-    //fprintf(fd,"Kernel Iteration time: %3.1f ms\n", time);
-    //start timer for copy from device to host
-    //HANDLE_ERROR(cudaEventRecord(start,0));
-    //copy data from host to device
-    HANDLE_ERROR(cudaMemcpy(x,   d_x, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-    HANDLE_ERROR(cudaMemcpy(cc, d_cc, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-    HANDLE_ERROR(cudaMemcpy(fc, d_fc, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-    HANDLE_ERROR(cudaMemcpy(oC, d_oC, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-    HANDLE_ERROR(cudaMemcpy(uC, d_uC, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-    HANDLE_ERROR(cudaMemcpy(oN, d_oN, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-    HANDLE_ERROR(cudaMemcpy(oE, d_oE, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	//stop timer
-    //HANDLE_ERROR(cudaEventRecord(stop,0));
-    //HANDLE_ERROR(cudaEventSynchronize(stop));
-    //HANDLE_ERROR(cudaEventElapsedTime(&time, start, stop));
-    
-    
-    
-//    for(k=2; k<=*nz-1; k++){
-//    	for(j=2; j<=*ny-1; j++){
-//    		for(i=2; i<=*nx-1; i++){
-//    			VAT3(x,i,j,k) 	= (double)VAT3(fx,i,j,k);
-//    			VAT3(fc,i,j,k)	= (double)VAT3(ffc,i,j,k);
-//    			VAT3(cc,i,j,k) = (double)VAT3(fcc,i,j,k);
-//    			VAT3(oC,i,j,k) = (double)VAT3(foC,i,j,k);
-//    			VAT3(uC,i,j,k) = (double)VAT3(fuC,i,j,k);
-//    			VAT3(oN,i,j,k) = (double)VAT3(foN,i,j,k);
-//    			VAT3(oE,i,j,k) = (double)VAT3(foE,i,j,k);
-//    		}
-//    	}
-//    }
-    
-    
-    //close file
-    //fclose(fd);
-
-    //release cuda memory
-    HANDLE_ERROR(cudaFree(d_x));  HANDLE_ERROR(cudaFree(d_cc)); HANDLE_ERROR(cudaFree(d_fc));
-    HANDLE_ERROR(cudaFree(d_oC)); HANDLE_ERROR(cudaFree(d_uC)); HANDLE_ERROR(cudaFree(d_oE));
-    HANDLE_ERROR(cudaFree(d_oN)); HANDLE_ERROR(cudaFree(d_x2)); 
-    
-    //release float arrays
-//    free(fx);  free(ffc); free(fcc);
-//    free(foC); free(fuC); free(foN);
-//    free(foE); 
-
-    //destroy cuda timing variables
-    //cudaEventDestroy(start);
-    //cudaEventDestroy(stop);
-
-    //reset the cuda device
-    HANDLE_ERROR(cudaDeviceReset());
-    
-    if (*iresid == 1)
+ 
+    if (*iresid == 1){
         Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
-    
-    diff1 = clock() - start1;
-    printf("GS execution: %d ms\n", diff1 * 1000 / CLOCKS_PER_SEC);
+    }
 }
 
 

@@ -48,6 +48,9 @@
  */
 
 #include "matvecd.h"
+#include<stdio.h>
+#include<stdlib.h>
+#include<math.h>
 
 VPUBLIC void Vmatvec(int *nx, int *ny, int *nz,
         int    *ipc, double *rpc,
@@ -486,6 +489,34 @@ VPUBLIC void Vmresid7_1s(int *nx, int *ny, int *nz,
             }
         }
     }
+
+//    FILE *fd;
+//    double res = 0.0;
+//    fd = fopen("res7_1s.txt", "w");
+//    for (k=2; k<=*nz-1; k++) {
+//        for (j=2; j<=*ny-1; j++) {
+//            for(i=2; i<=*nx-1; i++) {
+//            	fprintf(fd,"(%d) r = %f\n", (k-1)*(*nx)*(*ny)+(j-1)*(*nx)+(i-1),VAT3(r,i,j,k));
+//            	res += abs(VAT3(r,i,j,k))*abs(VAT3(r,i,j,k));
+//            	fprintf(fd,"(%d):%f =  %f + %f*%f + %f*%f + %f*%f + %f*%f + %f*%f + %f*%f - %f + %f*%f\n",
+//            			(k-1)*(*nx)*(*ny)+(j-1)*(*nx)+(i-1),
+//						VAT3(r,i,j,k),
+//            			VAT3(fc,i,j,k),
+//						VAT3(oN,i,j,k),   VAT3(x,i,j+1,k),
+//						VAT3(oN,i,j-1,k), VAT3(x,i,j-1,k),
+//						VAT3(oE,i,j,k),   VAT3(x,i+1,j,k),
+//						VAT3(oE,i-1,j,k), VAT3(x,i-1,j,k),
+//						VAT3(uC,i,j,k-1), VAT3(x,i,j,k-1),
+//						VAT3(uC,i,j,k),   VAT3(x,i,j,k+1),
+//						VAT3(oC,i,j,k),
+//						VAT3(cc,i,j,k),   VAT3(x,i,j,k));
+//            }
+//        }
+//    }
+//    fprintf(fd,"******************\n");
+//    fprintf(fd,"res tot = %f\n", sqrt(res));
+//    fclose(fd);
+    //exit(-1);
 }
 
 

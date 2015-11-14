@@ -126,6 +126,7 @@ VPUBLIC void Vmgdriv(int* iparm, double* rparm,
     mgdisc = VAT(iparm, 19);
     mgsolv = VAT(iparm, 21);
 
+
     Vmgsz(&mgcoar, &mgdisc, &mgsolv,
                 &nx, &ny, &nz,
                 &nlev,
@@ -214,6 +215,7 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
     int mgsolv    = 0;
     int mgdisc    = 0;
     int mgsmoo    = 0;
+    int gpu       = 0;
     int iperf     = 0;
     int mode      = 0;
 
@@ -276,9 +278,11 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
     mgsmoo = VAT(iparm, 20);
     mgsolv = VAT(iparm, 21);
     iperf  = VAT(iparm, 22);
+    gpu    = VAT(iparm, 23);
 
     // Decode real parameters from the rparm array
     errtol = VAT(rparm,  1);
+    //errtol = 1.0e-5;
     omegal = VAT(rparm,  9);
     omegan = VAT(rparm, 10);
 
@@ -491,7 +495,7 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
                 Vmvcs(nx, ny, nz,
                         u, iz, a1cf, a2cf, a3cf, ccf,
                         &istop, &itmax, &iters, &ierror, &nlev,
-                        &ilev, &nlev_real, &mgsolv,
+                        &ilev, &nlev_real, &mgsolv, &gpu,
                         &iok, &iinfo, &epsiln, &errtol, &omegal,
                         &nu1, &nu2, &mgsmoo,
                         ipc, rpc, pc, ac, cc, fc, tcf);
@@ -501,7 +505,7 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
                 Vmvcs(nx, ny, nz,
                         u, iz, a1cf, a2cf, a3cf, ccf,
                         &istop, &itmax, &iters, &ierror, &nlev,
-                        &ilev, &nlev_real, &mgsolv,
+                        &ilev, &nlev_real, &mgsolv, &gpu,
                         &iok, &iinfo, &epsiln, &errtol, &omegal,
                         &nu1, &nu2, &mgsmoo,
                         ipc, rpc, pc, ac, cc, fc, tcf);
