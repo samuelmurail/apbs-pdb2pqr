@@ -129,9 +129,7 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
         double *errtol, double *omega,
         int *iresid, int *iadjoint) {
 	
-	clock_t start1, start2, diff1, diff2;
-	start1 = clock();
-	
+	clock_t start1, diff1;
 	
     int i, j, k, ioff;
     int sz = *nx * *ny * *nz; 					//<--- grid dimensions
@@ -171,32 +169,22 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     MAT3(uC, *nx, *ny, *nz);
     MAT3(oC, *nx, *ny, *nz);
 
-    //intialize cuda arrays and allocate the device memory
-    float *d_x;  HANDLE_ERROR(cudaMalloc((void**)&d_x,  sizeof(float) * sz));
-    float *d_x2; HANDLE_ERROR(cudaMalloc((void**)&d_x2, sizeof(float) * sz));
-    float *d_cc; HANDLE_ERROR(cudaMalloc((void**)&d_cc, sizeof(float) * sz));
-    float *d_fc; HANDLE_ERROR(cudaMalloc((void**)&d_fc, sizeof(float) * sz));
-    float *d_oC; HANDLE_ERROR(cudaMalloc((void**)&d_oC, sizeof(float) * sz));
-    float *d_uC; HANDLE_ERROR(cudaMalloc((void**)&d_uC, sizeof(float) * sz));
-    float *d_oN; HANDLE_ERROR(cudaMalloc((void**)&d_oN, sizeof(float) * sz));
-    float *d_oE; HANDLE_ERROR(cudaMalloc((void**)&d_oE, sizeof(float) * sz));
-    
     //since any cuda card of capability <= sm_13 can't handle double data type we need to deprecate the matrix values to floats.
-    //initialize  and allocate the memory for the float arrays
-    float *fx;  fx  = (float*)malloc(sizeof(float)*sz);
-    float *ffc; ffc = (float*)malloc(sizeof(float)*sz);
-    float *fcc; fcc = (float*)malloc(sizeof(float)*sz);
-    float *foC; foC = (float*)malloc(sizeof(float)*sz);
-    float *fuC; fuC = (float*)malloc(sizeof(float)*sz);
-    float *foN; foN = (float*)malloc(sizeof(float)*sz);
-    float *foE; foE = (float*)malloc(sizeof(float)*sz);
-    
-    //initialize them to 0
-    for(i=0; i<sz; i++){
-    	fx[i]  = 0; ffc[i] = 0; fcc[i] = 0;
-    	foC[i] = 0; fuC[i] = 0; foN[i] = 0;
-    	foE[i] = 0;
-    }
+	//initialize  and allocate the memory for the float arrays
+	float *fx;  fx  = (float*)malloc(sizeof(float)*sz);
+	float *ffc; ffc = (float*)malloc(sizeof(float)*sz);
+	float *fcc; fcc = (float*)malloc(sizeof(float)*sz);
+	float *foC; foC = (float*)malloc(sizeof(float)*sz);
+	float *fuC; fuC = (float*)malloc(sizeof(float)*sz);
+	float *foN; foN = (float*)malloc(sizeof(float)*sz);
+	float *foE; foE = (float*)malloc(sizeof(float)*sz);
+	
+	//initialize them to 0
+	for(i=0; i<sz; i++){
+		fx[i]  = 0; ffc[i] = 0; fcc[i] = 0;
+		foC[i] = 0; fuC[i] = 0; foN[i] = 0;
+		foE[i] = 0;
+	}
     
     //create the the corresponding dx,dy, and dz variable used in the VAT3 macro
     MAT3(fx,  *nx,*ny,*nz);
@@ -222,6 +210,18 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     	}
     }
     
+    start1 = clock();
+    
+    //intialize cuda arrays and allocate the device memory
+    float *d_x;  HANDLE_ERROR(cudaMalloc((void**)&d_x,  sizeof(float) * sz));
+    float *d_x2; HANDLE_ERROR(cudaMalloc((void**)&d_x2, sizeof(float) * sz));
+    float *d_cc; HANDLE_ERROR(cudaMalloc((void**)&d_cc, sizeof(float) * sz));
+    float *d_fc; HANDLE_ERROR(cudaMalloc((void**)&d_fc, sizeof(float) * sz));
+    float *d_oC; HANDLE_ERROR(cudaMalloc((void**)&d_oC, sizeof(float) * sz));
+    float *d_uC; HANDLE_ERROR(cudaMalloc((void**)&d_uC, sizeof(float) * sz));
+    float *d_oN; HANDLE_ERROR(cudaMalloc((void**)&d_oN, sizeof(float) * sz));
+    float *d_oE; HANDLE_ERROR(cudaMalloc((void**)&d_oE, sizeof(float) * sz));\
+    
     //start timer for cuda memcpy
     //HANDLE_ERROR(cudaEventRecord(start,0))
     //copy data from host to device
@@ -243,7 +243,7 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     
     //start timing for kernel
     //HANDLE_ERROR(cudaEventRecord(start,0));
-    start2 = clock();
+    //start2 = clock();
     for (*iters=1; *iters<=*itmax; (*iters)++) {
     	
     	float *temp;
@@ -253,24 +253,6 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     	temp = d_x;
     	d_x = d_x2;
     	d_x2 = temp;
-    	
-    	cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
-		HANDLE_ERROR(cudaGetLastError());
-		temp = d_x;
-		d_x = d_x2;
-		d_x2 = temp;
-		
-		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
-		HANDLE_ERROR(cudaGetLastError());
-		temp = d_x;
-		d_x = d_x2;
-		d_x2 = temp;
-    	
-		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
-		HANDLE_ERROR(cudaGetLastError());
-		temp = d_x;
-		d_x = d_x2;
-		d_x2 = temp;
     	
         // Do the red points ***
 //        #pragma omp parallel for private(i, j, k, ioff)
@@ -313,7 +295,7 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
 //        }
     }
     HANDLE_ERROR(cudaThreadSynchronize());
-    diff2= clock() -start2;
+    //diff2= clock() -start2;
     //printf(    "Kernel execution: %d ms\n", diff2 * 1000 / CLOCKS_PER_SEC);
     //stop cuda timer
     //HANDLE_ERROR(cudaEventRecord(stop,0));
@@ -336,7 +318,16 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     //HANDLE_ERROR(cudaEventSynchronize(stop));
     //HANDLE_ERROR(cudaEventElapsedTime(&time, start, stop));
     
+    //release cuda memory
+    HANDLE_ERROR(cudaFree(d_x));  HANDLE_ERROR(cudaFree(d_cc)); HANDLE_ERROR(cudaFree(d_fc));
+    HANDLE_ERROR(cudaFree(d_oC)); HANDLE_ERROR(cudaFree(d_uC)); HANDLE_ERROR(cudaFree(d_oE));
+    HANDLE_ERROR(cudaFree(d_oN)); HANDLE_ERROR(cudaFree(d_x2)); 
     
+    //reset the cuda device
+    HANDLE_ERROR(cudaDeviceReset());
+    
+    diff1 = clock() - start1;
+    printf("GS execution: %d ms\n", diff1 * 1000 / CLOCKS_PER_SEC);
     
     for(k=2; k<=*nz-1; k++){
     	for(j=2; j<=*ny-1; j++){
@@ -355,11 +346,6 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     
     //close file
     //fclose(fd);
-
-    //release cuda memory
-    HANDLE_ERROR(cudaFree(d_x));  HANDLE_ERROR(cudaFree(d_cc)); HANDLE_ERROR(cudaFree(d_fc));
-    HANDLE_ERROR(cudaFree(d_oC)); HANDLE_ERROR(cudaFree(d_uC)); HANDLE_ERROR(cudaFree(d_oE));
-    HANDLE_ERROR(cudaFree(d_oN)); HANDLE_ERROR(cudaFree(d_x2)); 
     
     //release float arrays
     free(fx);  free(ffc); free(fcc);
@@ -369,15 +355,10 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
     //destroy cuda timing variables
     //cudaEventDestroy(start);
     //cudaEventDestroy(stop);
-
-    //reset the cuda device
-    HANDLE_ERROR(cudaDeviceReset());
     
     if (*iresid == 1)
         Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
     
-    diff1 = clock() - start1;
-    printf("GS execution: %d ms\n", diff1 * 1000 / CLOCKS_PER_SEC);
 }
 
 
