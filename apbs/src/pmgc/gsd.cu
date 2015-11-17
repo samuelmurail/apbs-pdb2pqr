@@ -98,21 +98,25 @@ VPUBLIC void Vgsrb(int *nx, int *ny, int *nz,
     numdia = VAT(ipc, 11);
     if (numdia == 7) {
        if(*gpu == 0){
-			Vgsrb7x(nx, ny, nz,
-					ipc, rpc,
-					RAT2(ac, 1,1), cc, fc,
-					RAT2(ac, 1,2), RAT2(ac, 1,3), RAT2(ac, 1,4),
-					x, w1, w2, r,
-					itmax, iters, errtol, omega, iresid, iadjoint);
+		Vgsrb7x(nx, ny, nz,
+				ipc, rpc,
+				RAT2(ac, 1,1), cc, fc,
+				RAT2(ac, 1,2), RAT2(ac, 1,3), RAT2(ac, 1,4),
+				x, w1, w2, r,
+				itmax, iters, errtol, omega, iresid, iadjoint);
        }
        else
        {
+	 clock_t start, stop;
+	 start = clock();
     		Vgsrb7xGpu(nx, ny, nz,
 				ipc, rpc,
 				RAT2(ac, 1,1), cc, fc,
 				RAT2(ac, 1,2), RAT2(ac, 1,3), RAT2(ac, 1,4),
 				x, w1, w2, r,
 				itmax, iters, errtol, omega, iresid, iadjoint);
+		stop = clock();
+		printf("**One call vo Vgsrb7zGpu: %f\n", ((stop-start)/(double)CLOCKS_PER_SEC)*1000);
        }
     } else if (numdia == 27) {
         Vgsrb27x(nx, ny, nz,
@@ -140,7 +144,7 @@ VPUBLIC void Vgsrb7xGpu(int *nx,int *ny,int *nz,
 	
 	int i, j, k;
 	int sz = *nx * *ny * *nz; 					//<--- grid dimensions
-	int threads = 384;							//<--- number of cuda threads per block (max 512) 
+	int threads = 256;							//<--- number of cuda threads per block (max 512) 
 	int blocks = (int)ceil(sz/(float)threads); 	//<--- number of block of size threads needed to cover sz grid points
 
 	//this macro creates variable dx_<arr>, dy_<arr>, and dz_<arr> with values nx, ny, and nz respectively
@@ -164,48 +168,6 @@ VPUBLIC void Vgsrb7xGpu(int *nx,int *ny,int *nz,
 	double *d_uC; HANDLE_ERROR(cudaMalloc((void**)&d_uC, sizeof(double) * sz));
 	double *d_oN; HANDLE_ERROR(cudaMalloc((void**)&d_oN, sizeof(double) * sz));
 	double *d_oE; HANDLE_ERROR(cudaMalloc((void**)&d_oE, sizeof(double) * sz));
-	
-	//since any cuda card of capability <= sm_13 can't handle double data type we need to deprecate the matrix values to floats.
-	//initialize  and allocate the memory for the float arrays
-	/*float *fx;  fx  = (float*)malloc(sizeof(float)*sz);
-	float *ffc; ffc = (float*)malloc(sizeof(float)*sz);
-	float *fcc; fcc = (float*)malloc(sizeof(float)*sz);
-	float *foC; foC = (float*)malloc(sizeof(float)*sz);
-	float *fuC; fuC = (float*)malloc(sizeof(float)*sz);
-	float *foN; foN = (float*)malloc(sizeof(float)*sz);
-	float *foE; foE = (float*)malloc(sizeof(float)*sz);
-	    
-	//initialize them to 0
-	for(i=0; i<sz; i++){
-		fx[i]  = 0; ffc[i] = 0; fcc[i] = 0;
-		foC[i] = 0; fuC[i] = 0; foN[i] = 0;
-		foE[i] = 0;
-	}
-
-	//create the the corresponding dx,dy, and dz variable used in the VAT3 macro
-	MAT3(fx,  *nx,*ny,*nz);
-	MAT3(ffc, *nx,*ny,*nz);
-	MAT3(fcc, *nx,*ny,*nz);
-	MAT3(foC, *nx,*ny,*nz);
-	MAT3(fuC, *nx,*ny,*nz);
-	MAT3(foN, *nx,*ny,*nz);
-	MAT3(foE, *nx,*ny,*nz);
-	
-	//copy values from double arrays to the float arrays.
-	for(k=2; k<=*nz-1; k++){
-		for(j=2; j<=*ny-1; j++){
-			for(i=2; i<=*nx-1; i++){
-				VAT3(fx,i,j,k) 	= (float)VAT3(x,i,j,k);
-				VAT3(ffc,i,j,k)	= (float)VAT3(fc,i,j,k);
-				VAT3(fcc,i,j,k) = (float)VAT3(cc,i,j,k);
-				VAT3(foC,i,j,k) = (float)VAT3(oC,i,j,k);
-				VAT3(fuC,i,j,k) = (float)VAT3(uC,i,j,k);
-				VAT3(foN,i,j,k) = (float)VAT3(oN,i,j,k);
-				VAT3(foE,i,j,k) = (float)VAT3(oE,i,j,k);
-			}
-		}
-	}*/
-	    
 
 	//copy data from host to device
 	HANDLE_ERROR(cudaMemcpy(d_x,  x,  sizeof(double)*sz, cudaMemcpyHostToDevice));
@@ -243,37 +205,19 @@ VPUBLIC void Vgsrb7xGpu(int *nx,int *ny,int *nz,
 	HANDLE_ERROR(cudaThreadSynchronize());
 	
 	//copy data from device to host
-	HANDLE_ERROR(cudaMemcpy(x,   d_x, sizeof(float)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(cc, d_cc, sizeof(float)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(fc, d_fc, sizeof(float)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(oC, d_oC, sizeof(float)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(uC, d_uC, sizeof(float)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(oN, d_oN, sizeof(float)*sz, cudaMemcpyDeviceToHost));
-	HANDLE_ERROR(cudaMemcpy(oE, d_oE, sizeof(float)*sz, cudaMemcpyDeviceToHost));
-	
-	/*for(k=2; k<=*nz-1; k++){
-		for(j=2; j<=*ny-1; j++){
-			for(i=2; i<=*nx-1; i++){
-				VAT3(x,i,j,k) 	= (double)VAT3(fx,i,j,k);
-				VAT3(fc,i,j,k)	= (double)VAT3(ffc,i,j,k);
-				VAT3(cc,i,j,k) = (double)VAT3(fcc,i,j,k);
-				VAT3(oC,i,j,k) = (double)VAT3(foC,i,j,k);
-				VAT3(uC,i,j,k) = (double)VAT3(fuC,i,j,k);
-				VAT3(oN,i,j,k) = (double)VAT3(foN,i,j,k);
-				VAT3(oE,i,j,k) = (double)VAT3(foE,i,j,k);
-			}
-		}
-	}*/
+	HANDLE_ERROR(cudaMemcpy(x,   d_x, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	//these arrays shouldn't need to be copied back
+	//HANDLE_ERROR(cudaMemcpy(fc, d_fc, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	//HANDLE_ERROR(cudaMemcpy(cc, d_cc, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	//HANDLE_ERROR(cudaMemcpy(oC, d_oC, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	//HANDLE_ERROR(cudaMemcpy(uC, d_uC, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	//HANDLE_ERROR(cudaMemcpy(oN, d_oN, sizeof(double)*sz, cudaMemcpyDeviceToHost));
+	//HANDLE_ERROR(cudaMemcpy(oE, d_oE, sizeof(double)*sz, cudaMemcpyDeviceToHost));
 
 	//release cuda memory
 	HANDLE_ERROR(cudaFree(d_x));  HANDLE_ERROR(cudaFree(d_cc)); HANDLE_ERROR(cudaFree(d_fc));
 	HANDLE_ERROR(cudaFree(d_oC)); HANDLE_ERROR(cudaFree(d_uC)); HANDLE_ERROR(cudaFree(d_oE));
 	HANDLE_ERROR(cudaFree(d_oN)); HANDLE_ERROR(cudaFree(d_x2)); 
-	
-	//release float arrays
-	/*free(fx);  free(ffc); free(fcc);
-	free(foC); free(fuC); free(foN);
-	free(foE); */
 	
 	//reset the cuda device
 	HANDLE_ERROR(cudaDeviceReset());
