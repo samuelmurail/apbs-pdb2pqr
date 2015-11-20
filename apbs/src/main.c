@@ -476,10 +476,14 @@ int main(
                 printPBEPARM(pbeparm);
 
                 /* Solve PDE */
+		clock_t start, stop;
+		start = clock();
                 if (solveMG(nosh, pmg[i], mgparm->type) != 1) {
                     Vnm_tprint(2, "Error solving PDE!\n");
                     VJMPERR1(0);
                 }
+		stop = clock();
+		printf("**solveMg time: %f\n", ((stop-start)/(double)CLOCKS_PER_SEC)*1000);
 
                 /* Set partition information for observables and I/O */
                 if (setPartMG(nosh, mgparm, pmg[i]) != 1) {

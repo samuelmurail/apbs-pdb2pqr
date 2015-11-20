@@ -107,16 +107,16 @@ VPUBLIC void Vgsrb(int *nx, int *ny, int *nz,
        }
        else
        {
-	 clock_t start, stop;
-	 start = clock();
+	 //clock_t start, stop;
+	 //start = clock();
     		Vgsrb7xGpu(nx, ny, nz,
 				ipc, rpc,
 				RAT2(ac, 1,1), cc, fc,
 				RAT2(ac, 1,2), RAT2(ac, 1,3), RAT2(ac, 1,4),
 				x, w1, w2, r,
 				itmax, iters, errtol, omega, iresid, iadjoint);
-		stop = clock();
-		printf("**One call vo Vgsrb7zGpu: %f\n", ((stop-start)/(double)CLOCKS_PER_SEC)*1000);
+		//	stop = clock();
+		//printf("**One call vo Vgsrb7zGpu: %f\n", ((stop-start)/(double)CLOCKS_PER_SEC)*1000);
        }
     } else if (numdia == 27) {
         Vgsrb27x(nx, ny, nz,
@@ -144,7 +144,7 @@ VPUBLIC void Vgsrb7xGpu(int *nx,int *ny,int *nz,
 	
 	int i, j, k;
 	int sz = *nx * *ny * *nz; 					//<--- grid dimensions
-	int threads = 256;							//<--- number of cuda threads per block (max 512) 
+	int threads = 384;							//<--- number of cuda threads per block (max 512) 
 	int blocks = (int)ceil(sz/(float)threads); 	//<--- number of block of size threads needed to cover sz grid points
 
 	//this macro creates variable dx_<arr>, dy_<arr>, and dz_<arr> with values nx, ny, and nz respectively
@@ -179,23 +179,16 @@ VPUBLIC void Vgsrb7xGpu(int *nx,int *ny,int *nz,
 	HANDLE_ERROR(cudaMemcpy(d_oN, oN, sizeof(double)*sz, cudaMemcpyHostToDevice));
 	HANDLE_ERROR(cudaMemcpy(d_oE, oE, sizeof(double)*sz, cudaMemcpyHostToDevice));
 	    
-	for (*iters=1; *iters<=*itmax; (*iters)++) {
+	int imax = 10;
+	for (*iters=1; *iters<=imax; (*iters)++) {
 
 		double *temp;
-		
+
+		//clock_t start, stop;
+		//start = clock();
 		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
-		HANDLE_ERROR(cudaGetLastError());
-		temp = d_x;
-		d_x = d_x2;
-		d_x2 = temp;
-		
-		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
-		HANDLE_ERROR(cudaGetLastError());
-		temp = d_x;
-		d_x = d_x2;
-		d_x2 = temp;
-		
-		cuTest<<<blocks, threads>>>(d_x, d_x2, d_fc, d_cc, d_oC, d_uC, d_oE, d_oN, sz, *nx, *ny, *nz);
+		//stop = clock();
+		//printf("**One call to kernel: %f\n", ((stop-start)/(double)CLOCKS_PER_SEC)*1000);
 		HANDLE_ERROR(cudaGetLastError());
 		temp = d_x;
 		d_x = d_x2;
@@ -206,13 +199,6 @@ VPUBLIC void Vgsrb7xGpu(int *nx,int *ny,int *nz,
 	
 	//copy data from device to host
 	HANDLE_ERROR(cudaMemcpy(x,   d_x, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	//these arrays shouldn't need to be copied back
-	//HANDLE_ERROR(cudaMemcpy(fc, d_fc, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	//HANDLE_ERROR(cudaMemcpy(cc, d_cc, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	//HANDLE_ERROR(cudaMemcpy(oC, d_oC, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	//HANDLE_ERROR(cudaMemcpy(uC, d_uC, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	//HANDLE_ERROR(cudaMemcpy(oN, d_oN, sizeof(double)*sz, cudaMemcpyDeviceToHost));
-	//HANDLE_ERROR(cudaMemcpy(oE, d_oE, sizeof(double)*sz, cudaMemcpyDeviceToHost));
 
 	//release cuda memory
 	HANDLE_ERROR(cudaFree(d_x));  HANDLE_ERROR(cudaFree(d_cc)); HANDLE_ERROR(cudaFree(d_fc));
@@ -221,6 +207,19 @@ VPUBLIC void Vgsrb7xGpu(int *nx,int *ny,int *nz,
 	
 	//reset the cuda device
 	HANDLE_ERROR(cudaDeviceReset());
+
+	FILE *fd;
+	fd = fopen("xvec.txt", "w+");
+
+	for(k=2; k<=*nz-1; k++){
+	  for(j=2; j<=*ny-1; j++){
+	    for(i=2; i<=*nx-1; i++){
+	      fprintf(fd,"(%d): %f\n", (k-1)*(*nx)*(*ny)+(j-1)*(*nx)+(i-1), VAT3(x,i,j,k));
+	    }
+	  }
+	}
+
+	fclose(fd);
 	
 	if (*iresid == 1){
 		Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
@@ -294,6 +293,20 @@ VPUBLIC void Vgsrb7x(int *nx,int *ny,int *nz,
             }
         }
     }
+
+    	FILE *fd;
+	fd = fopen("xvec.txt", "w+");
+
+	for(k=2; k<=*nz-1; k++){
+	  for(j=2; j<=*ny-1; j++){
+	    for(i=2; i<=*nx-1; i++){
+	      fprintf(fd,"(%d): %f\n", (k-1)*(*nx)*(*ny)+(j-1)*(*nx)+(i-1), VAT3(x,i,j,k));
+	    }
+	  }
+	}
+
+	fclose(fd);
+
  
     if (*iresid == 1){
         Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
