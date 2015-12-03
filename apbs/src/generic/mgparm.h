@@ -103,6 +103,7 @@ enum eMGparm_CentMeth {
  * @ingroup  MGparm
  */
 typedef enum eMGparm_CentMeth MGparm_CentMeth;
+
 /**
  *  @ingroup MGparm
  *  @author  Nathan Baker and Todd Dolinsky
@@ -313,21 +314,21 @@ VEXTERNC MGparm*  MGparm_ctor(MGparm_CalcType type);
  *  @param   type Type of MG calculation
  *  @returns Success enumeration
  */
-VEXTERNC Vrc_Codes      MGparm_ctor2(MGparm *thee, MGparm_CalcType type);
+VEXTERNC Vrc_Codes MGparm_ctor2(MGparm *thee, MGparm_CalcType type);
 
 /** @brief   Object destructor
  *  @ingroup MGparm
  *  @author  Nathan Baker
  *  @param   thee  Pointer to memory location of MGparm object
  */
-VEXTERNC void     MGparm_dtor(MGparm **thee);
+VEXTERNC void MGparm_dtor(MGparm **thee);
 
 /** @brief   FORTRAN stub for object destructor
  *  @ingroup MGparm
  *  @author  Nathan Baker
  *  @param   thee  Pointer to MGparm object
  */
-VEXTERNC void     MGparm_dtor2(MGparm *thee);
+VEXTERNC void MGparm_dtor2(MGparm *thee);
 
 /** @brief   Consistency check for parameter values stored in object
  *  @ingroup MGparm
@@ -335,7 +336,7 @@ VEXTERNC void     MGparm_dtor2(MGparm *thee);
  *  @param   thee   MGparm object
  *  @returns Success enumeration
  */
-VEXTERNC Vrc_Codes      MGparm_check(MGparm *thee);
+VEXTERNC Vrc_Codes MGparm_check(MGparm *thee);
 
 /** @brief   Copy MGparm object into thee
  *  @ingroup MGparm
@@ -343,7 +344,7 @@ VEXTERNC Vrc_Codes      MGparm_check(MGparm *thee);
  *  @param   thee   MGparm object (target for copy)
  *  @param   parm   MGparm object (source for copy)
  */
-VEXTERNC void     MGparm_copy(MGparm *thee, MGparm *parm);
+VEXTERNC void MGparm_copy(MGparm *thee, MGparm *parm);
 
 /** @brief   Parse an MG keyword from an input file
  *  @ingroup MGparm
