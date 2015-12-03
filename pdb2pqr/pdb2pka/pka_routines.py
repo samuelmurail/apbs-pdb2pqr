@@ -960,9 +960,13 @@ class pKaRoutines:
         #linear interpolation
         charge0, ph0 =  charge_list[prevous_cross_index]
         charge1, ph1 =  charge_list[cross_index]
-        ph_at_0_5 = ph0 + ((ph1-ph0) * ((curve_calc_point-charge0)/(charge1-charge0)))
-
-        self.ph_at_0_5[name] = ph_at_0_5
+        try:
+            ph_at_0_5 = ph0 + ((ph1-ph0) * ((curve_calc_point-charge0)/(charge1-charge0)))
+            self.ph_at_0_5[name] = ph_at_0_5
+        except ZeroDivisionError:
+            warning = "WARNING: UNABLE TO CACLCULATE PKA FOR {name}\n".format(name=name)
+            print warning,
+            self.warnings.append(warning)
 
         if not bad_curve:
             print "{name} exhibits Henderson-Hasselbalch behavior.".format(name=name)
@@ -2076,9 +2080,10 @@ class pKaRoutines:
             charge, radius = self.forcefield.getParams1(residue, atomname)
             initialmap[atomname] = charge
             if charge is None:
-                print atomname,charge
+                print residue
+                print atomname
                 print residue.isCterm
-                PDB2PKAError('Charge on atom is None')
+                raise PDB2PKAError('Charge on atom is None')
             sum+=charge
         if abs(sum)<0.001:
             neutral_state=start_state
