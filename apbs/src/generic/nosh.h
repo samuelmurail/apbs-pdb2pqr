@@ -75,6 +75,7 @@
 #include "generic/valist.h"
 #include "generic/bemparm.h"
 #include "generic/geoflowparm.h"
+#include "generic/cuparm.h"
 
 /** @brief Maximum number of molecules in a run
 *  @ingroup NOsh */
@@ -117,7 +118,8 @@ enum eNOsh_CalcType {
     NCT_FEM=1, /**< Finite element */
     NCT_APOL=2, /**< non-polar */
     NCT_BEM=3, /**< Boundary element (TABI)*/
-    NCT_GEOFLOW=4 /**< Geometric flow*/
+    NCT_GEOFLOW=4, /**< Geometric flow*/
+	NCT_GPU = 5 /**< Use a gpu solver*/
 };
 
 /**
@@ -170,6 +172,7 @@ struct sNOsh_calc {
     FEMparm *femparm;       /**< Finite element parameters */
     BEMparm *bemparm;       /**< boundary element (tabi) parameters */
     GEOFLOWparm *geoflowparm;
+    CUparm *cuparm;		    /**< Generic gpu parameters */
     PBEparm *pbeparm;       /**< Generic PBE parameters */
     APOLparm *apolparm;		/**< Non-polar parameters */
     NOsh_CalcType calctype; /**< Calculation type */

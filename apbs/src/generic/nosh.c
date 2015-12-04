@@ -351,6 +351,7 @@ VPUBLIC NOsh_calc* NOsh_calc_ctor(
     thee->apolparm = VNULL;
     thee->bemparm = VNULL;
     thee->geoflowparm = VNULL;
+    thee->cuparm = VNULL;
 
     switch (calctype) {
         case NCT_MG:
@@ -369,6 +370,9 @@ VPUBLIC NOsh_calc* NOsh_calc_ctor(
             thee->geoflowparm = GEOFLOWparm_ctor(GFCT_NONE);
             thee->apolparm = APOLparm_ctor();
             break;
+        case NCT_GPU:
+        	thee->cuparm = CUparm_ctor(CCT_AMGX);
+        	break;
         default:
             Vnm_print(2, "NOsh_calc_ctor:  unknown calculation type (%d)!\n",
                       calctype);
@@ -1217,6 +1221,12 @@ ELEC section!\n");
             (thee->nelec)++;
             calc->geoflowparm->type = GFCT_AUTO;
             return NOsh_parseGEOFLOW(thee, sock, calc);
+        } else if(Vstring_strcasecmp(tok, "gpu-amgx") == 0){
+        	thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_GPU);
+        	calc = thee->elec[thee->nelec];
+        	(thee->nelec)++;
+        	calc->cuparm->type = CCT_AMGX;
+        	return NOsh_parseCU(thee, sock, calc);
         } else {
             Vnm_print(2, "NOsh_parseELEC: The method (\"mg\",\"fem\", \"bem\", \"geoflow\") or \
 \"name\" must be the first keyword in the ELEC section\n");
@@ -2261,6 +2271,87 @@ in  NOsh_setupMGAUTO\n", __FILE__, __LINE__);
 
 }
 
+VPUBLIC int NOsh_parseCU(NOsh *thee, Vio *sock, NOsh_calc *elec){
+
+	char tok[VMAX_BUFSIZE];
+	CUparm *cuparm = VNULL;
+	PBEparm *pbeparm = VNULL;
+	int rc;
+	Vrc_Codes vrc;
+
+	/*check the arguments*/
+	if(thee == VNULL){
+		Vnm_print(2, "NOsh_parseCU: Got NULL thee!\n");
+		return 0;
+	}
+	if(sock == VNULL){
+		Vnm_print(2, "NOsh_parseCU: Got pointer to NULL socket!\n");
+		return 0;
+	}
+	if(elec == VNULL){
+		Vnm_print(2, "NOsh_parseCU: Got pointer to NULL elec object!\n");
+		return 0;
+	}
+
+	cuparm = elec->cuparm;
+	if(cuparm == VNULL){
+		Vnm_print(2, "NOsh_parseCU: Got pointer to NULL cuparm object!\n");
+		return 0;
+	}
+
+	Vnm_print(0, "NOsh_parseCu: Parsing parameter for gpu calculation\n");
+
+	/*Start reading tokens from the input stream*/
+	rc = 1;
+	while(Vio_scanf(sock, "%s", tok) == 1){
+
+		Vnm_print(0, "NOsh_parseCU: Parsing %s...\n", tok);
+
+		/*see if it's an END token*/
+		if(Vstring_strcasecmp(tok, "end") == 0){
+			cuparm->parsed = 1;
+			pbeparm->parsed = 1;
+			rc = 1;
+			break;
+		}
+
+		/*pass the token through a series of a series of parsers*/
+		rc = PBEparm_parseToken(pbeparm, tok, sock);
+		if(rc == -1){
+			Vnm_print(0, "NOsh_parseCU: parsePBE error!\n");
+			break;
+		}
+		else if(rc == 0){
+			/*parse the token through a generic GPU parser*/
+			vrc = CUparm_parseToken(cuparm, tok, sock);
+			if(vrc == VRC_FAILURE){
+				Vnm_print(0, "NOsh_parseCU: parseCU error!\n");
+				break;
+			}
+			else if(vrc == VRC_WARNING){
+				/*we ran out of parser!*/
+				Vnm_print(2, "NOsh: Unrecognized keyword!\n");
+				break;
+			}
+		}
+
+	}/*end while*/
+
+	/*Handle various errors arising in the token rading loop -- these all just result in simple
+	 * return right now.
+	 */
+	if(rc == -1) return 0;
+	if(rc == 0) return 0;
+
+	/*Check the status of the parameter objects*/
+	if((!CUparm_check(cuparm)) || (!PBEparm_check(pbeparm))){
+		Vnm_print(2, "NOsh: CU parameters not set correctly!\n");
+		return 0;
+	}
+
+	return 1;
+}
+
 VPUBLIC int NOsh_parseFEM(
                           NOsh *thee,
                           Vio *sock,
@@ -2319,10 +2410,10 @@ VPUBLIC int NOsh_parseFEM(
             Vnm_print(0, "NOsh_parseFEM:  parsePBE error!\n");
             break;
         } else if (rc == 0) {
-            /* Pass the token to the generic MG parser */
+            /* Pass the token to the generic FEM parser */
             vrc = FEMparm_parseToken(feparm, tok, sock);
             if (vrc == VRC_FAILURE) {
-                Vnm_print(0, "NOsh_parseFEM:  parseMG error!\n");
+                Vnm_print(0, "NOsh_parseFEM:  parseFEM error!\n");
                 break;
             } else if (vrc == VRC_WARNING) {
                 /* We ran out of parsers! */
