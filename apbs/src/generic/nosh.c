@@ -107,6 +107,12 @@ VEXTERNC int NOsh_parseAPOL(
                            NOsh_calc *elec
                            );
 
+VPUBLIC int NOsh_parseCU(
+						NOsh *thee,
+						Vio *sock,
+						NOsh_calc *elec
+						);
+
 VPRIVATE int NOsh_setupCalcMG(
                               NOsh *thee,
                               NOsh_calc *elec
@@ -148,10 +154,20 @@ VPRIVATE int NOsh_setupCalcGEOFLOW(
                               NOsh_calc *elec
                               );
 
+VPRIVATE int NOsh_setupCalcCU(
+							  NOsh *thee,
+							  NOsh_calc *elec
+							  );
+
 VPRIVATE int NOsh_setupCalcBEMMANUAL(
                               NOsh *thee,
                               NOsh_calc *elec
                               );
+
+VPRIVATE int NOsh_setupCalcCUAMGX(
+							  NOsh *thee,
+							  NOsh_calc *elec
+							  );
 
 VPRIVATE int NOsh_setupCalcGEOFLOWMANUAL(
                               NOsh *thee,
@@ -1371,6 +1387,9 @@ map is used!\n");
             case NCT_GEOFLOW:
                 NOsh_setupCalcGEOFLOW(thee, elec);
                 break;
+            case NCT_GPU:
+            	NOsh_setupCalcCU(thee, elec);
+            	break;
             default:
                 Vnm_print(2, "NOsh_setupCalc:  Invalid calculation type (%d)!\n",
                           elec->calctype);
@@ -1630,6 +1649,28 @@ VPRIVATE int NOsh_setupCalcFEM(
 
     /* Shouldn't get here */
     return 0;
+}
+
+VPRIVATE int NOsh_setupCalcCU(NOsh *thee, NOsh_calc *calc){
+
+	CUparm *cuparm = VNULL;
+
+	VASSERT(thee != VNULL);
+	VASSERT(calc != VNULL);
+
+	cuparm = calc->cuparm;
+	VASSERT(cuparm != VNULL);
+
+	/*now we are ready for whatever sorts of post-processing operations that are
+	 * necessary for the varios types of calculations.
+	 */
+	if(cuparm->type == CCT_AMGX){ /*TODO: at some point add other options and checks*/
+		return NOsh_setupCalcCUAMGX(thee, calc);
+	}
+	else{
+		Vnm_print(2, "NOsh_setupCalcCU: undefined CU calculation type (%d)!\n", cuparm->type);
+		return 0;
+	}
 }
 
 
@@ -2702,6 +2743,59 @@ set up?\n");
     return 1;
 }
 
+VPRIVATE int NOsh_setupCalcCUAMGX(NOsh *thee, NOsh_calc *elec){
+
+	CUparm *cuparm = VNULL;
+	APOLparm *apolparm = VNULL;
+	PBEparm *pbeparm = VNULL;
+	NOsh_calc *calc = VNULL;
+
+	if(thee == VNULL){
+		Vnm_print(2, "NOsh_setupCalcCUAMGX: Got NULL thee!\n");
+		return 0;
+	}
+	if(thee == VNULL){
+		Vnm_print(2, "NOsh_setupCalcCUAMGX: Got NULL calc!\n");
+		return 0;
+	}
+
+	cuparm = elec->cuparm;
+	if(cuparm == VNULL){
+		Vnm_print(2, "NOsh_setupCalcCUAMGX: Got NULL cuparm -- calculation may have not been set up!\n");
+		return 0;
+	}
+
+	apolparm = elec->apolparm;
+	if(apolparm == VNULL){
+		Vnm_print(2, "NOsh_setupCalcCUAMGX: Got NULL apolparm -- calculation may have not been set up!\n");
+		return 0;
+	}
+
+	pbeparm = elec->pbeparm;
+	if(pbeparm == VNULL){
+		Vnm_print(2, "NOsh_setupCalcCUAMGX: Got NULL pbeparm --calculation may have not been set up!\n");
+		return 0;
+	}
+
+	/*Check to see if we have any room left for this type of calculation, if so, set up the calculation
+	 * type, update the number of calculations of this type, and parse the rest of the section
+	 */
+	if(thee->ncalc >= NOSH_MAXCALC){
+		Vnm_print(2, "NOsh: Too many calculations in this run!\n");
+		Vnm_print(2, "NOsh: Current max is %d; ignoring this calculation\n", NOSH_MAXCLAC);
+		return 0;
+	}
+
+	/*Get the next calculation object and increment the number of calculations*/
+	thee->calc[thee->ncalc] = NOsh_calc_ctor(NCT_GPU);
+	calc = thee->calc[thee->ncalc];
+	(thee->ncalc)++;
+
+	/*Copy over contents of ELEC*/
+	NOsh_calc_copy(calc, elec);
+
+	return 1;
+}
 
 VPUBLIC int NOsh_parseBEM(
                          NOsh *thee,

@@ -1211,6 +1211,65 @@ VPUBLIC void printMGPARM(MGparm *mgparm, double realCenter[3]) {
 }
 
 /**
+ * init a gpu calculation
+ */
+VPUBLIC int initGPU(
+		int icalc,
+		NOsh *nosh,
+		CUparm *cuparm,
+		PBEparm *pbeparm,
+		double realCenter[3],
+		Vpbe *pbe[NOSH_MAXCALC],
+		Valist *alist[NOSH_MAXMOL],
+		Vgrid *dielXMap[NOSH_MAXMOL],
+		Vgrid *dielYMap[NOSH_MAXMOL],
+		Vgrid *dielZMap[NOSH_MAXMOL],
+		Vgrid *kappaMap[NOSH_MAXMOL],
+		Vgrid *chargeMap[NOSH_MAXMOL],
+		Vpmgp *pmgp[NOSH_MAXCALC],
+		Vpmg *pmg[NOSH_MAXCALC],
+		Vgrid *potMap[NOSH_MAXMOL]
+		){
+
+	int j, focusflag, iatom;
+	size_t bytesTotal, highWater;
+	double sparm, iparm, q;
+	Vatom *atom = VNULL;
+	Vgrid 	*theDielXMap = VNULL,
+			*theDielYMap = VNULL,
+			*theDielZMap = VNULL;
+	Vgrid	*theKappaMap = VNULL,
+			*thePotMap = VNULL,
+			*thechargeMap = VNULL;
+	Valist *myalist = VNULL;
+
+	Vnm_start(APBS_TIMER_SETUP, "Setup timer");
+
+	/*get grid center*/
+	for(j=0; j<3; j++){
+		realCenter[j] = cuparm->center[j];
+	}
+
+	/*set up the PBE object*/
+	Vnm_tprint(0, "Setting up PBE object...\n");
+	if(pbeparm->srfm == VSM_SPLINE){
+		sparm = pbeparm->swin;
+	}
+	else{
+		sparm = pbeparm->srad;
+	}
+
+	if(pbeparm->nion > 0){
+
+	}
+
+
+
+
+
+}
+
+/**
  * Initialize a multigrid calculation.
  */
 VPUBLIC int initMG(int icalc,

@@ -245,6 +245,30 @@ VEXTERNC int initMG(
                     );
 
 /**
+ * @brief Initaliza a gpu calculation
+ * @ingroup Frontend
+ * @author Juan Brandi (largely copied from Nathan Baker's code)
+ * @return 1 if successful, 0 otherwise
+ */
+VEXTERNC int initGPU(
+		int icalc, /**< Index of calculation in pmg/pmpg arrays */
+		NOsh *nosh, /**< Object with parsed input file parameters */
+		CUparm *cuparm, /**< Object with GPU-specific parameters*/
+		PBEparm *pbeparm, /**< Object with generic PBE parameters */
+		double realCenter[3], /**< The actual center of the current mesh */
+		Vpbe *pbe[NOSH_MAXCALC], /**< Array of Vpbe objects (one for each calc) */
+		Valist *alist[NOSH_MAXMOL], /**< Array of atom lists */
+		Vgrid *dielXMap[NOSH_MAXMOL], /**< Array of x-shifted dielectric maps */
+		Vgrid *dielYMap[NOSH_MAXMOL], /**< Array of y-shifted dielectric maps */
+		Vgrid *dielZMap[NOSH_MAXMOL], /**< Array of z-shifted dielectric maps */
+		Vgrid *kappaMap[NOSH_MAXMOL], /**< Array of kappa maps */
+		Vgrid *chargeMap[NOSH_MAXMOL], /**< Array of charge maps */
+		Vpmgp *pmgp[NOSH_MAXCALC], /**< Array of problem parameters */
+		Vpmg *pmg[NOSH_MAXCALC], /**< Array of problem objects */
+		Vgrid *potMap[NOSH_MAXMOL] /**< Array of potential maps */
+		);
+
+/**
  * @brief  Kill structures initialized during an MG calculation
  * @ingroup  Frontend
  * @author  Nathan Baker

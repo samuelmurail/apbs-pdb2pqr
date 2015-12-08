@@ -94,6 +94,7 @@ int main(
     BEMparm *bemparm = VNULL;
 #endif
     GEOFLOWparm *geoflowparm = VNULL;
+    CUparm *cuparm = VNULL;
     PBEparm *pbeparm = VNULL;
     APOLparm *apolparm = VNULL;
     Vparam *param = VNULL;
@@ -778,6 +779,39 @@ int main(
                 exit(2);
 #endif
                 
+            case NCT_GPU:
+
+            	/*What is this? This seems lie a very awkward way to find the right ELEC statement...*/
+            	for(k=0; k<nosh->nelec; k++){
+            		if(nosh->elec2calc[k] >= i){
+            			break;
+            		}
+            	}
+
+            	if(Vstring_strcasecmp(nosh->elecname[k], "") == 0){
+            		Vnm_tprint(1, "CALCULATION #%d: GPU Solver\n", i+1);
+            	}
+            	else{
+            		Vnm_tprint(1, "CALCULATION: #%d (%s): GPU Solver\n", i+1, nosh->elecname[k]);
+            	}
+
+            	/*useful local variables*/
+            	cuparm = nosh->calc[i]->cuparm;
+            	apolparm = nosh->calc[i]->apolparm;
+            	pbeparm = nosh->calc[i]->pbeparm;
+
+            	/*Set up the problem*/
+            	Vnm_tprint(1,"	Setting up problem...\n");
+
+            	if(!initGPU(i, nosh, cuparm, pbeparm, realCenter, pbe, alist, dielXMap, dielYMap,
+            			dielZMap, kappaMap, chargeMap, pmgp, pmg, potMap)){
+            		Vnm_tprint(2, "Error setting up GPU calculation!\n");
+            		VJMPERR1(0);
+            	}
+
+
+            	break;
+
             default:
                 Vnm_tprint(2, "  Unknown calculation type (%d)!\n", nosh->calc[i]->calctype);
                 exit(2);
