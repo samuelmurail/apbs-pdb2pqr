@@ -50,7 +50,7 @@ __author__ = "Todd Dolinsky, Yong Huang"
 
 import string, sys
 import copy  ### PC
-from errors import PDBInputError, PDBInternalError
+from .errors import PDBInputError, PDBInternalError
 
 lineParsers = {}
 
@@ -66,7 +66,7 @@ class BaseRecord(object):
     def __init__(self, line):
         record = string.strip(line[0:6])
         if record != self.__class__.__name__:
-            raise ValueError, record
+            raise ValueError(record)
 
         self.original_text = line.rstrip('\r\n')
 
@@ -444,7 +444,7 @@ class HETATM(BaseRecord):
             self.resSeq = int(string.strip(line[22:26]))
             self.iCode = string.strip(line[26])
         except:
-            raise ValueError, 'Residue name must be less than 4 characters!'
+            raise ValueError('Residue name must be less than 4 characters!')
         self.x = float(string.strip(line[30:38]))
         self.y = float(string.strip(line[38:46]))
         self.z = float(string.strip(line[46:54]))
@@ -632,7 +632,7 @@ class MOL2MOLECULE:
                 try:
                     thisAtom.mol2charge=float(charge)
                 except:
-                    print 'Warning. Non-float charge in mol2 file.',charge
+                    print('Warning. Non-float charge in mol2 file.',charge)
                     thisAtom.mol2charge=None
             self.lPDBAtoms.append(mol2pdb)
             self.lAtoms.append(thisAtom)
@@ -2309,12 +2309,12 @@ def readPDB(file):
             sys.stderr.write("Error parsing line: %s\n" % details)
             sys.stderr.write("<%s>\n" % string.strip(line))
             sys.stderr.write("Truncating remaining errors for record type:%s\n" % record)
-        except StandardError as details:
+        except Exception as details:
             if record == "ATOM" or record == "HETATM":
                 try:
                     obj = readAtom(line)
                     pdblist.append(obj)
-                except StandardError, details:
+                except Exception as details:
                     sys.stderr.write("Error parsing line: %s\n" % details)
                     sys.stderr.write("<%s>\n" % string.strip(line))
             elif record == "SITE" or record == "TURN":
