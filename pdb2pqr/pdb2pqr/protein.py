@@ -3,42 +3,42 @@
 
     This module contains the protein object used in PDB2PQR and associated
     methods
-    
+
     ----------------------------
-   
+
     PDB2PQR -- An automated pipeline for the setup, execution, and analysis of
     Poisson-Boltzmann electrostatics calculations
 
-    Copyright (c) 2002-2011, Jens Erik Nielsen, University College Dublin; 
-    Nathan A. Baker, Battelle Memorial Institute, Developed at the Pacific 
-    Northwest National Laboratory, operated by Battelle Memorial Institute, 
-    Pacific Northwest Division for the U.S. Department Energy.; 
+    Copyright (c) 2002-2011, Jens Erik Nielsen, University College Dublin;
+    Nathan A. Baker, Battelle Memorial Institute, Developed at the Pacific
+    Northwest National Laboratory, operated by Battelle Memorial Institute,
+    Pacific Northwest Division for the U.S. Department Energy.;
     Paul Czodrowski & Gerhard Klebe, University of Marburg.
 
 	All rights reserved.
 
-	Redistribution and use in source and binary forms, with or without modification, 
+	Redistribution and use in source and binary forms, with or without modification,
 	are permitted provided that the following conditions are met:
 
-		* Redistributions of source code must retain the above copyright notice, 
+		* Redistributions of source code must retain the above copyright notice,
 		  this list of conditions and the following disclaimer.
-		* Redistributions in binary form must reproduce the above copyright notice, 
-		  this list of conditions and the following disclaimer in the documentation 
+		* Redistributions in binary form must reproduce the above copyright notice,
+		  this list of conditions and the following disclaimer in the documentation
 		  and/or other materials provided with the distribution.
         * Neither the names of University College Dublin, Battelle Memorial Institute,
           Pacific Northwest National Laboratory, US Department of Energy, or University
           of Marburg nor the names of its contributors may be used to endorse or promote
           products derived from this software without specific prior written permission.
 
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
-	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-	IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-	INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-	BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
-	OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+	IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+	INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+	BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+	OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 	OF THE POSSIBILITY OF SUCH DAMAGE.
 
     ----------------------------
@@ -102,11 +102,11 @@ class Protein:
 
                 if previousAtom == None:
                     previousAtom = record
-                
+
                 if chainID not in chainDict:
                     myChain = Chain(chainID)
                     chainDict[chainID] = myChain
-                        
+
                 if resSeq != previousAtom.resSeq or \
                       iCode != previousAtom.iCode or \
                       chainID != previousAtom.chainID:
@@ -126,7 +126,7 @@ class Protein:
                 numModels += 1
                 if residue == []: continue
                 if numModels > 1:
-                    myResidue = self.createResidue(residue, previousAtom.resName)    
+                    myResidue = self.createResidue(residue, previousAtom.resName)
                     chainDict[previousAtom.chainID].addResidue(myResidue)
                     break
 
@@ -142,7 +142,7 @@ class Protein:
         self.chainmap = chainDict.copy()
 
         # Make a list for sequential ordering of chains
-        
+
         if "" in chainDict:
             chainDict["ZZ"] = chainDict[""]
             del chainDict[""]
@@ -210,70 +210,13 @@ class Protein:
             elif atom.chainID != currentchainID:
                 currentchainID = atom.chainID
                 text.append("TER\n")
-            
+
             if pdbfile == True:
                 text.append("%s\n" % atom.getPDBString())
             else:
                 text.append("%s\n" % atom.getPQRString(chainflag=chainflag))
         text.append("TER\nEND")
         return text
-
-    def createHTMLTypeMap(self, definition, outfilename):
-        """
-            Create an HTML typemap file at the desired location. If a
-            type cannot be found for an atom a blank is listed.
-            
-            Parameters
-                definition: The definition objects.
-                outfilename:  The name of the file to write (string)
-        """
-        from .forcefield import Forcefield
-        from aconf import STYLESHEET
-
-        # Cache the initial atom numbers
-        numcache = {}
-        for atom in self.getAtoms():
-            numcache[atom] = atom.serial
-        self.reSerialize()
-
-        amberff = Forcefield("amber", definition, None)
-        charmmff = Forcefield("charmm", definition, None)
-
-        file = open(outfilename, "w")
-        file.write("<HTML>\n")
-        file.write("<HEAD>\n")
-        file.write("<TITLE>PQR Typemap (beta)</TITLE>\n")
-        file.write("<link rel=\"stylesheet\" href=\"%s\" type=\"text/css\">\n" % STYLESHEET)
-        file.write("</HEAD>\n")
-        file.write("<BODY>\n")
-        file.write("<H3>This is a developmental page including the atom type for the atoms in the PQR file.</H3><P>\n")
-        file.write("<TABLE CELLSPACING=2 CELLPADDING=2 BORDER=1>\n")
-        file.write("<tr><th>Atom Number</th><th>Atom Name</th><th>Residue Name</th><th>Chain ID</th><th>AMBER Atom Type</th><th>CHARMM Atom Type</th></tr>\n")
-       
-        for atom in self.getAtoms():
-            if isinstance(atom.residue, (Amino, WAT, Nucleic)):
-                resname = atom.residue.ffname
-            else:
-                resname = atom.residue.name
-
-            ambergroup = amberff.getGroup(resname, atom.name)
-            charmmgroup  = charmmff.getGroup(resname, atom.name)
-        
-            
-            file.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (atom.serial, atom.name, resname, atom.chainID, ambergroup, charmmgroup))
-        
-
-        file.write("</table>\n")
-        file.write("</BODY></HTML>\n")
-        file.close()
-
-        # Return the original numbers back
-        for atom in self.getAtoms():
-            atom.serial = numcache[atom]
-    
-        del numcache
-        del amberff
-        del charmmff
 
     def reSerialize(self):
         """
@@ -289,7 +232,7 @@ class Protein:
             Return the list of residues in the entire protein
         """
         return self.residues
-    
+
     def numResidues(self):
         """
             Get the number of residues for the entire protein (including
@@ -340,7 +283,7 @@ class Protein:
             for residue in chain.get("residues"):
                 rescharge = residue.getCharge()
                 charge += rescharge
-                if isinstance(residue, Nucleic):               
+                if isinstance(residue, Nucleic):
                     if residue.is3term or residue.is5term: continue
                 if float("%i" % rescharge) != rescharge:
                     misslist.append(residue)
@@ -354,7 +297,7 @@ class Protein:
                 chains: The list of chains in the protein (chain)
         """
         return self.chains
-    
+
     def getSummary(self):
         output = []
         for chain in self.chains:

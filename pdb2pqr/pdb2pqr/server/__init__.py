@@ -1,51 +1,50 @@
 """
-    CGI Server for PDB2PQR
+    Module for web-based use of PDB2PQR
 
     This module contains the various functions necessary to run PDB2PQR
     from a web server.
 
     ----------------------------
-   
+
     PDB2PQR -- An automated pipeline for the setup, execution, and analysis of
     Poisson-Boltzmann electrostatics calculations
 
-    Copyright (c) 2002-2011, Jens Erik Nielsen, University College Dublin; 
-    Nathan A. Baker, Battelle Memorial Institute, Developed at the Pacific 
-    Northwest National Laboratory, operated by Battelle Memorial Institute, 
-    Pacific Northwest Division for the U.S. Department Energy.; 
+    Copyright (c) 2002-2011, Jens Erik Nielsen, University College Dublin;
+    Nathan A. Baker, Battelle Memorial Institute, Developed at the Pacific
+    Northwest National Laboratory, operated by Battelle Memorial Institute,
+    Pacific Northwest Division for the U.S. Department Energy.;
     Paul Czodrowski & Gerhard Klebe, University of Marburg.
 
 	All rights reserved.
 
-	Redistribution and use in source and binary forms, with or without modification, 
+	Redistribution and use in source and binary forms, with or without modification,
 	are permitted provided that the following conditions are met:
 
-		* Redistributions of source code must retain the above copyright notice, 
+		* Redistributions of source code must retain the above copyright notice,
 		  this list of conditions and the following disclaimer.
-		* Redistributions in binary form must reproduce the above copyright notice, 
-		  this list of conditions and the following disclaimer in the documentation 
+		* Redistributions in binary form must reproduce the above copyright notice,
+		  this list of conditions and the following disclaimer in the documentation
 		  and/or other materials provided with the distribution.
         * Neither the names of University College Dublin, Battelle Memorial Institute,
           Pacific Northwest National Laboratory, US Department of Energy, or University
           of Marburg nor the names of its contributors may be used to endorse or promote
           products derived from this software without specific prior written permission.
 
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
-	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-	IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-	INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-	BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
-	OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+	IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+	INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+	BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+	OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 	OF THE POSSIBILITY OF SUCH DAMAGE.
 
     ----------------------------
 """
 
-__date__   = "4 August 2008"
-__author__ = "Todd Dolinsky, Samir Unni, Yong Huang"
+__all__ = ["utilities"]
 
 import string
 import os
@@ -54,7 +53,6 @@ import time
 from aconf import *
 
 # GLOBAL SERVER VARIABLES
-#Currently this file is unused. TODO: Nuke it?
 
 """ The absolute path to root HTML directory """
 SRCPATH   = SRCPATH
@@ -134,7 +132,7 @@ def setID(time):
 #    if "ligand" in options: opts += "ligand,"
 #    if "apbs" in options: opts += "apbs,"
 #    if "chain" in options: opts += "chain,"
-#    
+#
 #    if opts == "": opts = "none,"
 #
 #    text += "%s\t%s\t%.2f\n" % (opts[:-1], size, nettime)
@@ -161,10 +159,10 @@ def cleanTmpdir():
         if id not in newdir:
             newdir.append(id)
             count += 1
-        
+
     newdir.sort()
     size = size / (1024.0 * 1024.0)
-    
+
     newcount = 0
     if size >= LIMIT:
         for filename in newdir:
@@ -268,7 +266,7 @@ def cleanTmpdir():
 #
 #    print "<font size=2>Server time:</font> <code>%s</code><BR>" % (time.asctime(time.localtime()))
 #    print "</blockquote>"
-#    
+#
 #    print "</BODY></HTML>"
 
 #def printRedirector(name, have_opal):
@@ -306,7 +304,7 @@ def cleanTmpdir():
 #    line = file.readline()
 #    words = string.split(line)
 #    loads = words[:3]
-#    
+#
 #    return loads
 
 def createResults(header, input, name, time, missedligands=[]):
@@ -327,7 +325,7 @@ def createResults(header, input, name, time, missedligands=[]):
 
     filename = "%s%s%s.html" % (INSTALLDIR, TMPDIR, name)
     file = open(filename, "w")
-    
+
     file.write("<html>\n")
     file.write("<head>\n")
     file.write("<title>PDB2PQR Results</title>\n")
@@ -339,7 +337,7 @@ def createResults(header, input, name, time, missedligands=[]):
     file.write("<P>\n")
     file.write("Here are the results from PDB2PQR.  The files will be available on the ")
     file.write("server for a short period of time if you need to re-access the results.<P>\n")
- 
+
     file.write("<a href=\"%s%s%s.pqr\">%s.pqr</a><BR>\n" % (WEBSITE, TMPDIR, name, name))
     if input:
         file.write("<a href=\"%s%s%s.in\">%s.in</a><BR>\n" % (WEBSITE, TMPDIR, name, name))
@@ -348,7 +346,7 @@ def createResults(header, input, name, time, missedligands=[]):
         file.write("<a href=\"%s%s%s.propka\">%s.propka</a><BR>\n" % (WEBSITE, TMPDIR, name, name))
     typename = "%s%s%s-typemap.html" % (INSTALLDIR, TMPDIR, name)
     if os.path.isfile(typename):
-        file.write("<a href=\"%s%s%s-typemap.html\">%s-typemap.html</a><BR>\n" % (WEBSITE, TMPDIR, name, name)) 
+        file.write("<a href=\"%s%s%s-typemap.html\">%s-typemap.html</a><BR>\n" % (WEBSITE, TMPDIR, name, name))
     file.write("<P>The header for your PQR file, including any warnings generated, is:<P>\n")
     file.write("<blockquote><code>\n")
     file.write("%s<P>\n" % newheader)
@@ -369,7 +367,7 @@ def createResults(header, input, name, time, missedligands=[]):
     file.write("If you would like to run APBS with these results, please click <a href=\"%s../apbs/index.py?pdb2pqr-id=%s\">here</a>.<P>\n" % (WEBSITE[:-1], name))
     file.write("<P>Thank you for using the PDB2PQR server!<P>\n")
     file.write("<font size=\"-1\"><P>Total time on server: %.2f seconds</font><P>\n" % time)
-    file.write("<font size=\"-1\"><CENTER><I>Last Updated %s</I></CENTER></font>\n" % __date__) 
+    file.write("<font size=\"-1\"><CENTER><I>Last Updated %s</I></CENTER></font>\n" % __date__)
     file.write("</body>\n")
     file.write("</html>\n")
 
@@ -398,10 +396,10 @@ def createError(name, details):
     file.write("If you believe this error is due to a bug, please contact the server administrator.<BR>\n")
     file.write("If you would like to try running PDB2QR again, please click <a href=\"%s%s\">\n" % (WEBSITE, WEBNAME))
     file.write("here</a>.<P>\n")
-    file.write("<font size=\"-1\"><CENTER><I>Last Updated %s</I></CENTER></font>\n" % __date__) 
+    file.write("<font size=\"-1\"><CENTER><I>Last Updated %s</I></CENTER></font>\n" % __date__)
     file.write("</body>\n")
     file.write("</html>\n")
-    
+
 #def startServer(name):
 #    """
 #        Start the PDB2PQR server.  This function is necessary so
@@ -412,7 +410,7 @@ def createError(name, details):
 #            name:    The ID name of the final file to create (string)
 #        Returns
 #            pqrpath: The complete path to the pqr file (string)
-#    """    
+#    """
 #    cleanTmpdir()
 #    path = SRCPATH
 #    tmpdir = TMPDIR
@@ -458,7 +456,7 @@ def createError(name, details):
 #            #os.remove(tmpname)
 #            os.remove(filename)
 #            sys.exit()
-#        
+#
 #    else: # Child - run PDB2PQR
 #        # don't know what this does, or if there's even anything going on here, like running pdb2pqr
 #        home = os.getcwd()
