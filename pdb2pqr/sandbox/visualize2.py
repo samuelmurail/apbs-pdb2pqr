@@ -2,14 +2,14 @@
 """
     Displays the Jmol input page
 """
-print 'Content-type: text/html\n\n'
+print('Content-type: text/html\n\n')
 
 __date__ = "18 June 2008"
 __author__ = "Samir Unni"
 __version__ = "0.0.1"
 
 from src.aconf import *
-import cgi, cgitb, pickle, urllib, os, glob
+import cgi, cgitb, pickle, urllib.request, urllib.parse, urllib.error, os, glob
 from src.utilities import getEventTrackingString, getTrackingScriptString
 
 cgitb.enable()
@@ -18,7 +18,7 @@ form = cgi.FieldStorage()
 def initVars():
     #global serviceURL
 
-    if not form.has_key("jobid"):
+    if "jobid" not in form:
         pass # add code to redirect to PDB2PQR input page here
     else:
         jobid = form['jobid'].value
@@ -48,7 +48,7 @@ def initVars():
             for file in resp._outputFile:
                 fileName = file._name
                 if fileName!="Standard Output" and fileName!="Standard Error":
-                    urllib.urlretrieve(file._url, '%s%s%s/%s' % (INSTALLDIR, TMPDIR, jobid, fileName))
+                    urllib.request.urlretrieve(file._url, '%s%s%s/%s' % (INSTALLDIR, TMPDIR, jobid, fileName))
 
         return apbsOptions
 
@@ -90,7 +90,7 @@ def main(apbsOptions):
                                                         label=str(os.environ["REMOTE_ADDR"])),
                   trackingscript=getTrackingScriptString(jobid=jobid))
 
-    print string
+    print(string)
 
 
 main(initVars())

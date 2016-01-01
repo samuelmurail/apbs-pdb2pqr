@@ -2,20 +2,20 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Translate a dx file to cube format')
 parser.add_argument('dx_input',
-                   help='Name of the dx_input file (required arguement)')
+                   help='Name of the dx_input file (required argument)')
 parser.add_argument('pqr_input',
-                   help='Name of the pqr_input file (required arguement)')
+                   help='Name of the pqr_input file (required argument)')
 parser.add_argument('output',
-                   help='Name of the output file (required arguement)')
+                   help='Name of the output file (required argument)')
 
 args = parser.parse_args()  
 counter = 0                 
 
 #DX STUFF
 if args.dx_input.endswith('.dx'):
-    print "Success"
+    print("Success")
 else:
-    print "Error converting file"
+    print("Error converting file")
 
 try:
     with open(args.dx_input, 'r') as in_f, open(args.output, 'w') as out_f, open(args.pqr_input, 'r') as in_pqr:
@@ -54,7 +54,7 @@ try:
         out_f.write(origin_line)
         
         
-        for x in xrange(3):
+        for x in range(3):
             split_line = in_f.readline().split()
             grid_dims = [float(item) for item in split_line[-3:]]
             
@@ -88,7 +88,7 @@ try:
         x_avg = sum(xreal_center)/float(atom_num)
         y_avg = sum(yreal_center)/float(atom_num)
         z_avg = sum(zreal_center)/float(atom_num)       
-        print x_avg, y_avg, z_avg
+        print((x_avg, y_avg, z_avg))
             
         #print origin
         #new_origin = []
@@ -106,7 +106,7 @@ try:
         
         value_format = ["{:< 13.5E}"]
         value_format = ' '.join(value_format * 6) + '\n'
-        print value_format 
+        print(value_format) 
         group = []
         line = in_f.readline()
         while not line.startswith('attribute'):
@@ -126,7 +126,7 @@ try:
             
 
 except IOError:
-    print "file doesn't exist"
+    print("file doesn't exist")
 '''
 for line in dx_data:
     dx_data_2 = dx_data
