@@ -242,7 +242,7 @@ class Input:
         """
             Make the input file(s) associated with this object
         """
-        base_pqr_name = utilities.getPQRBaseFileName(self.pqrpath)
+        base_pqr_name = utilities.get_pqr_base_file_name(self.pqrpath)
         if self.asyncflag == 1:
             outname = base_pqr_name + "-para.in"
 
@@ -276,7 +276,7 @@ class Input:
         """
             Make a Python pickle associated with the APBS input parameters
         """
-        base_pqr_name = utilities.getPQRBaseFileName(self.pqrpath)
+        base_pqr_name = utilities.get_pqr_base_file_name(self.pqrpath)
         outname = base_pqr_name + "-input.p"
         pfile = open(outname, "w")
         pickle.dump(self, pfile)
@@ -308,7 +308,7 @@ def splitInput(filename):
         sys.stderr.write("The inputgen script was unable to asynchronize this file!\n")
         sys.exit(2)
 
-    base_pqr_name = utilities.getPQRBaseFileName(filename)
+    base_pqr_name = utilities.get_pqr_base_file_name(filename)
     for i in range(nproc):
         outname = base_pqr_name + "-PE%i.in" % i
         outtext = string.replace(text, "mg-para\n","mg-para\n    async %i\n" % i)

@@ -172,7 +172,7 @@ class Definition:
         sax.make_parser()
 
         for path in [AAPATH, NAPATH]:
-            defpath = getDatFile(path)
+            defpath = get_data_file(path)
             if defpath == "":
                 raise PDBInternalError("%s not found!" % path)
 
@@ -184,7 +184,7 @@ class Definition:
     
         # Now handle patches
 
-        defpath = getDatFile(PATCHPATH)
+        defpath = get_data_file(PATCHPATH)
         if defpath == "":
             raise PDBInternalError("%s not found!" % PATCHPATH)
      
@@ -243,7 +243,7 @@ class Definition:
             # Remove atoms as directed
                     
             for remove in patch.remove:
-                if not patchResidue.hasAtom(remove): continue
+                if not patchResidue.has_atom(remove): continue
                 removebonds = patchResidue.map[remove].bonds
                 del patchResidue.map[remove]
                 for bond in removebonds:

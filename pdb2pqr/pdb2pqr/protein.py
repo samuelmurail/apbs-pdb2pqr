@@ -111,7 +111,7 @@ class Protein:
                       insert_code != previousAtom.insert_code or \
                       chain_id != previousAtom.chain_id:
                     myResidue = self.createResidue(residue, previousAtom.res_name)
-                    chainDict[previousAtom.chain_id].addResidue(myResidue)
+                    chainDict[previousAtom.chain_id].add_residue(myResidue)
                     residue = []
 
                 residue.append(record)
@@ -119,7 +119,7 @@ class Protein:
 
             elif isinstance(record, END):
                 myResidue = self.createResidue(residue, previousAtom.res_name)
-                chainDict[previousAtom.chain_id].addResidue(myResidue)
+                chainDict[previousAtom.chain_id].add_residue(myResidue)
                 residue = []
 
             elif isinstance(record, MODEL):
@@ -127,7 +127,7 @@ class Protein:
                 if residue == []: continue
                 if numModels > 1:
                     myResidue = self.createResidue(residue, previousAtom.res_name)
-                    chainDict[previousAtom.chain_id].addResidue(myResidue)
+                    chainDict[previousAtom.chain_id].add_residue(myResidue)
                     break
 
             elif isinstance(record, TER):
@@ -135,7 +135,7 @@ class Protein:
 
         if residue != [] and numModels <= 1:
             myResidue = self.createResidue(residue, previousAtom.res_name)
-            chainDict[previousAtom.chain_id].addResidue(myResidue)
+            chainDict[previousAtom.chain_id].add_residue(myResidue)
 
         # Keep a map for accessing chains via chain_id
 
@@ -161,7 +161,7 @@ class Protein:
                 #if isinstance(residue, Amino):
                     #raise ValueError, "Unable to support amino acid chains of only one residue (%s)" % residue
 
-            for residue in chain.getResidues():
+            for residue in chain.get_residues():
                 self.residues.append(residue)
 
     def createResidue(self, residue, resname):
@@ -223,11 +223,11 @@ class Protein:
             Generate new serial numbers for atoms in the protein
         """
         count = 1
-        for atom in self.getAtoms():
+        for atom in self.get_atoms():
             atom.set("serial", count)
             count += 1
 
-    def getResidues(self):
+    def get_residues(self):
         """
             Return the list of residues in the entire protein
         """
@@ -241,16 +241,16 @@ class Protein:
             Returns
                 count:  Number of residues in the protein (int)
         """
-        return len(self.getResidues())
+        return len(self.get_residues())
 
-    def numAtoms(self):
+    def num_atoms(self):
         """
             Get the number of atoms for the entire protein(including
             multiple chains)
         """
-        return len(self.getAtoms())
+        return len(self.get_atoms())
 
-    def getAtoms(self):
+    def get_atoms(self):
         """
             Return all Atom objects in list format
 
@@ -260,7 +260,7 @@ class Protein:
 
         atomlist = []
         for chain in self.chains:
-            for atom in chain.getAtoms():
+            for atom in chain.get_atoms():
                 atomlist.append(atom)
         return atomlist
 
@@ -298,8 +298,8 @@ class Protein:
         """
         return self.chains
 
-    def getSummary(self):
+    def get_summary(self):
         output = []
         for chain in self.chains:
-            output.append(chain.getSummary())
+            output.append(chain.get_summary())
         return ' '.join(output)

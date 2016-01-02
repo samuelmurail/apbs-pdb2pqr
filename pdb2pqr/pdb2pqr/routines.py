@@ -64,15 +64,15 @@ NAS = ["A", "A5", "A3", "C", "C5", "C3", "G", "G5", "G3", "T", "T5", "T3", "U", 
 
 import math
 import copy
-from pdb import *
-from utilities import *
-from quatfit import *
-from forcefield import *
-from structures import *
-from protein import *
-from definitions import *
+from .pdb import *
+from .utilities import *
+from .quatfit import *
+from .forcefield import *
+from .structures import *
+from .protein import *
+from .definitions import *
 from StringIO import StringIO
-from errors import PDBInputError, PDBInternalError, PDB2PKAError
+from .errors import PDBInputError, PDBInternalError, PDB2PKAError
 from pprint import pformat
 
 
@@ -129,13 +129,13 @@ class Routines:
 
         """
         self.write("Applying the naming scheme to the protein...")
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if isinstance(residue, (Amino, WAT, Nucleic)):
                 resname = residue.ffname
             else:
                 resname = residue.name
 
-            for atom in residue.getAtoms():
+            for atom in residue.get_atoms():
                 rname, aname = forcefield.getNames(resname, atom.name)
                 if resname not in ['LIG', 'WAT', 'ACE', 'NME'] and rname != None:
                     try:
@@ -164,7 +164,7 @@ class Routines:
         self.write("Applying the forcefield to the protein...")
         misslist = []
         hitlist = []
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if isinstance(residue, (Amino, WAT, Nucleic)):
                 resname = residue.ffname
             else:
@@ -172,7 +172,7 @@ class Routines:
 
             # Apply the parameters
 
-            for atom in residue.getAtoms():
+            for atom in residue.get_atoms():
                 atomname = atom.get("name")
                 charge, radius = forcefield.getParams(resname, atomname)
                 if charge != None and radius != None:
@@ -211,9 +211,9 @@ class Routines:
         """
         self.write("Updating SS bridges...\n")
         SGpartners = {}
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if isinstance(residue, CYS):
-                atom = residue.getAtom("SG")
+                atom = residue.get_atom("SG")
                 if atom != None:
                     SGpartners[atom] = []
 
@@ -231,8 +231,8 @@ class Routines:
             if numpartners == 1:
                 partner = SGpartners[atom][0]
                 res2 = partner.get("residue")
-                res1.set("SSbonded", 1)
-                res1.set("SSbondedpartner", partner)
+                res1.set("disulfide_bonded", 1)
+                res1.set("disulfide_bonded_partner", partner)
                 self.applyPatch("CYX", res1)
                 self.write("%s - %s\n" % (res1, res2), 1)
             elif numpartners > 1:
@@ -249,13 +249,13 @@ class Routines:
             Update the internal bonding network using the reference
             objects in each atom.
         """
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if isinstance(residue, (Amino, WAT, Nucleic)):
-                for atom in residue.getAtoms():
+                for atom in residue.get_atoms():
                     if not atom.hasReference(): continue
                     for bond in atom.reference.bonds:
-                        if not residue.hasAtom(bond): continue
-                        bondatom = residue.getAtom(bond)
+                        if not residue.has_atom(bond): continue
+                        bondatom = residue.get_atom(bond)
                         if bondatom not in atom.bonds:
                             atom.addBond(bondatom)
 
@@ -272,7 +272,7 @@ class Routines:
 
         # Apply the peptide patch
 
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if isinstance(residue, Amino):
                 if residue.is_n_terminus or residue.is_c_terminus:
                     continue
@@ -291,13 +291,13 @@ class Routines:
                 res2 = chain.residues[i + 1]
                 if not isinstance(res1, Amino) or not isinstance(res2, Amino):
                     continue
-                atom1 = res1.getAtom("C")
-                atom2 = res2.getAtom("N")
+                atom1 = res1.get_atom("C")
+                atom2 = res2.get_atom("N")
 
                 if atom1 != None:
-                    res2.peptideC = atom1
+                    res2.peptide_c = atom1
                 if atom2 != None:
-                    res1.peptideN = atom2
+                    res1.peptide_n = atom2
                 if atom1 == None or atom2 == None:
                     continue
 
@@ -306,8 +306,8 @@ class Routines:
                            (res1, res2)
                     self.write(text, 1)
                     self.warnings.append(text)
-                    res2.peptideC = None
-                    res1.peptideN = None
+                    res2.peptide_c = None
+                    res1.peptide_n = None
 
     def applyPatch(self, patchname, residue):
         """
@@ -359,7 +359,7 @@ class Routines:
         # Remove atoms as directed by patch
 
         for remove in patch.remove:
-            if remove in residue.map: residue.removeAtom(remove)
+            if remove in residue.map: residue.remove_atom(remove)
             if remove not in newreference.map: continue
             removebonds = newreference.map[remove].bonds
             del newreference.map[remove]
@@ -379,18 +379,18 @@ class Routines:
 
         # Rename atoms as directed by patch
 
-        for atom in residue.getAtoms():
+        for atom in residue.get_atoms():
             if atom.name in patch.altnames:
                 residue.renameAtom(atom.name, patch.altnames[atom.name])
 
         # Replace each atom's reference with the new one
 
         for atomname in residue.map:
-            if newreference.hasAtom(atomname):
-                atom = residue.getAtom(atomname)
+            if newreference.has_atom(atomname):
+                atom = residue.get_atom(atomname)
                 atom.reference = newreference.map[atomname]
 
-    def setStates(self):
+    def set_states(self):
         """
             Set the state of each residue.  This is the last step
             before assigning the forcefield, but is necessary so
@@ -398,9 +398,9 @@ class Routines:
 
             See aa.py for residue-specific functions.
         """
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if isinstance(residue, (Amino, Nucleic)):
-                residue.setState()
+                residue.set_state()
 
     def assignTermini(self, chain, neutraln=False, neutralc=False):
         """
@@ -482,7 +482,7 @@ class Routines:
 
             # origlist holds the original residue list for the chain
 
-            for residue in chain.getResidues():
+            for residue in chain.get_residues():
                 origlist.append(residue)
 
             for residue in origlist:
@@ -493,11 +493,11 @@ class Routines:
 
                 fixflag = 0
                 if isinstance(residue, Amino):
-                    if (residue.hasAtom("OXT") and not residue.is_c_terminus):
+                    if (residue.has_atom("OXT") and not residue.is_c_terminus):
                         fixflag = 1
 
                 elif isinstance(residue, Nucleic):
-                    if ((residue.hasAtom("H3T") or residue.name.endswith("3"))\
+                    if ((residue.has_atom("H3T") or residue.name.endswith("3"))\
                       and not residue.is3term):
                         fixflag = 1
 
@@ -525,7 +525,7 @@ class Routines:
                     self.protein.chains.insert(c, newchain)
 
                     for res in reslist:
-                        newchain.addResidue(res)
+                        newchain.add_residue(res)
                         chain.residues.remove(res)
                         res.setChainID(chainid[0])
 
@@ -584,7 +584,7 @@ class Routines:
         self.write("Checking for missing heavy atoms... \n")
         misscount = 0
         heavycount = 0
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if not isinstance(residue, (Amino, Nucleic)): continue
 
             # Check for Missing Heavy Atoms
@@ -593,9 +593,9 @@ class Routines:
                 if refatomname.startswith("H"): continue
                 if refatomname in ["N+1", "C-1"]: continue
                 if refatomname in ["O1P", "O2P"]:
-                    if residue.hasAtom("OP1") and residue.hasAtom("OP2"): continue
+                    if residue.has_atom("OP1") and residue.has_atom("OP2"): continue
                 heavycount += 1
-                if not residue.hasAtom(refatomname):
+                if not residue.has_atom(refatomname):
                     self.write("Missing %s in %s\n" % \
                                (refatomname, residue), 1)
                     misscount += 1
@@ -609,12 +609,12 @@ class Routines:
 
             for atom in atomlist:
                 atomname = atom.get("name")
-                if atomname in ["OP1", "OP2"] and residue.reference.hasAtom("O1P") \
-                    and residue.reference.hasAtom("O2P"): continue
-                if not residue.reference.hasAtom(atomname):
+                if atomname in ["OP1", "OP2"] and residue.reference.has_atom("O1P") \
+                    and residue.reference.has_atom("O2P"): continue
+                if not residue.reference.has_atom(atomname):
                     self.write("Extra atom %s in %s! - " % \
                                (atomname, residue), 1)
-                    residue.removeAtom(atomname)
+                    residue.remove_atom(atomname)
                     self.write("Deleted this atom.\n")
 
         if heavycount == 0:
@@ -663,7 +663,7 @@ class Routines:
 
         # Return if the bonded atom does not exist
 
-        if not residue.hasAtom(bondname):
+        if not residue.has_atom(bondname):
             return False
 
         # This group is tetrahedral if bondatom has 4 bonds,
@@ -682,8 +682,8 @@ class Routines:
 
         # Now rebuild according to the tetrahedral geometry
 
-        bondatom = residue.getAtom(bondname)
-        nextatom = residue.getAtom(nextatomname)
+        bondatom = residue.get_atom(bondname)
+        nextatom = residue.get_atom(nextatomname)
         numbonds = len(bondatom.bonds)
 
         if numbonds == 1:
@@ -695,27 +695,27 @@ class Routines:
                          residue.reference.map[nextatomname].getCoords()]
             refatomcoords = atomref.getCoords()
             newcoords = findCoordinates(2, coords, refcoords, refatomcoords)
-            residue.createAtom(atomname, newcoords)
+            residue.create_atom(atomname, newcoords)
 
             # For LEU and ILE residues only: make sure the Hydrogens are in staggered conformation instead of eclipsed.
 
             if isinstance(residue, LEU):
                 hcoords = newcoords
-                cbatom = residue.getAtom('CB')
-                ang = getDihedral(cbatom.getCoords(), nextatom.getCoords(), bondatom.getCoords(), hcoords)
+                cbatom = residue.get_atom('CB')
+                ang = get_dihedral(cbatom.getCoords(), nextatom.getCoords(), bondatom.getCoords(), hcoords)
                 diffangle = 60 - ang
                 residue.rotateTetrahedral(nextatom, bondatom, diffangle)
 
             elif isinstance(residue, ILE):
                 hcoords = newcoords
-                cg1atom = residue.getAtom('CG1')
-                cbatom = residue.getAtom('CB')
+                cg1atom = residue.get_atom('CG1')
+                cbatom = residue.get_atom('CB')
                 if bondatom.name == 'CD1':
-                    ang = getDihedral(cbatom.getCoords(), nextatom.getCoords(), bondatom.getCoords(), hcoords)
+                    ang = get_dihedral(cbatom.getCoords(), nextatom.getCoords(), bondatom.getCoords(), hcoords)
                 elif bondatom.name == 'CG2':
-                    ang = getDihedral(cg1atom.getCoords(), nextatom.getCoords(), bondatom.getCoords(), hcoords)
+                    ang = get_dihedral(cg1atom.getCoords(), nextatom.getCoords(), bondatom.getCoords(), hcoords)
                 else:
-                    ang = getDihedral(cbatom.getCoords(), nextatom.getCoords(), bondatom.getCoords(), hcoords)
+                    ang = get_dihedral(cbatom.getCoords(), nextatom.getCoords(), bondatom.getCoords(), hcoords)
 
                 diffangle = 60 - ang
                 residue.rotateTetrahedral(nextatom, bondatom, diffangle)
@@ -728,8 +728,8 @@ class Routines:
 
             hatom = None
             for bond in bondatom.reference.bonds:
-                if residue.hasAtom(bond) and bond.startswith("H"):
-                    hatom = residue.getAtom(bond)
+                if residue.has_atom(bond) and bond.startswith("H"):
+                    hatom = residue.get_atom(bond)
                     break
 
             # Use the existing hydrogen and rotate about the bond
@@ -737,7 +737,7 @@ class Routines:
             residue.rotateTetrahedral(nextatom, bondatom, 120)
             newcoords = hatom.getCoords()
             residue.rotateTetrahedral(nextatom, bondatom, -120)
-            residue.createAtom(atomname, newcoords)
+            residue.create_atom(atomname, newcoords)
 
             return 1
 
@@ -747,8 +747,8 @@ class Routines:
 
             hatoms = []
             for bond in bondatom.reference.bonds:
-                if residue.hasAtom(bond) and bond.startswith("H"):
-                    hatoms.append(residue.getAtom(bond))
+                if residue.has_atom(bond) and bond.startswith("H"):
+                    hatoms.append(residue.get_atom(bond))
 
             # If this is more than two something is wrong
 
@@ -765,9 +765,9 @@ class Routines:
             # Determine which one hatoms[1] is not in
 
             if distance(hatoms[1].getCoords(), newcoords1) > 0.1:
-                residue.createAtom(atomname, newcoords1)
+                residue.create_atom(atomname, newcoords1)
             else:
-                residue.createAtom(atomname, newcoords2)
+                residue.create_atom(atomname, newcoords2)
 
             return 1
 
@@ -782,15 +782,15 @@ class Routines:
         """
         count = 0
         self.write("Adding hydrogens to the protein...\n")
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if not isinstance(residue, (Amino, Nucleic)):
                 continue
             for atomname in residue.reference.map:
                 if not atomname.startswith("H"):
                     continue
-                if residue.hasAtom(atomname):
+                if residue.has_atom(atomname):
                     continue
-                if isinstance(residue, CYS) and residue.SSbonded and atomname == "HG":
+                if isinstance(residue, CYS) and residue.disulfide_bonded and atomname == "HG":
                     continue
 
                 # If this hydrogen is part of a tetrahedral group,
@@ -810,11 +810,11 @@ class Routines:
 
                 for bond in bondlist:
                     if bond == "N+1":
-                        atom = residue.peptideN
+                        atom = residue.peptide_n
                     elif bond == "C-1":
-                        atom = residue.peptideC
+                        atom = residue.peptide_c
                     else:
-                        atom = residue.getAtom(bond)
+                        atom = residue.get_atom(bond)
 
                     if atom == None:
                         continue
@@ -831,7 +831,7 @@ class Routines:
 
                 if len(coords) == 3:
                     newcoords = findCoordinates(3, coords, refcoords, refatomcoords)
-                    residue.createAtom(atomname, newcoords)
+                    residue.create_atom(atomname, newcoords)
                     count += 1
                 else:
                     self.write("Couldn't rebuild %s in %s!\n" % (atomname, residue), 1)
@@ -841,12 +841,12 @@ class Routines:
     def removeHydrogens(self):
         self.write("Stripping hydrogens from the protein...\n")
 
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if not isinstance(residue, (Amino, Nucleic)):
                 continue
             for atom in residue.atoms[:]:
                 if atom.isHydrogen():
-                    residue.removeAtom(atom.name)
+                    residue.remove_atom(atom.name)
 
     def repairHeavy(self):
         """
@@ -858,7 +858,7 @@ class Routines:
             atom.
         """
         self.write("Rebuilding missing heavy atoms... \n")
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if not isinstance(residue, (Amino, Nucleic)):
                 continue
             missing = residue.get("missing")
@@ -878,9 +878,9 @@ class Routines:
                 bondlist = residue.reference.getNearestBonds(atomname)
 
                 for bond in bondlist:
-                    if bond == "N+1": atom = residue.peptideN
-                    elif bond == "C-1": atom = residue.peptideC
-                    else: atom = residue.getAtom(bond)
+                    if bond == "N+1": atom = residue.peptide_n
+                    elif bond == "C-1": atom = residue.peptide_c
+                    else: atom = residue.get_atom(bond)
 
                     if atom == None: continue
 
@@ -912,7 +912,7 @@ class Routines:
 
                 else: # Rebuild the atom
                     newcoords = findCoordinates(3, coords, refcoords, refatomcoords)
-                    residue.createAtom(atomname, newcoords)
+                    residue.create_atom(atomname, newcoords)
                     self.write("Added %s to %s at coordinates" % (atomname, residue), 1)
                     self.write(" %.3f %.3f %.3f\n" % \
                            (newcoords[0], newcoords[1], newcoords[2]))
@@ -924,15 +924,15 @@ class Routines:
             Set the distance to the CA atom in the residue.
             This is necessary for determining which atoms are
             allowed to move during rotations.  Uses the
-            shortestPath algorithm found in utilities.py.
+            shortest_path algorithm found in utilities.py.
         """
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if not isinstance(residue, Amino): continue
 
             # Initialize some variables
 
             map = {}
-            caatom = residue.getAtom("CA")
+            caatom = residue.get_atom("CA")
 
             if caatom == None:
                 text = "Cannot set references to %s without CA atom!\n"
@@ -940,12 +940,12 @@ class Routines:
 
             # Set up the linked map
 
-            for atom in residue.getAtoms():
+            for atom in residue.get_atoms():
                 map[atom] = atom.bonds
 
             # Run the algorithm
 
-            for atom in residue.getAtoms():
+            for atom in residue.get_atoms():
                 if atom.isBackbone():
                     atom.refdistance = -1
                 elif residue.is_c_terminus and atom.name == "HO":   # special case for HO in Cterm
@@ -953,7 +953,7 @@ class Routines:
                 elif residue.is_n_terminus and (atom.name == "H3" or atom.name == "H2"):  # special case for H2 or H3 in Nterm
                     atom.refdistance = 2
                 else:
-                    atom.refdistance = len(shortestPath(map, atom, caatom)) - 1
+                    atom.refdistance = len(shortest_path(map, atom, caatom)) - 1
 
     def getbumpscore(self, residue):
         """Get an bump score for the current structure"""
@@ -968,13 +968,13 @@ class Routines:
         self.updateInternalinked_bonds()
         self.setReferenceDistance()
         bumpscore = 0.0
-        #for residue in self.protein.getResidues():
+        #for residue in self.protein.get_residues():
         if not isinstance(residue, Amino): return 0.0
         # Initialize variables
 
         conflictnames = []
 
-        for atom in residue.getAtoms():
+        for atom in residue.get_atoms():
             atomname = atom.name
             #if not atom.added: continue
             if atomname[0] != "H": continue
@@ -1022,7 +1022,7 @@ class Routines:
             if not isinstance(closeresidue, Amino):
                 continue
             if isinstance(residue, CYS):
-                if residue.SSbondedpartner == closeatom: continue
+                if residue.disulfide_bonded_partner == closeatom: continue
 
             # Also ignore if this is a donor/acceptor pair
             pair_ignored = False
@@ -1070,7 +1070,7 @@ class Routines:
 
         # Determine which residues to debump
 
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if not isinstance(residue, Amino): continue
 
             # Initialize variables
@@ -1098,7 +1098,7 @@ class Routines:
 
     def findResidueConflicts(self, residue, writeConflictInfo=False):
         conflictnames = []
-        for atom in residue.getAtoms():
+        for atom in residue.get_atoms():
             atomname = atom.name
             if not atom.added: continue
             if atomname == "H": continue
@@ -1123,7 +1123,7 @@ class Routines:
         pivot = atomnames[2]
         moveablenames = self.getMoveableNames(residue, pivot)
         for name in moveablenames:
-            nearatoms = self.findNearbyAtoms(residue.getAtom(name))
+            nearatoms = self.findNearbyAtoms(residue.get_atom(name))
             for v in nearatoms.values():
                 score += v
 
@@ -1215,7 +1215,7 @@ class Routines:
         """
             Calculate the dihedral angle for every residue within the protein
         """
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if not isinstance(residue, Amino): continue
             residue.dihedrals = []
 
@@ -1225,13 +1225,13 @@ class Routines:
                 atoms = di.split()
                 for i in range(4):
                     atomname = atoms[i]
-                    if residue.hasAtom(atomname):
-                        coords.append(residue.getAtom(atomname).getCoords())
+                    if residue.has_atom(atomname):
+                        coords.append(residue.get_atom(atomname).getCoords())
 
-                if len(coords) == 4: angle = getDihedral(coords[0], coords[1], coords[2], coords[3])
+                if len(coords) == 4: angle = get_dihedral(coords[0], coords[1], coords[2], coords[3])
                 else: angle = None
 
-                residue.addDihedralAngle(angle)
+                residue.add_dihedral_angle(angle)
 
     def getClosestAtom(self, atom):
         """
@@ -1265,7 +1265,7 @@ class Routines:
             if closeresidue == residue: continue
             if not isinstance(closeresidue, (Amino,WAT)): continue
             if isinstance(residue, CYS):
-                if residue.SSbondedpartner == closeatom: continue
+                if residue.disulfide_bonded_partner == closeatom: continue
 
             # Also ignore if this is a donor/acceptor pair
 
@@ -1328,7 +1328,7 @@ class Routines:
 
             if not isinstance(closeresidue, (Amino, WAT)):
                 continue
-            if isinstance(residue, CYS) and residue.SSbondedpartner == closeatom:
+            if isinstance(residue, CYS) and residue.disulfide_bonded_partner == closeatom:
                 continue
 
             # Also ignore if this is a donor/acceptor pair
@@ -1432,8 +1432,8 @@ class Routines:
 
         pivot = atomnames[2]
         for atomname in atomnames:
-            if residue.hasAtom(atomname):
-                coordlist.append(residue.getAtom(atomname).getCoords())
+            if residue.has_atom(atomname):
+                coordlist.append(residue.get_atom(atomname).getCoords())
             else:
                 raise PDBInputError("Error occurred while trying to debump!")
 
@@ -1442,13 +1442,13 @@ class Routines:
         moveablenames = self.getMoveableNames(residue, pivot)
 
         for name in moveablenames:
-            atom = residue.getAtom(name)
+            atom = residue.get_atom(name)
             movecoords.append(subtract(atom.getCoords(), coordlist[1]))
 
         newcoords = qchichange(initcoords, movecoords, diff)
 
         for i in range(len(moveablenames)):
-            atom = residue.getAtom(moveablenames[i])
+            atom = residue.get_atom(moveablenames[i])
             self.cells.removeCell(atom)
             x = (newcoords[i][0] + coordlist[1][0])
             y = (newcoords[i][1] + coordlist[1][1])
@@ -1463,12 +1463,12 @@ class Routines:
 
         coordlist = []
         for atomname in atomnames:
-            if residue.hasAtom(atomname):
-                coordlist.append(residue.getAtom(atomname).getCoords())
+            if residue.has_atom(atomname):
+                coordlist.append(residue.get_atom(atomname).getCoords())
             else:
                 raise PDBInputError("Error occurred while trying to debump!")
 
-        di = getDihedral(coordlist[0], coordlist[1], coordlist[2], coordlist[3])
+        di = get_dihedral(coordlist[0], coordlist[1], coordlist[2], coordlist[3])
         residue.dihedrals[anglenum] = di
 
     def getMoveableNames(self, residue, pivot):
@@ -1481,8 +1481,8 @@ class Routines:
                 pivot:    The pivot atomname
         """
         movenames = []
-        refdist = residue.getAtom(pivot).refdistance
-        for atom in residue.getAtoms():
+        refdist = residue.get_atom(pivot).refdistance
+        for atom in residue.get_atoms():
             if atom.refdistance > refdist:
                 movenames.append(atom.name)
         return movenames
@@ -1491,7 +1491,7 @@ class Routines:
         """
             Set the donors and acceptors within the protein
         """
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             residue.setDonorsAndAcceptors()
 
     def runPDB2PKA(self, ph, ff, pdblist, ligand, verbose, pdb2pka_params):
@@ -1567,14 +1567,14 @@ class Routines:
 
         # Reorder the atoms in each residue to start with N
 
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             residue.reorder()
 
         # Make a string with all non-hydrogen atoms
 
         HFreeProteinFile = StringIO()
 
-        for atom in self.protein.getAtoms():
+        for atom in self.protein.get_atoms():
             if not atom.isHydrogen():
                 atomtxt = atom.getPDBString()
                 atomtxt = atomtxt[:linelen]
@@ -1621,7 +1621,7 @@ class Routines:
         self.write(formatted_pkadict+'\n\n')
 
         warnings = []
-        for residue in self.protein.getResidues():
+        for residue in self.protein.get_residues():
             if not isinstance(residue, Amino):
                 continue
             resname = residue.name
@@ -1782,7 +1782,7 @@ class Cells:
         """
             Place each atom in a virtual cell for easy neighbor comparison
         """
-        for atom in protein.getAtoms():
+        for atom in protein.get_atoms():
             atom.cell = None
             self.addCell(atom)
 

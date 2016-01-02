@@ -69,7 +69,7 @@ def createHTMLTypeMap(protein, definition, outfilename):
 
     # Cache the initial atom numbers
     numcache = {}
-    for atom in protein.getAtoms():
+    for atom in protein.get_atoms():
         numcache[atom] = atom.serial
     protein.reSerialize()
 
@@ -87,7 +87,7 @@ def createHTMLTypeMap(protein, definition, outfilename):
     file.write("<TABLE CELLSPACING=2 CELLPADDING=2 BORDER=1>\n")
     file.write("<tr><th>Atom Number</th><th>Atom Name</th><th>Residue Name</th><th>Chain ID</th><th>AMBER Atom Type</th><th>CHARMM Atom Type</th></tr>\n")
 
-    for atom in protein.getAtoms():
+    for atom in protein.get_atoms():
         if isinstance(atom.residue, (Amino, WAT, Nucleic)):
             resname = atom.residue.ffname
         else:
@@ -105,7 +105,7 @@ def createHTMLTypeMap(protein, definition, outfilename):
     file.close()
 
     # Return the original numbers back
-    for atom in protein.getAtoms():
+    for atom in protein.get_atoms():
         atom.serial = numcache[atom]
 
     del numcache

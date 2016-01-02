@@ -231,7 +231,7 @@ class Forcefield:
         defpath = ""
 
         if userff == None:
-            defpath = getFFfile(ff)
+            defpath = get_forcefield_file(ff)
             if defpath == "":
                 raise PDBInputError("Unable to find forcefield parameter file %s!" % self.name)
           
@@ -267,7 +267,7 @@ class Forcefield:
                 if myResidue == None:
                     myResidue = ForcefieldResidue(resname)
                     self.map[resname] = myResidue
-                myResidue.addAtom(atom)
+                myResidue.add_atom(atom)
 
         file.close()
 
@@ -275,7 +275,7 @@ class Forcefield:
         # This is not necessary (if canonical names match ff names)
  
 
-        defpath = getNamesFile(ff)
+        defpath = get_names_file(ff)
         if defpath != "":
         
             handler = ForcefieldHandler(self.map, definition.map)
@@ -344,7 +344,7 @@ class Forcefield:
         aname = None
         if resname in self.map:
             res = self.map[resname]
-            if res.hasAtom(atomname):
+            if res.has_atom(atomname):
                 atom = res.atoms[atomname]
                 aname = atom.name
                 rname = atom.resname
@@ -362,7 +362,7 @@ class Forcefield:
         group = ""
         if resname in self.map:
             resid = self.map[resname]
-            if resid.hasAtom(atomname):
+            if resid.has_atom(atomname):
                 atom = resid.atoms[atomname]
                 group = atom.group
         return group
@@ -388,7 +388,7 @@ class Forcefield:
 
         if resname in self.map:
             resid = self.map[resname]
-            if resid.hasAtom(atomname):
+            if resid.has_atom(atomname):
                 atom = resid.atoms[atomname]
                 charge = atom.charge
                 radius = atom.radius
@@ -430,7 +430,7 @@ class Forcefield:
         if defresidue == None:
             return charge, radius
 
-        atom = defresidue.getAtom(atomname)
+        atom = defresidue.get_atom(atomname)
         if atom != None:
             charge = atom.get("charge")
             radius = atom.get("radius")
@@ -676,12 +676,12 @@ class Forcefield:
             elif atomname == "H2'1": atomname = "H2'"
             elif atomname in ["H2'2","HO'2"]: atomname = "H2''"
             
-            if residue.getAtom("O2'") == None:
+            if residue.get_atom("O2'") == None:
                 if atomname in ["C2'","H2'","H2''"]: resname = "DEO1"
 
-            if residue.getAtom("H5T") != None:
+            if residue.get_atom("H5T") != None:
                 if atomname in ["H5T","O5'","C5'"]: resname = "5TER"
-            if residue.getAtom("H3T") != None:
+            if residue.get_atom("H3T") != None:
                 if atomname in ["H3T","O3'","C3'"]: resname = "3TER"
                 
         # Terminal/Water Substitutions
@@ -821,7 +821,7 @@ class ForcefieldResidue:
         self.atoms = {}
 
 
-    def addAtom(self, atom):
+    def add_atom(self, atom):
         """
             Add an atom to the ForcefieldResidue
 
@@ -831,13 +831,13 @@ class ForcefieldResidue:
         atomname = atom.get("name")
         self.atoms[atomname] = atom
 
-    def getAtoms(self):
+    def get_atoms(self):
         """
             Return the list of atoms in this residue.
         """
         return self.atoms
 
-    def hasAtom(self, atomname):
+    def has_atom(self, atomname):
         """
             Check to see if the atomname is in the current residue.
 
@@ -849,7 +849,7 @@ class ForcefieldResidue:
         if atomname in self.atoms: return 1
         else: return 0
 
-    def getAtom(self, atomname):
+    def get_atom(self, atomname):
         """
             Return the atom object with the given atomname
 
@@ -858,7 +858,7 @@ class ForcefieldResidue:
             Returns
                 residue: The atom object (ForcefieldAtom)
         """
-        if self.hasAtom(atomname): return self.atoms[atomname]
+        if self.has_atom(atomname): return self.atoms[atomname]
         else: return None
 
 class ForcefieldAtom:

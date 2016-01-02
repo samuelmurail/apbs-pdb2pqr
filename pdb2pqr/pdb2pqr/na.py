@@ -66,13 +66,13 @@ class Nucleic(Residue):
                     main naming scheme.
     """
     def __init__(self, atoms, ref):
-        sampleAtom = atoms[-1]
+        sample_atom = atoms[-1]
 
         self.atoms = []
-        self.name = sampleAtom.res_name
-        self.chain_id = sampleAtom.chain_id
-        self.res_seq = sampleAtom.res_seq
-        self.insert_code = sampleAtom.insert_code
+        self.name = sample_atom.res_name
+        self.chain_id = sample_atom.chain_id
+        self.res_seq = sample_atom.res_seq
+        self.insert_code = sample_atom.insert_code
 
         self.ffname = self.name
         self.map = {}
@@ -93,11 +93,11 @@ class Nucleic(Residue):
 
             if a.name not in self.map:
                 atom = Atom(a, "ATOM", self)
-                self.addAtom(atom)
+                self.add_atom(atom)
 
-    def createAtom(self, atomname, newcoords):
+    def create_atom(self, atomname, newcoords):
         """
-            Create an atom.  Overrides the generic residue's createAtom().
+            Create an atom.  Overrides the generic residue's create_atom().
 
             Parameters
                 atomname:  The name of the atom to add (string)
@@ -112,11 +112,11 @@ class Nucleic(Residue):
         newatom.set("occupancy",1.00)
         newatom.set("temperature_factor",0.00)
         newatom.added = 1
-        self.addAtom(newatom)
+        self.add_atom(newatom)
 
-    def addAtom(self, atom):
+    def add_atom(self, atom):
         """
-            Override the existing addAtom - include the link to the
+            Override the existing add_atom - include the link to the
             reference object
         """
         self.atoms.append(atom)
@@ -125,14 +125,14 @@ class Nucleic(Residue):
         try:
             atom.reference = self.reference.map[atomname]
             for bond in atom.reference.bonds:
-                if self.hasAtom(bond):
+                if self.has_atom(bond):
                     bondatom = self.map[bond]
                     if bondatom not in atom.bonds: atom.bonds.append(bondatom)
                     if atom not in bondatom.bonds: bondatom.bonds.append(atom)
         except KeyError:
             atom.reference = None
 
-    def addDihedralAngle(self, value):
+    def add_dihedral_angle(self, value):
         """
             Add the value to the list of chiangles
 
@@ -141,7 +141,7 @@ class Nucleic(Residue):
         """
         self.dihedrals.append(value)
 
-    def setState(self):
+    def set_state(self):
         """
            Adds the termini for all inherited objects
         """
@@ -167,16 +167,16 @@ class ADE(Nucleic):
         Nucleic.__init__(self, atoms, ref)
         self.reference = ref
 
-    def letterCode(self):
+    def letter_code(self):
         return 'A'
 
-    def setState(self):
+    def set_state(self):
         """
             Set the state to distinguish RNA from DNA.
         """
-        if self.hasAtom("O2'"): self.ffname = "RA"
+        if self.has_atom("O2'"): self.ffname = "RA"
         else: self.ffname = "DA"
-        Nucleic.setState(self)
+        Nucleic.set_state(self)
 
 class CYT(Nucleic):
     """
@@ -197,16 +197,16 @@ class CYT(Nucleic):
         Nucleic.__init__(self, atoms, ref)
         self.reference = ref
 
-    def letterCode(self):
+    def letter_code(self):
         return 'C'
 
-    def setState(self):
+    def set_state(self):
         """
             Set the state to distinguish RNA from DNA.
         """
-        if self.hasAtom("O2'"): self.ffname = "RC"
+        if self.has_atom("O2'"): self.ffname = "RC"
         else: self.ffname = "DC"
-        Nucleic.setState(self)
+        Nucleic.set_state(self)
 
 class GUA(Nucleic):
     """
@@ -227,16 +227,16 @@ class GUA(Nucleic):
         Nucleic.__init__(self, atoms, ref)
         self.reference = ref
 
-    def letterCode(self):
+    def letter_code(self):
         return 'G'
 
-    def setState(self):
+    def set_state(self):
         """
             Set the state to distinguish RNA from DNA.
         """
-        if self.hasAtom("O2'"): self.ffname = "RG"
+        if self.has_atom("O2'"): self.ffname = "RG"
         else: self.ffname = "DG"
-        Nucleic.setState(self)
+        Nucleic.set_state(self)
 
 class THY(Nucleic):
     """
@@ -257,16 +257,16 @@ class THY(Nucleic):
         Nucleic.__init__(self, atoms, ref)
         self.reference = ref
 
-    def letterCode(self):
+    def letter_code(self):
         return 'T'
 
-    def setState(self):
+    def set_state(self):
         """
             Set the state to distinguish RNA from DNA.  In this case it is
             always DNA.
         """
         self.ffname = "DT"
-        Nucleic.setState(self)
+        Nucleic.set_state(self)
 
 class URA(Nucleic):
     """
@@ -287,16 +287,16 @@ class URA(Nucleic):
         Nucleic.__init__(self, atoms, ref)
         self.reference = ref
 
-    def letterCode(self):
+    def letter_code(self):
         return 'U'
 
-    def setState(self):
+    def set_state(self):
         """
             Set the state to distinguish RNA from DNA.  In this case it is
             always RNA.
         """
         self.ffname = "RU"
-        Nucleic.setState(self)
+        Nucleic.set_state(self)
 
 #Tie the class name to the base name in NA.XML
 class RA(ADE):
