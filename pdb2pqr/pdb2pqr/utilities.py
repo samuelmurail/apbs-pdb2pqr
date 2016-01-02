@@ -316,10 +316,10 @@ def getPDBFile(path):
 
     file = None
     if not os.path.isfile(path):
-        URLpath = "http://www.rcsb.org/pdb/cgi/export.cgi/" + path + \
+        urlpath = "http://www.rcsb.org/pdb/cgi/export.cgi/" + path + \
                   ".pdb?format=PDB&pdbId=" + path + "&compression=None"
         try:
-            file = urllib.request.urlopen(URLpath)
+            file = urllib.request.urlopen(urlpath)
             if file.getcode() != 200 or 'nosuchfile' in file.geturl() :
                 raise IOError
         except IOError:

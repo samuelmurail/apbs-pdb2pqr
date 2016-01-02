@@ -91,53 +91,53 @@ class Protein:
         for record in pdblist:
             if isinstance(record, ATOM) or isinstance(record, HETATM):
 
-                if record.chainID == "" and numChains > 1 and record.resName not in ["WAT","HOH"]:
+                if record.chain_id == "" and numChains > 1 and record.res_name not in ["WAT","HOH"]:
                     # Assign a chain ID
-                    record.chainID = string.ascii_uppercase[count]
+                    record.chain_id = string.ascii_uppercase[count]
 
-                chainID = record.chainID
-                resSeq = record.resSeq
-                resName = record.resName
-                iCode = record.iCode
+                chain_id = record.chain_id
+                res_seq = record.res_seq
+                res_name = record.res_name
+                insert_code = record.insert_code
 
                 if previousAtom == None:
                     previousAtom = record
 
-                if chainID not in chainDict:
-                    myChain = Chain(chainID)
-                    chainDict[chainID] = myChain
+                if chain_id not in chainDict:
+                    myChain = Chain(chain_id)
+                    chainDict[chain_id] = myChain
 
-                if resSeq != previousAtom.resSeq or \
-                      iCode != previousAtom.iCode or \
-                      chainID != previousAtom.chainID:
-                    myResidue = self.createResidue(residue, previousAtom.resName)
-                    chainDict[previousAtom.chainID].addResidue(myResidue)
+                if res_seq != previousAtom.res_seq or \
+                      insert_code != previousAtom.insert_code or \
+                      chain_id != previousAtom.chain_id:
+                    myResidue = self.createResidue(residue, previousAtom.res_name)
+                    chainDict[previousAtom.chain_id].addResidue(myResidue)
                     residue = []
 
                 residue.append(record)
                 previousAtom = record
 
             elif isinstance(record, END):
-                myResidue = self.createResidue(residue, previousAtom.resName)
-                chainDict[previousAtom.chainID].addResidue(myResidue)
+                myResidue = self.createResidue(residue, previousAtom.res_name)
+                chainDict[previousAtom.chain_id].addResidue(myResidue)
                 residue = []
 
             elif isinstance(record, MODEL):
                 numModels += 1
                 if residue == []: continue
                 if numModels > 1:
-                    myResidue = self.createResidue(residue, previousAtom.resName)
-                    chainDict[previousAtom.chainID].addResidue(myResidue)
+                    myResidue = self.createResidue(residue, previousAtom.res_name)
+                    chainDict[previousAtom.chain_id].addResidue(myResidue)
                     break
 
             elif isinstance(record, TER):
                 count += 1
 
         if residue != [] and numModels <= 1:
-            myResidue = self.createResidue(residue, previousAtom.resName)
-            chainDict[previousAtom.chainID].addResidue(myResidue)
+            myResidue = self.createResidue(residue, previousAtom.res_name)
+            chainDict[previousAtom.chain_id].addResidue(myResidue)
 
-        # Keep a map for accessing chains via chainID
+        # Keep a map for accessing chains via chain_id
 
         self.chainmap = chainDict.copy()
 
@@ -154,7 +154,7 @@ class Protein:
             self.chains.append(chainDict[key])
 
         for chain in self.chains:
-            #if chain.numResidues() == 1:
+            #if chain.num_residues() == 1:
                 # We cannot support Amino Acid chains with only one residue-
                 # It is unclear whether they are Nterm, Cterm, or both.
                 #residue = chain.residues[0]
@@ -202,13 +202,13 @@ class Protein:
         """
         self.reSerialize()
         text = []
-        currentchainID = None
+        currentchain_id = None
         for atom in atomlist:
             # Print the "TER" records between chains
-            if currentchainID == None:
-                currentchainID = atom.chainID
-            elif atom.chainID != currentchainID:
-                currentchainID = atom.chainID
+            if currentchain_id == None:
+                currentchain_id = atom.chain_id
+            elif atom.chain_id != currentchain_id:
+                currentchain_id = atom.chain_id
                 text.append("TER\n")
 
             if pdbfile == True:
@@ -233,7 +233,7 @@ class Protein:
         """
         return self.residues
 
-    def numResidues(self):
+    def num_residues(self):
         """
             Get the number of residues for the entire protein (including
             multiple chains)

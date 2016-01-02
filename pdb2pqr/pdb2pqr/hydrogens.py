@@ -192,8 +192,8 @@ class hydrogenAmbiguity:
         """
             Print the ambiguity for debugging purposes
         """
-        text = "%s %i %s (%s)" % (self.residue.name, self.residue.resSeq, \
-                                  self.residue.chainID, self.hdef.opttype)
+        text = "%s %i %s (%s)" % (self.residue.name, self.residue.res_seq, \
+                                  self.residue.chain_id, self.hdef.opttype)
         return text
 
 class Optimize:
@@ -802,7 +802,7 @@ class Flip(Optimize):
         pivot = dihedral.split()[2]
         moveablenames = self.routines.getMoveableNames(residue, pivot)
         # HO in CTERM shouldn't be in the list of flip atoms
-        if residue.isCterm:
+        if residue.is_c_terminus:
             newmoveablenames = []
             for i in range(len(moveablenames)):
                 if moveablenames[i] == "HO": pass
@@ -2069,7 +2069,7 @@ class hydrogenRoutines:
             hname = conf.hname
             boundname = conf.boundatom
             if residue.getAtom(hname) != None:
-                print('Removing',residue.name,residue.resSeq,hname)
+                print('Removing',residue.name,residue.res_seq,hname)
                 residue.removeAtom(hname)
             residue.getAtom(boundname).hacceptor = 1
             residue.getAtom(boundname).hdonor = 0
@@ -2115,7 +2115,7 @@ class hydrogenRoutines:
             residue.getAtom(boundname).addIntraBond(hname)    
             residue.getAtom(boundname).hacceptor = 0
             residue.getAtom(boundname).hdonor = 1
-            residue.getAtom(hname).sybylType='H'    # Setting the SybylType for the newly built H
+            residue.getAtom(hname).sybyl_type='H'    # Setting the SybylType for the newly built H
             residue.getAtom(hname).formalcharge=0.0 # formal charge for PEOE_PB
             residue.getAtom(hname).titratableH=True # flag the added hydrogen
             residue.getAtom(hname).addIntraBond(boundname)
@@ -2185,7 +2185,7 @@ class hydrogenRoutines:
                 continue # Nothing to add
             hname = conf.hname
             for atom in conf.atoms:      # specail case for N-term PRO
-                if residue.isNterm and residue.name == "PRO":
+                if residue.is_n_terminus and residue.name == "PRO":
                     if atom.name == "H":
                         atom.name = "CD"
                         atom.x = 1.874
@@ -2210,13 +2210,13 @@ class hydrogenRoutines:
             boundname = conf.boundatom
             residue.getAtom(boundname).hacceptor = 0
             residue.getAtom(boundname).hdonor = 1
-            residue.getAtom(hname).sybylType='H'    # Setting the SybylType for the newly built H
+            residue.getAtom(hname).sybyl_type='H'    # Setting the SybylType for the newly built H
             residue.getAtom(hname).formalcharge=0.0 # formal charge for PEOE_PB
             residue.getAtom(hname).titratableH=True # flag the added hydrogen
         #
         # Update intrabonds again
         #
-        if residue.isNterm and residue.name == "PRO":
+        if residue.is_n_terminus and residue.name == "PRO":
             for atom in residue.getAtoms():
                 if atom.name == "H":
                     residue.removeAtom("H")
@@ -2310,7 +2310,7 @@ class hydrogenRoutines:
         self.routines.cells.assignCells(self.protein)
         self.routines.calculateDihedralAngles()
         self.routines.setDonorsAndAcceptors()
-        self.routines.updateInternalBonds()
+        self.routines.updateInternalinked_bonds()
         self.routines.setReferenceDistance()
         self.optlist = []
         self.atomlist = []
@@ -2354,7 +2354,7 @@ class hydrogenRoutines:
         self.routines.cells.assignCells(self.protein)
         self.routines.calculateDihedralAngles()
         self.routines.setDonorsAndAcceptors()
-        self.routines.updateInternalBonds()
+        self.routines.updateInternalinked_bonds()
         self.routines.setReferenceDistance()
         self.optlist = []
         

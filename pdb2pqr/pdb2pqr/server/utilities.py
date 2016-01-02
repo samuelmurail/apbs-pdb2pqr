@@ -54,10 +54,6 @@ def getEventTrackingString(category, action, label, value=None):
     eventString = '_gaq.push(["_trackEvent", "{category}", "{action}", "{label}"{valuestr}]);\n'
     return eventString.format(category=str(category), action=str(action), label=str(label), valuestr=valueString)
 
-class ExtraOptions(object):
-    pass
-
-
 def createHTMLTypeMap(protein, definition, outfilename):
     """
         Create an HTML typemap file at the desired location. If a
@@ -101,7 +97,7 @@ def createHTMLTypeMap(protein, definition, outfilename):
         charmmgroup  = charmmff.getGroup(resname, atom.name)
 
 
-        file.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (atom.serial, atom.name, resname, atom.chainID, ambergroup, charmmgroup))
+        file.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (atom.serial, atom.name, resname, atom.chain_id, ambergroup, charmmgroup))
 
 
     file.write("</table>\n")

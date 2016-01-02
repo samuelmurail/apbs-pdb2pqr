@@ -5,40 +5,40 @@
     associated methods.
 
     ----------------------------
-   
+
     PDB2PQR -- An automated pipeline for the setup, execution, and analysis of
     Poisson-Boltzmann electrostatics calculations
 
-    Copyright (c) 2002-2011, Jens Erik Nielsen, University College Dublin; 
-    Nathan A. Baker, Battelle Memorial Institute, Developed at the Pacific 
-    Northwest National Laboratory, operated by Battelle Memorial Institute, 
-    Pacific Northwest Division for the U.S. Department Energy.; 
+    Copyright (c) 2002-2011, Jens Erik Nielsen, University College Dublin;
+    Nathan A. Baker, Battelle Memorial Institute, Developed at the Pacific
+    Northwest National Laboratory, operated by Battelle Memorial Institute,
+    Pacific Northwest Division for the U.S. Department Energy.;
     Paul Czodrowski & Gerhard Klebe, University of Marburg.
 
 	All rights reserved.
 
-	Redistribution and use in source and binary forms, with or without modification, 
+	Redistribution and use in source and binary forms, with or without modification,
 	are permitted provided that the following conditions are met:
 
-		* Redistributions of source code must retain the above copyright notice, 
+		* Redistributions of source code must retain the above copyright notice,
 		  this list of conditions and the following disclaimer.
-		* Redistributions in binary form must reproduce the above copyright notice, 
-		  this list of conditions and the following disclaimer in the documentation 
+		* Redistributions in binary form must reproduce the above copyright notice,
+		  this list of conditions and the following disclaimer in the documentation
 		  and/or other materials provided with the distribution.
         * Neither the names of University College Dublin, Battelle Memorial Institute,
           Pacific Northwest National Laboratory, US Department of Energy, or University
           of Marburg nor the names of its contributors may be used to endorse or promote
           products derived from this software without specific prior written permission.
 
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
-	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-	IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-	INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-	BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
-	OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+	IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+	INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+	BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+	OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 	OF THE POSSIBILITY OF SUCH DAMAGE.
 
     ----------------------------
@@ -61,19 +61,19 @@ class Chain:
         Chain class
 
         The chain class contains information about each chain within a given
-        Protein object.  
+        Protein object.
     """
 
-    def __init__(self, chainID):
+    def __init__(self, chain_id):
         """
             Initialize the class
 
             Parameters
-                chainID: The chainID for this chain as denoted in
+                chain_id: The chain_id for this chain as denoted in
                          the PDB file (string)
         """
 
-        self.chainID = chainID
+        self.chain_id = chain_id
         self.residues = []
 
     def get(self, name):
@@ -105,8 +105,8 @@ class Chain:
                 residue: The residue to be added (Residue)
         """
         self.residues.append(residue)
-        
-    def numResidues(self):
+
+    def num_residues(self):
         """
             Get the number of residues for the chain
 
@@ -120,7 +120,7 @@ class Chain:
 
     def renumberResidues(self):
         """
-            Renumber Atoms based on actual Residue number and not PDB resSeq
+            Renumber Atoms based on actual Residue number and not PDB res_seq
         """
         count = 1
         for residue in self.residues:
@@ -134,7 +134,7 @@ class Chain:
             Returns
                 count:  Number of atoms in the chain (int)
         """
-        count = len(self.getAtoms())       
+        count = len(self.getAtoms())
         return count
 
     def getResidues(self):
@@ -142,7 +142,7 @@ class Chain:
             Return a list of Residue objects in this chain
         """
         return self.residues
-    
+
     def getAtoms(self):
         """
             Return a list of Atom objects contained in this chain
@@ -156,12 +156,12 @@ class Chain:
             for atom in myList:
                 atomlist.append(atom)
         return atomlist
-    
+
     def getSummary(self):
         output = []
         for residue in self.residues:
             output.append(residue.letterCode())
-            
+
         return ''.join(output)
 
 
@@ -183,12 +183,12 @@ class Residue:
         """
 
         sampleAtom = atoms[-1]
-        
+
         self.atoms = []
-        self.name = sampleAtom.resName
-        self.chainID = sampleAtom.chainID
-        self.resSeq = sampleAtom.resSeq
-        self.iCode = sampleAtom.iCode
+        self.name = sampleAtom.res_name
+        self.chain_id = sampleAtom.chain_id
+        self.res_seq = sampleAtom.res_seq
+        self.insert_code = sampleAtom.insert_code
         #
         #
         self.map = {}
@@ -205,22 +205,22 @@ class Residue:
             atomname = atom.get("name")
             if atomname not in self.map:
                 self.addAtom(atom)
-            else: # Don't add duplicate atom              
+            else: # Don't add duplicate atom
                 oldatom = self.getAtom(atomname)
-                oldatom.set("altLoc","")
+                oldatom.set("alt_loc","")
 
         if self.name == "HOH":
             self.name = "WAT"
             for atom in self.atoms:
-                atom.set("resName","WAT")
+                atom.set("res_name","WAT")
 
     def __str__(self):
         """
             Basic string representation
         """
-        text = "%s %s %i%s" % (self.name, self.chainID, self.resSeq, self.iCode)
+        text = "%s %s %i%s" % (self.name, self.chain_id, self.res_seq, self.insert_code)
         return text
-    
+
     #TODO: Kill this in a fire.
     def get(self, name):
         """
@@ -231,14 +231,14 @@ class Residue:
             Possible Values
                 atoms:         The atoms in the residue
                 name:          The name of the residue
-                chainID:       The chainID associated with the residue
-                resSeq:        The sequence number of the residue
-                icode:         The iCode of the residue
+                chain_id:       The chain_id associated with the residue
+                res_seq:        The sequence number of the residue
+                icode:         The insert_code of the residue
                 SSbonded:      1 if the residue has a SS bond, 0 otherwise
                 SSbondpartner: The residue of the bond partner
                 type:          The type associated with this residue
-                isNterm:       # of hydrogens if the residue is the N-Terminus, 0 otherwise
-                isCterm:       1 if the residue is the C-Terminus, 0 otherwise
+                is_n_terminus:       # of hydrogens if the residue is the N-Terminus, 0 otherwise
+                is_c_terminus:       1 if the residue is the C-Terminus, 0 otherwise
                 missing:     List of missing atoms of the residue
             Returns
                 item:          The value of the member
@@ -252,7 +252,7 @@ class Residue:
 
     def set(self, name, value):
         """
-            Set a member of the Residue class to a specific value 
+            Set a member of the Residue class to a specific value
 
             Parameters
                 name:          The name of the object to set (string)
@@ -260,22 +260,22 @@ class Residue:
             Possible Values
                 atoms:         The atoms in the residue
                 name:          The name of the residue
-                chain:         The chainID associated with the residue
-                resSeq:        The sequence number of the residue
-                icode:         The iCode of the residue
+                chain:         The chain_id associated with the residue
+                res_seq:        The sequence number of the residue
+                icode:         The insert_code of the residue
                 SSbonded:      1 if the residue has a SS bond, 0 otherwise
                 SSbondpartner: The residue of the bond partner
                 type:          The type associated with this residue
-                isNterm:       # of hydrogens if the residue is the N-Terminus, 0 otherwise
-                isCterm:       1 if the residue is the C-Terminus, 0 otherwise
+                is_n_terminus:       # of hydrogens if the residue is the N-Terminus, 0 otherwise
+                is_c_terminus:       1 if the residue is the C-Terminus, 0 otherwise
                 isDirty:       1 if the residue is not missing atoms,
                                0 otherwise
             Notes
-                resSeq points to the residue.setResSeq function
+                res_seq points to the residue.setResSeq function
             Returns
-                item:          The value of the member   
+                item:          The value of the member
         """
-        if name == "resSeq": 
+        if name == "res_seq":
             self.setResSeq(value)
         else:
             try:
@@ -285,11 +285,11 @@ class Residue:
                 raise PDBInternalError(message)
 
     def update_terminus_status(self):
-        """Update the isNterms and isCterm flags"""
+        """Update the is_n_terminuss and is_c_terminus flags"""
         #
         # If Nterm then update counter of hydrogens
         #
-        if self.isNterm:
+        if self.is_n_terminus:
             count=0
             atoms=['H','H2','H3']
             for atom in atoms:
@@ -297,19 +297,20 @@ class Residue:
                     atomname=atom2.get('name')
                     if atom==atomname:
                         count=count+1
-            self.isNterm=count
+            self.is_n_terminus=count
         #
         # If Cterm then update counter
         #
-        if self.isCterm:
-            self.isCterm=None
+        if self.is_c_terminus:
+            self.is_c_terminus=None
             for atom in self.atoms:
                 atomname=atom.get('name')
                 if atomname=='HO':
-                    self.isCterm=2
+                    # TODO - this is insanity... why is a Boolean being updated as an int?
+                    self.is_c_terminus=2
                     break
-            if not self.isCterm:
-                self.isCterm=1
+            if not self.is_c_terminus:
+                self.is_c_terminus=1
         return
 
     def numAtoms(self):
@@ -320,30 +321,30 @@ class Residue:
                 Number of atoms in the residue (int)
         """
         return len(self.atoms)
-                    
+
     def setResSeq(self, value):
         """
-            Set the atom field resSeq to a certain value and
+            Set the atom field res_seq to a certain value and
             change the residue's information.  The icode field is no longer
             useful.
 
             Parameters
-                value:  The new value of resSeq (int)
+                value:  The new value of res_seq (int)
         """
-        self.iCode = ""
-        self.resSeq = value
+        self.insert_code = ""
+        self.res_seq = value
         for atom in self.atoms:
-            atom.set("resSeq",value)
-            #atom.set("iCode","")
+            atom.set("res_seq",value)
+            #atom.set("insert_code","")
 
     def setChainID(self, value):
         """
-           Set the chainID field to a certain value
+           Set the chain_id field to a certain value
         """
-        self.chainID = value
+        self.chain_id = value
         for atom in self.atoms:
-            atom.set("chainID", value)
-        
+            atom.set("chain_id", value)
+
     def addAtom(self, atom):
         """
             Add the atom object to the residue.
@@ -363,7 +364,7 @@ class Residue:
         """
 
         # Delete the atom from the map
-        
+
         atom = self.map[atomname]
         bonds = atom.bonds
         del self.map[atomname]
@@ -373,7 +374,7 @@ class Residue:
         self.atoms.remove(atom)
 
         # Delete all instances of the atom as a bond
-        
+
         for bondatom in bonds:
             if atom in bondatom.bonds:
                 bondatom.bonds.remove(atom)
@@ -392,7 +393,7 @@ class Residue:
         atom.set("name",newname)
         self.map[newname] = atom
         del self.map[oldname]
-        
+
     def createAtom(self, name, newcoords, type):
         """
             Add a new atom object to the residue. Uses an atom
@@ -411,8 +412,8 @@ class Residue:
         newatom.set("z",newcoords[2])
         newatom.set("name", name)
         newatom.set("occupancy",1.00)
-        newatom.set("tempFactor",0.00)
-        self.addAtom(newatom) 
+        newatom.set("temperature_factor",0.00)
+        self.addAtom(newatom)
 
     def addMissing(self, value):
         """
@@ -468,7 +469,7 @@ class Residue:
         """
         self.name = name
         for atom in self.atoms:
-            atom.resName = name
+            atom.res_name = name
 
     def rotateTetrahedral(self, atom1, atom2, angle):
         """
@@ -482,11 +483,11 @@ class Residue:
         """
         moveatoms = []
         movecoords = []
-        
+
         initcoords = subtract(atom2.getCoords(), atom1.getCoords())
 
         # Determine which atoms to rotate
-        
+
         for atom in atom2.bonds:
             if atom == atom1: continue
             moveatoms.append(atom)
@@ -501,7 +502,7 @@ class Residue:
             atom.set("x", x)
             atom.set("y", y)
             atom.set("z", z)
-           
+
 
     def setDonorsAndAcceptors(self):
         """
@@ -514,7 +515,7 @@ class Residue:
 
             atom.set("hdonor", 0)
             atom.set("hacceptor", 0)
-         
+
             if atomname.startswith("N"):
                 bonded = 0
                 for bondedatom in atom.bonds:
@@ -524,14 +525,14 @@ class Residue:
                         break
                 if not bonded and self.reference.name == "HIS":
                     atom.set("hacceptor",1)
-                    
+
             elif atomname.startswith("O") or \
                  (atomname.startswith("S") and self.reference.name == "CYS"):
                 atom.set("hacceptor",1)
                 for bondedatom in atom.bonds:
                     if bondedatom.isHydrogen():
                         atom.set("hdonor",1)
-                        break     
+                        break
 
     def reorder(self):
         """
@@ -551,7 +552,7 @@ class Residue:
         # Change the list pointer
 
         self.atoms = templist[:]
-        
+
     def letterCode(self):
         return 'X'
 
@@ -564,7 +565,7 @@ class Atom(ATOM):
         Also simplifies code by combining ATOM and HETATM objects into a
         single class.
     """
-    
+
     def __init__(self, atom, type, residue):
         """
             Initialize the new Atom object by using the old object.
@@ -580,17 +581,17 @@ class Atom(ATOM):
             raise PDBInternalError("Invalid atom type %s (Atom Class IN structures.py)!" % type)
         self.serial = atom.serial
         self.name = atom.name
-        self.altLoc = atom.altLoc
-        self.resName = atom.resName
-        self.chainID = atom.chainID
-        self.resSeq = atom.resSeq
-        self.iCode = atom.iCode
+        self.alt_loc = atom.alt_loc
+        self.res_name = atom.res_name
+        self.chain_id = atom.chain_id
+        self.res_seq = atom.res_seq
+        self.insert_code = atom.insert_code
         self.x = atom.x
         self.y = atom.y
         self.z = atom.z
         self.occupancy = atom.occupancy
-        self.tempFactor = atom.tempFactor
-        self.segID = atom.segID
+        self.temperature_factor = atom.temperature_factor
+        self.segment_id = atom.segment_id
         self.element = atom.element
         self.charge = atom.charge
 
@@ -610,14 +611,14 @@ class Atom(ATOM):
         self.mol2charge=None
         if hasattr(atom,'mol2charge'):
             self.mol2charge=atom.mol2charge
-        
-    
+
+
     def getCommonStringRep(self, chainflag=False):
         """
-            Returns a string of the common column of the new atom type.  
-            Uses the ATOM string output but changes the first field 
+            Returns a string of the common column of the new atom type.
+            Uses the ATOM string output but changes the first field
             to either by ATOM or HETATM as necessary.
-            
+
             This is used to create the output for pqr and pdb files! No touchy!
 
             Returns
@@ -635,22 +636,22 @@ class Atom(ATOM):
         else:
             outstr += " " + string.ljust(tstr, 3)[:3]
 
-        tstr = self.resName
+        tstr = self.res_name
         if len(tstr) == 4:
             outstr += string.ljust(tstr, 4)[:4]
         else:
             outstr += " " + string.ljust(tstr, 3)[:3]
-            
+
         outstr += " "
         if chainflag:
-            tstr = self.chainID
+            tstr = self.chain_id
         else:
             tstr = ''
         outstr += string.ljust(tstr, 1)[:1]
-        tstr = "%d" % self.resSeq
+        tstr = "%d" % self.res_seq
         outstr += string.rjust(tstr, 4)[:4]
-        if self.iCode != "":
-            outstr += "%s   " % self.iCode
+        if self.insert_code != "":
+            outstr += "%s   " % self.insert_code
         else:
             outstr += "    "
         tstr = "%8.3f" % self.x
@@ -658,71 +659,71 @@ class Atom(ATOM):
         tstr = "%8.3f" % self.y
         outstr += string.ljust(tstr, 8)[:8]
         tstr = "%8.3f" % self.z
-        outstr += string.ljust(tstr, 8)[:8] 
+        outstr += string.ljust(tstr, 8)[:8]
         return outstr
-        
+
     def __str__(self):
         """
             Returns a string of the new atom type.  Uses the ATOM string
             output but changes the first field to either by ATOM or
             HETATM as necessary.
-            
+
             This is used to create the output for pqr files! No touchy!
 
             Returns
                 str: String with ATOM/HETATM field set appropriately
         """
         return self.getPQRString()
-    
-    
+
+
     def getPQRString(self, chainflag=False):
         """
             Returns a string of the new atom type.  Uses the ATOM string
             output but changes the first field to either by ATOM or
             HETATM as necessary.
-            
+
             This is used to create the output for pqr files! No touchy!
 
             Returns
                 str: String with ATOM/HETATM field set appropriately
         """
         outstr = self.getCommonStringRep(chainflag=chainflag)
-        
-        if self.ffcharge != None: 
+
+        if self.ffcharge != None:
             ffcharge = "%.4f" % self.ffcharge
-        else: 
+        else:
             ffcharge = "0.0000"
         outstr += string.rjust(ffcharge, 8)[:8]
-        if self.radius != None: 
+        if self.radius != None:
             ffradius = "%.4f" % self.radius
-        else: 
+        else:
             ffradius = "0.0000"
         outstr += string.rjust(ffradius, 7)[:7]
 
         return outstr
-    
-    
+
+
     def getPDBString(self):
         """
             Returns a string of the new atom type.  Uses the ATOM string
             output but changes the first field to either by ATOM or
             HETATM as necessary.
-            
-            This is for the pdb representation of the atom. The propka30 module 
+
+            This is for the pdb representation of the atom. The propka30 module
             depends on this being correct. No touchy!
 
             Returns
                 str: String with ATOM/HETATM field set appropriately
         """
         outstr = self.getCommonStringRep(chainflag=True)
-        
+
         tstr = "%6.2f" % self.occupancy
         outstr += string.ljust(tstr, 6)[:6]
-        tstr = "%6.2f" % self.tempFactor
+        tstr = "%6.2f" % self.temperature_factor
         outstr += string.rjust(tstr, 6)[:6]
-        #padding between temp factor and segID
+        #padding between temp factor and segment_id
         outstr += ' ' * 7
-        tstr = self.segID
+        tstr = self.segment_id
         outstr += string.ljust(tstr, 4)[:4]
         tstr = self.element
         outstr += string.ljust(tstr, 2)[:2]
@@ -731,7 +732,7 @@ class Atom(ATOM):
 
 
         return outstr
-    
+
     #TODO: What? Why? Isn't this Python?
     #Are we really doing attribute access based
     # on dynamic names? A search of the code says no.
@@ -745,17 +746,17 @@ class Atom(ATOM):
                 type:       The type of Atom (either ATOM or HETATM)
                 serial:     Atom serial number
                 name:       Atom name
-                altLoc:     Alternate location
-                resName:    Residue name
-                chainID:    Chain identifier
-                resSeq:     Residue sequence number
-                iCode:      Code for insertion of residues
+                alt_loc:     Alternate location
+                res_name:    Residue name
+                chain_id:    Chain identifier
+                res_seq:     Residue sequence number
+                insert_code:      Code for insertion of residues
                 x:          Orthogonal coordinates for X in Angstroms.
                 y:          Orthogonal coordinates for Y in Angstroms.
                 z:          Orthogonal coordinates for Z in Angstroms.
                 occupancy:  Occupancy
-                tempFactor: Temperature Factor
-                segID:      Segment identifier
+                temperature_factor: Temperature Factor
+                segment_id:      Segment identifier
                 element:    Element symbol
                 charge:     Charge on the atom
                 bonds:      The bonds associated with the atom
@@ -787,17 +788,17 @@ class Atom(ATOM):
                 type:       The type of Atom (either ATOM or HETATM)
                 serial:     Atom serial number
                 name:       Atom name
-                altLoc:     Alternate location
-                resName:    Residue name
-                chainID:    Chain identifier
-                resSeq:     Residue sequence number
-                iCode:      Code for insertion of residues
+                alt_loc:     Alternate location
+                res_name:    Residue name
+                chain_id:    Chain identifier
+                res_seq:     Residue sequence number
+                insert_code:      Code for insertion of residues
                 x:          Orthogonal coordinates for X in Angstroms.
                 y:          Orthogonal coordinates for Y in Angstroms.
                 z:          Orthogonal coordinates for Z in Angstroms.
                 occupancy:  Occupancy
-                tempFactor: Temperature Factor
-                segID:      Segment identifier
+                temperature_factor: Temperature Factor
+                segment_id:      Segment identifier
                 element:    Element symbol
                 charge:     Charge on the atom
                 residue:    The parent residue of the atom
@@ -810,7 +811,7 @@ class Atom(ATOM):
             setattr(self, name, value)
         except AttributeError:
             message = "Unable to set object \"%s\" in class Atom" % name
-            raise PDBInternalError(message)   
+            raise PDBInternalError(message)
 
     def getCoords(self):
         """
@@ -858,6 +859,3 @@ class Atom(ATOM):
         """
 
         return self.reference != None
-
-    
-        

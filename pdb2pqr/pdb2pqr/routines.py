@@ -139,12 +139,12 @@ class Routines:
                 rname, aname = forcefield.getNames(resname, atom.name)
                 if resname not in ['LIG', 'WAT', 'ACE', 'NME'] and rname != None:
                     try:
-                        if (residue.isNterm or residue.isCterm) and rname != residue.name:
+                        if (residue.is_n_terminus or residue.is_c_terminus) and rname != residue.name:
                             rname = residue.name
                     except AttributeError:
                         pass
                 if aname != None and rname != None:
-                    atom.resName = rname
+                    atom.res_name = rname
                     atom.name = aname
 
         self.write("Done.\n")
@@ -244,7 +244,7 @@ class Routines:
                 self.write("%s is a free cysteine\n" % res1, 1)
         self.write("Done.\n")
 
-    def updateInternalBonds(self):
+    def updateInternalinked_bonds(self):
         """
             Update the internal bonding network using the reference
             objects in each atom.
@@ -266,7 +266,7 @@ class Routines:
               1.  Applying the PEPTIDE patch to all Amino residues
                   so as to add reference for the N(i+1) and C(i-1)
                   atoms
-              2.  UpdateInternalBonds for inter-residue linking
+              2.  UpdateInternalinked_bonds for inter-residue linking
               3.  Set the links to the N(i+1) and C(i-1) atoms
         """
 
@@ -274,19 +274,19 @@ class Routines:
 
         for residue in self.protein.getResidues():
             if isinstance(residue, Amino):
-                if residue.isNterm or residue.isCterm:
+                if residue.is_n_terminus or residue.is_c_terminus:
                     continue
                 else:
                     self.applyPatch("PEPTIDE", residue)
 
         # Update all internal bonds
 
-        self.updateInternalBonds()
+        self.updateInternalinked_bonds()
 
         # Set the peptide bond pointers
 
         for chain in self.protein.getChains():
-            for i in range(chain.numResidues() - 1):
+            for i in range(chain.num_residues() - 1):
                 res1 = chain.residues[i]
                 res2 = chain.residues[i + 1]
                 if not isinstance(res1, Amino) or not isinstance(res2, Amino):
@@ -409,14 +409,14 @@ class Routines:
         """
 
         if len(chain.residues) == 0:
-            text = "Error: chain \"%s\" has 0 residues!" % chain.chainID
+            text = "Error: chain \"%s\" has 0 residues!" % chain.chain_id
             raise PDBInputError(text)
 
         # Set the N-Terminus/ 5' Terminus
 
         res0 = chain.residues[0]
         if isinstance(res0, Amino):
-            res0.set("isNterm", 1)
+            res0.set("is_n_terminus", 1)
             if isinstance(res0, PRO):
                 self.applyPatch("NEUTRAL-NTERM", res0)
             elif neutraln:
@@ -431,7 +431,7 @@ class Routines:
 
         reslast = chain.residues[-1]
         if isinstance(reslast, Amino):
-            reslast.set("isCterm", 1)
+            reslast.set("is_c_terminus", 1)
             if neutralc:
                 self.applyPatch("NEUTRAL-CTERM", reslast)
             else:
@@ -443,7 +443,7 @@ class Routines:
             for i in range(len(chain.residues)):
                 resthis = chain.residues[-1 - i]
                 if isinstance(resthis, Amino):
-                    resthis.set("isCterm", 1)
+                    resthis.set("is_c_terminus", 1)
                     if neutralc:
                         self.applyPatch("NEUTRAL-CTERM", resthis)
                     else:
@@ -487,13 +487,13 @@ class Routines:
 
             for residue in origlist:
                 reslist.append(residue)
-                oldid = residue.chainID
+                oldid = residue.chain_id
 
                 # Look for ending termini
 
                 fixflag = 0
                 if isinstance(residue, Amino):
-                    if (residue.hasAtom("OXT") and not residue.isCterm):
+                    if (residue.hasAtom("OXT") and not residue.is_c_terminus):
                         fixflag = 1
 
                 elif isinstance(residue, Nucleic):
@@ -537,7 +537,7 @@ class Routines:
 
             c += 1
 
-        # Update the final chain's chainID if it is "" unless it's all water
+        # Update the final chain's chain_id if it is "" unless it's all water
 
         if "" in self.protein.chainmap:
 
@@ -566,7 +566,7 @@ class Routines:
                 message = 'Warning: Reusing chain id: ' + chainid[0] + '\n'
                 self.write(message)
 
-            # Use the new chainID
+            # Use the new chain_id
 
             self.protein.chainmap[chainid] = chain
             del self.protein.chainmap[""]
@@ -948,9 +948,9 @@ class Routines:
             for atom in residue.getAtoms():
                 if atom.isBackbone():
                     atom.refdistance = -1
-                elif residue.isCterm and atom.name == "HO":   # special case for HO in Cterm
+                elif residue.is_c_terminus and atom.name == "HO":   # special case for HO in Cterm
                     atom.refdistance = 3
-                elif residue.isNterm and (atom.name == "H3" or atom.name == "H2"):  # special case for H2 or H3 in Nterm
+                elif residue.is_n_terminus and (atom.name == "H3" or atom.name == "H2"):  # special case for H2 or H3 in Nterm
                     atom.refdistance = 2
                 else:
                     atom.refdistance = len(shortestPath(map, atom, caatom)) - 1
@@ -965,7 +965,7 @@ class Routines:
 
         self.calculateDihedralAngles()
         self.setDonorsAndAcceptors()
-        self.updateInternalBonds()
+        self.updateInternalinked_bonds()
         self.setReferenceDistance()
         bumpscore = 0.0
         #for residue in self.protein.getResidues():
@@ -1065,7 +1065,7 @@ class Routines:
 
         self.calculateDihedralAngles()
         self.setDonorsAndAcceptors()
-        self.updateInternalBonds()
+        self.updateInternalinked_bonds()
         self.setReferenceDistance()
 
         # Determine which residues to debump
@@ -1555,7 +1555,7 @@ class Routines:
         self.write("Running PROPKA and applying at pH %.2f... \n" % ph)
 
         from propka30.Source.protein import Protein as pkaProtein
-        from propka30.Source.pdb import readPDB as pkaReadPDB
+        from propka30.Source.pdb import read_pdb as pkaReadPDB
         from propka30.Source.lib import residueList, setVerbose
 
         setVerbose(options.verbose)
@@ -1601,10 +1601,10 @@ class Routines:
         for chain in myPkaProtein.chains:
             for residue_type in residue_list:
                 for residue in chain.residues:
-                    if residue.resName == residue_type:
+                    if residue.res_name == residue_type:
                         #Strip out the extra space after C- or N+
-                        key = string.strip('%s %s %s' % (string.strip(residue.resName),
-                                                        residue.resNumb, residue.chainID))
+                        key = string.strip('%s %s %s' % (string.strip(residue.res_name),
+                                                        residue.resNumb, residue.chain_id))
                         pkadic[key] = residue.pKa_pro
 
         if len(pkadic) == 0:
@@ -1625,11 +1625,11 @@ class Routines:
             if not isinstance(residue, Amino):
                 continue
             resname = residue.name
-            resnum = residue.resSeq
-            chainID = residue.chainID
+            resnum = residue.res_seq
+            chain_id = residue.chain_id
 
-            if residue.isNterm:
-                key = "N+ %i %s" % (resnum, chainID)
+            if residue.is_n_terminus:
+                key = "N+ %i %s" % (resnum, chain_id)
                 key = string.strip(key)
                 if key in pkadic:
                     value = pkadic[key]
@@ -1641,8 +1641,8 @@ class Routines:
                         else:
                             self.applyPatch("NEUTRAL-NTERM", residue)
 
-            if residue.isCterm:
-                key = "C- %i %s" % (resnum, chainID)
+            if residue.is_c_terminus:
+                key = "C- %i %s" % (resnum, chain_id)
                 key = string.strip(key)
                 if key in pkadic:
                     value = pkadic[key]
@@ -1654,7 +1654,7 @@ class Routines:
                         else:
                             self.applyPatch("NEUTRAL-CTERM", residue)
 
-            key = "%s %i %s" % (resname, resnum, chainID)
+            key = "%s %i %s" % (resname, resnum, chain_id)
             key = string.strip(key)
             if key in pkadic:
                 value = pkadic[key]
@@ -1672,10 +1672,10 @@ class Routines:
                         warn = (key, "neutral")
                         warnings.append(warn)
                 elif resname == "ASP" and ph < value:
-                    if residue.isCterm and ff in ["amber", "tyl06", "swanson"]:
+                    if residue.is_c_terminus and ff in ["amber", "tyl06", "swanson"]:
                         warn = (key, "Protonated at C-Terminal")
                         warnings.append(warn)
-                    elif residue.isNterm and ff in ["amber", "tyl06", "swanson"]:
+                    elif residue.is_n_terminus and ff in ["amber", "tyl06", "swanson"]:
                         warn = (key, "Protonated at N-Terminal")
                         warnings.append(warn)
                     else:
@@ -1687,10 +1687,10 @@ class Routines:
                     else:
                         self.applyPatch("CYM", residue)
                 elif resname == "GLU" and ph < value:
-                    if residue.isCterm and ff in ["amber", "tyl06", "swanson"]:
+                    if residue.is_c_terminus and ff in ["amber", "tyl06", "swanson"]:
                         warn = (key, "Protonated at C-Terminal")
                         warnings.append(warn)
-                    elif residue.isNterm and ff in ["amber", "tyl06", "swanson"]:
+                    elif residue.is_n_terminus and ff in ["amber", "tyl06", "swanson"]:
                         warn = (key, "Protonated at N-Terminal")
                         warnings.append(warn)
                     else:
@@ -1701,10 +1701,10 @@ class Routines:
                     if ff == "charmm":
                         warn = (key, "neutral")
                         warnings.append(warn)
-                    elif ff in ["amber", "tyl06", "swanson"] and residue.get("isCterm"):
+                    elif ff in ["amber", "tyl06", "swanson"] and residue.get("is_c_terminus"):
                         warn = (key, "neutral at C-Terminal")
                         warnings.append(warn)
-                    elif ff == "tyl06" and residue.get("isNterm"):
+                    elif ff == "tyl06" and residue.get("is_n_terminus"):
                         warn = (key, "neutral at N-Terminal")
                         warnings.append(warn)
                     else:

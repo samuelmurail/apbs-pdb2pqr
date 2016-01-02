@@ -5,40 +5,40 @@
     pdb2pqr.
 
     ----------------------------
-   
+
     PDB2PQR -- An automated pipeline for the setup, execution, and analysis of
     Poisson-Boltzmann electrostatics calculations
 
-    Copyright (c) 2002-2011, Jens Erik Nielsen, University College Dublin; 
-    Nathan A. Baker, Battelle Memorial Institute, Developed at the Pacific 
-    Northwest National Laboratory, operated by Battelle Memorial Institute, 
-    Pacific Northwest Division for the U.S. Department Energy.; 
+    Copyright (c) 2002-2011, Jens Erik Nielsen, University College Dublin;
+    Nathan A. Baker, Battelle Memorial Institute, Developed at the Pacific
+    Northwest National Laboratory, operated by Battelle Memorial Institute,
+    Pacific Northwest Division for the U.S. Department Energy.;
     Paul Czodrowski & Gerhard Klebe, University of Marburg.
 
 	All rights reserved.
 
-	Redistribution and use in source and binary forms, with or without modification, 
+	Redistribution and use in source and binary forms, with or without modification,
 	are permitted provided that the following conditions are met:
 
-		* Redistributions of source code must retain the above copyright notice, 
+		* Redistributions of source code must retain the above copyright notice,
 		  this list of conditions and the following disclaimer.
-		* Redistributions in binary form must reproduce the above copyright notice, 
-		  this list of conditions and the following disclaimer in the documentation 
+		* Redistributions in binary form must reproduce the above copyright notice,
+		  this list of conditions and the following disclaimer in the documentation
 		  and/or other materials provided with the distribution.
         * Neither the names of University College Dublin, Battelle Memorial Institute,
           Pacific Northwest National Laboratory, US Department of Energy, or University
           of Marburg nor the names of its contributors may be used to endorse or promote
           products derived from this software without specific prior written permission.
 
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
-	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-	IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-	INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-	BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
-	OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+	IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+	INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+	BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+	LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+	OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 	OF THE POSSIBILITY OF SUCH DAMAGE.
 
     ----------------------------
@@ -67,24 +67,24 @@ class Nucleic(Residue):
     """
     def __init__(self, atoms, ref):
         sampleAtom = atoms[-1]
-        
+
         self.atoms = []
-        self.name = sampleAtom.resName
-        self.chainID = sampleAtom.chainID
-        self.resSeq = sampleAtom.resSeq
-        self.iCode = sampleAtom.iCode
+        self.name = sampleAtom.res_name
+        self.chain_id = sampleAtom.chain_id
+        self.res_seq = sampleAtom.res_seq
+        self.insert_code = sampleAtom.insert_code
 
         self.ffname = self.name
         self.map = {}
         self.dihedrals = []
         self.patches = []
-        self.is3term = 0
-        self.is5term = 0
-        self.isCterm = 0
-        self.isNterm = 0
+        self.is3term = False
+        self.is5term = False
+        self.is_c_terminus = False
+        self.is_n_terminus = False
         self.missing = []
         self.reference = ref
-     
+
         # Create each atom
 
         for a in atoms:
@@ -110,9 +110,9 @@ class Nucleic(Residue):
         newatom.set("z",newcoords[2])
         newatom.set("name", atomname)
         newatom.set("occupancy",1.00)
-        newatom.set("tempFactor",0.00)
+        newatom.set("temperature_factor",0.00)
         newatom.added = 1
-        self.addAtom(newatom) 
+        self.addAtom(newatom)
 
     def addAtom(self, atom):
         """
@@ -142,12 +142,12 @@ class Nucleic(Residue):
         self.dihedrals.append(value)
 
     def setState(self):
-        """ 
+        """
            Adds the termini for all inherited objects
         """
         if self.is5term: self.ffname = self.ffname + "5"
         if self.is3term: self.ffname = self.ffname + "3"
- 
+
 class ADE(Nucleic):
     """
         Adenosine class
@@ -166,7 +166,7 @@ class ADE(Nucleic):
         """
         Nucleic.__init__(self, atoms, ref)
         self.reference = ref
-        
+
     def letterCode(self):
         return 'A'
 
@@ -177,7 +177,7 @@ class ADE(Nucleic):
         if self.hasAtom("O2'"): self.ffname = "RA"
         else: self.ffname = "DA"
         Nucleic.setState(self)
-     
+
 class CYT(Nucleic):
     """
         Cytidine class
@@ -196,10 +196,10 @@ class CYT(Nucleic):
         """
         Nucleic.__init__(self, atoms, ref)
         self.reference = ref
-    
+
     def letterCode(self):
         return 'C'
-        
+
     def setState(self):
         """
             Set the state to distinguish RNA from DNA.
@@ -207,7 +207,7 @@ class CYT(Nucleic):
         if self.hasAtom("O2'"): self.ffname = "RC"
         else: self.ffname = "DC"
         Nucleic.setState(self)
-        
+
 class GUA(Nucleic):
     """
         Guanosine class
@@ -226,10 +226,10 @@ class GUA(Nucleic):
         """
         Nucleic.__init__(self, atoms, ref)
         self.reference = ref
-        
+
     def letterCode(self):
         return 'G'
-        
+
     def setState(self):
         """
             Set the state to distinguish RNA from DNA.
@@ -256,10 +256,10 @@ class THY(Nucleic):
         """
         Nucleic.__init__(self, atoms, ref)
         self.reference = ref
-        
+
     def letterCode(self):
         return 'T'
-        
+
     def setState(self):
         """
             Set the state to distinguish RNA from DNA.  In this case it is
@@ -267,7 +267,7 @@ class THY(Nucleic):
         """
         self.ffname = "DT"
         Nucleic.setState(self)
-                
+
 class URA(Nucleic):
     """
         Uridine class
@@ -286,10 +286,10 @@ class URA(Nucleic):
         """
         Nucleic.__init__(self, atoms, ref)
         self.reference = ref
-        
+
     def letterCode(self):
         return 'U'
-        
+
     def setState(self):
         """
             Set the state to distinguish RNA from DNA.  In this case it is
@@ -297,20 +297,19 @@ class URA(Nucleic):
         """
         self.ffname = "RU"
         Nucleic.setState(self)
-        
+
 #Tie the class name to the base name in NA.XML
 class RA(ADE):
     pass
-     
+
 class RC(CYT):
     pass
-        
+
 class RG(GUA):
     pass
-        
+
 class DT(THY):
     pass
-        
+
 class RU(URA):
     pass
-

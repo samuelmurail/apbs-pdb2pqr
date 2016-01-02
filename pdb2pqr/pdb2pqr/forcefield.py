@@ -489,9 +489,9 @@ class Forcefield:
                 elif atomname == "OD2": atomname = "OD1"
             elif "HD2" in residue.get("map"): resname = "ASH"
                
-        if residue.get("isCterm"):
+        if residue.get("is_c_terminus"):
             resname = "C" + resname
-        elif residue.get("isNterm"):
+        elif residue.get("is_n_terminus"):
             resname = "N" + resname
 
         # Atom Substitutions
@@ -506,9 +506,9 @@ class Forcefield:
             if atomname == "H": atomname = "H1"
         if (resname == "CCYS" or resname == "NCYS") and atomname == "HG": atomname = "HSG"
         if resname == "CYM" and atomname == "H": atomname = "HN"
-        if residue.get("isNterm") and resname == "NPRO" and atomname == "HN2":
+        if residue.get("is_n_terminus") and resname == "NPRO" and atomname == "HN2":
             atomname = "H2"
-        if residue.get("isNterm") and resname == "NPRO" and atomname == "HN1":
+        if residue.get("is_n_terminus") and resname == "NPRO" and atomname == "HN1":
             atomname = "H3"   
         return resname, atomname
 
@@ -528,8 +528,8 @@ class Forcefield:
 
         # Terminal/Water Substitutions
 
-        nterm = residue.get("isNterm")
-        cterm = residue.get("isCterm")
+        nterm = residue.get("is_n_terminus")
+        cterm = residue.get("is_c_terminus")
         if nterm and resname != "ACE":
             if resname == "PRO" and nterm == 2:
                 resname = "PR+"
@@ -686,7 +686,7 @@ class Forcefield:
                 
         # Terminal/Water Substitutions
 
-        if residue.get("isNterm"):
+        if residue.get("is_n_terminus"):
             if resname == "GLY" and atomname in ["N","H","H2","H3","CA","HA2","HA3"]:
                 resname = "GLYP"
                 if atomname == "H": atomname = "HT1"
@@ -709,7 +709,7 @@ class Forcefield:
                     if atomname == "H": atomname = "HT1"
                     elif atomname == "H2": atomname = "HT2"
                     elif atomname == "H3": atomname = "HT3"               
-        elif residue.get("isCterm"):
+        elif residue.get("is_c_terminus"):
             if atomname in ["O","OXT","C"]:
                 resname = "CTER"
                 if atomname == "O":
