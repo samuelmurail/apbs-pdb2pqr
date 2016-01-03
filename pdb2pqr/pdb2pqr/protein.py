@@ -48,11 +48,6 @@
 __date__ = "13 May 2008"
 __author__ = "Todd Dolinsky, Yong Huang"
 
-from .pdb import *
-from .structures import *
-from .aa import *
-from .na import *
-
 class Protein:
     """
         Protein class
@@ -110,32 +105,32 @@ class Protein:
                 if res_seq != previousAtom.res_seq or \
                       insert_code != previousAtom.insert_code or \
                       chain_id != previousAtom.chain_id:
-                    myResidue = self.createResidue(residue, previousAtom.res_name)
-                    chainDict[previousAtom.chain_id].add_residue(myResidue)
+                    my_residue = self.createResidue(residue, previousAtom.res_name)
+                    chainDict[previousAtom.chain_id].add_residue(my_residue)
                     residue = []
 
                 residue.append(record)
                 previousAtom = record
 
             elif isinstance(record, END):
-                myResidue = self.createResidue(residue, previousAtom.res_name)
-                chainDict[previousAtom.chain_id].add_residue(myResidue)
+                my_residue = self.createResidue(residue, previousAtom.res_name)
+                chainDict[previousAtom.chain_id].add_residue(my_residue)
                 residue = []
 
             elif isinstance(record, MODEL):
                 numModels += 1
                 if residue == []: continue
                 if numModels > 1:
-                    myResidue = self.createResidue(residue, previousAtom.res_name)
-                    chainDict[previousAtom.chain_id].add_residue(myResidue)
+                    my_residue = self.createResidue(residue, previousAtom.res_name)
+                    chainDict[previousAtom.chain_id].add_residue(my_residue)
                     break
 
             elif isinstance(record, TER):
                 count += 1
 
         if residue != [] and numModels <= 1:
-            myResidue = self.createResidue(residue, previousAtom.res_name)
-            chainDict[previousAtom.chain_id].add_residue(myResidue)
+            my_residue = self.createResidue(residue, previousAtom.res_name)
+            chainDict[previousAtom.chain_id].add_residue(my_residue)
 
         # Keep a map for accessing chains via chain_id
 

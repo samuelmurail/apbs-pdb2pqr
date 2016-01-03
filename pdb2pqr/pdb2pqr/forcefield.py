@@ -90,11 +90,11 @@ class ForcefieldHandler(sax.ContentHandler):
             if regexp:
                 re_list.append(regexp)
         return re_list
-    def startElement(self, name, _):
-        """ Override the startElement function to keep track of the current element. """
+    def start_element(self, name, _):
+        """ Override the start_element function to keep track of the current element. """
         if name != "name":
             self.curelement = name
-    def endElement(self, name):
+    def end_element(self, name):
         """ At the end of the element, act on the stored information.
         Parameters
             name:  The name of the element (string) """

@@ -45,10 +45,9 @@ __author__ = "Todd Dolinsky, Nathan Baker"
 
 BACKBONE = ["N", "CA", "C", "O", "O2", "HA", "HN", "H", "tN"]
 
-import string
-import pdb
-import utilities
-import quatfit
+from . import pdb
+from . import utilities
+from . import quatfit
 from .errors import PDBInternalError
 
 class Chain:
@@ -144,62 +143,6 @@ class Residue:
     def __str__(self):
         text = "%s %s %i%s" % (self.name, self.chain_id, self.res_seq, self.insert_code)
         return text
-    def get(self, name):
-        """ Get a member of the Residue class
-        Parameters
-            name:          The name of the member (string)
-        Possible Values
-            atoms:         The atoms in the residue
-            name:          The name of the residue
-            chain_id:       The chain_id associated with the residue
-            res_seq:        The sequence number of the residue
-            icode:         The insert_code of the residue
-            disulfide_bonded:      1 if the residue has a SS bond, 0 otherwise
-            SSbondpartner: The residue of the bond partner
-            type:          The type associated with this residue
-            is_n_terminus:       # of hydrogens if the residue is the N-Terminus, 0 otherwise
-            is_c_terminus:       1 if the residue is the C-Terminus, 0 otherwise
-            missing:     List of missing atoms of the residue
-        Returns
-            item:          The value of the member
-        """
-        try:
-            item = getattr(self, name)
-            return item
-        except AttributeError:
-            message = "Unable to access object \"%s\" in class Residue" % name
-            raise PDBInternalError(message)
-    def set(self, name, value):
-        """ Set a member of the Residue class to a specific value
-        Parameters
-            name:          The name of the object to set (string)
-            value:         The object to append
-        Possible Values
-            atoms:         The atoms in the residue
-            name:          The name of the residue
-            chain:         The chain_id associated with the residue
-            res_seq:        The sequence number of the residue
-            icode:         The insert_code of the residue
-            disulfide_bonded:      1 if the residue has a SS bond, 0 otherwise
-            SSbondpartner: The residue of the bond partner
-            type:          The type associated with this residue
-            is_n_terminus:       # of hydrogens if the residue is the N-Terminus, 0 otherwise
-            is_c_terminus:       1 if the residue is the C-Terminus, 0 otherwise
-            isDirty:       1 if the residue is not missing atoms,
-                           0 otherwise
-        Notes
-            res_seq points to the residue.setResSeq function
-        Returns
-            item:          The value of the member
-        """
-        if name == "res_seq":
-            self.setResSeq(value)
-        else:
-            try:
-                setattr(self, name, value)
-            except AttributeError:
-                message = "Unable to set object \"%s\" in class Residue" % name
-                raise PDBInternalError(message)
     def update_terminus_status(self):
         """ Update the is_n_terminus and is_c_terminus flags"""
         if self.is_n_terminus:
@@ -234,7 +177,7 @@ class Residue:
         self.res_seq = value
         for atom in self.atoms:
             atom.set("res_seq", value)
-    def setChainID(self, value):
+    def set_chain_id(self, value):
         """ Set the chain_id field to a certain value """
         self.chain_id = value
         for atom in self.atoms:
@@ -259,7 +202,7 @@ class Residue:
             if atom in bondatom.bonds:
                 bondatom.bonds.remove(atom)
         del atom
-    def renameAtom(self, oldname, newname):
+    def rename_atom(self, oldname, newname):
         """ Rename an atom to a new name
         Parameters
             oldname: The old atom name (string)
@@ -269,7 +212,7 @@ class Residue:
         atom.set("name", newname)
         self.map[newname] = atom
         del self.map[oldname]
-    def create_atom(self, name, newcoords, type):
+    def create_atom(self, name, newcoords, atom_type):
         """ Add a new atom object to the residue. Uses an atom currently in the residue to seed the
         new atom object, then replaces the coordinates and name accordingly.
         Parameters
@@ -277,7 +220,7 @@ class Residue:
             newcoords: The x,y,z coordinates of the new atom (list)
             type: The type of atom, ATOM or HETATM """
         oldatom = self.atoms[0]
-        newatom = Atom(oldatom, type, self)
+        newatom = Atom(oldatom, atom_type, self)
         newatom.set("x", newcoords[0])
         newatom.set("y", newcoords[1])
         newatom.set("z", newcoords[2])
@@ -339,7 +282,7 @@ class Residue:
             atom.set("x", x)
             atom.set("y", y)
             atom.set("z", z)
-    def setDonorsAndAcceptors(self):
+    def set_donors_and_acceptors(self):
         """ Set the donors and acceptors within the residue """
         if not hasattr(self, "reference"): return
         for atom in self.get_atoms():
@@ -378,7 +321,7 @@ class Residue:
     def letter_code(self):
         return 'X'
 
-class Atom(ATOM):
+class Atom(pdb.ATOM):
     """ The Atom class inherits off the ATOM object in pdb.py.  It is used for adding fields not
     found in the pdb that may be useful for analysis. Also simplifies code by combining ATOM and
     HETATM objects into a single class. """

@@ -65,7 +65,7 @@ class DefinitionHandler(sax.ContentHandler):
         self.patches = []
         self.attributes = None
         return
-    def startElement(self, name, attributes):
+    def start_element(self, name, attributes):
         """ Handle opening element """
         self.attributes = attributes
         if name == "residue":
@@ -83,7 +83,7 @@ class DefinitionHandler(sax.ContentHandler):
         else:
             self.curelement = name
         return
-    def endElement(self, name):
+    def end_element(self, name):
         """ Handle closing element """
         if name == "residue": # Complete Residue object
             residue = self.curholder

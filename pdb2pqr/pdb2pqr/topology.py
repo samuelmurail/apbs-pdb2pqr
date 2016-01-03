@@ -74,7 +74,7 @@ class TopologyHandler(sax.ContentHandler):
 		self.residues = []
 		self.incomplete = 0
 		
-	def startElement(self, tagName, attributes):
+	def start_element(self, tagName, attributes):
 		if not self.incomplete: 
 			#print "Processing %s start tag" % tagName
 			if tagName == "topology":
@@ -147,7 +147,7 @@ class TopologyHandler(sax.ContentHandler):
 			else:
 				print("** NOT handling %s start tag" % tagName)
 			
-	def endElement(self, tagName):
+	def end_element(self, tagName):
 		if not self.incomplete:
 			#print "Processing %s end tag" % tagName
 			self.currentElement == None

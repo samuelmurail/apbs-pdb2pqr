@@ -93,8 +93,8 @@ def createHTMLTypeMap(protein, definition, outfilename):
         else:
             resname = atom.residue.name
 
-        ambergroup = amberff.getGroup(resname, atom.name)
-        charmmgroup  = charmmff.getGroup(resname, atom.name)
+        ambergroup = amberff.get_group(resname, atom.name)
+        charmmgroup  = charmmff.get_group(resname, atom.name)
 
 
         file.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (atom.serial, atom.name, resname, atom.chain_id, ambergroup, charmmgroup))
