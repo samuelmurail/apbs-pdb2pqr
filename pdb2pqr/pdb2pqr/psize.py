@@ -376,10 +376,10 @@ def usage(rc):
 
 def main():
     filename = ""
-    shortOptList = "h"
-    longOptList = ["help", "cfac=", "fadd=", "space=", "gmemfac=", "gmemceil=", "ofrac=", "redfac="]
+    short_opt_list = "h"
+    long_opt_list = ["help", "cfac=", "fadd=", "space=", "gmemfac=", "gmemceil=", "ofrac=", "redfac="]
     try:
-        opts, args = getopt.getopt(sys.argv[1:], shortOptList, longOptList)
+        opts, args = getopt.getopt(sys.argv[1:], short_opt_list, long_opt_list)
     except getopt.GetoptError as details:
         stderr.write("Option error (%s)!\n" % details)
         usage(2)
