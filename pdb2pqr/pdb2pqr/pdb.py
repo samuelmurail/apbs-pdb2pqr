@@ -1756,7 +1756,7 @@ def read_atom(line):
     for iword in range(size):
         entry = words[size - iword]
         try:
-            val = float(entry)
+            _ = float(entry)
             consec = consec + 1
             if consec == 5:
                 break
@@ -1847,11 +1847,11 @@ def main():
     """ Main driver for testing.  Parses set number of random PDBs """
     npdb = 1
     sys.stdout.write("Testing %d PDBs...\n" % npdb)
-    for ipdb in range(0, npdb):
+    for _ in range(0, npdb):
         sys.stdout.write("Getting random PDB...\n")
         path = get_random()
         sys.stdout.write("Parsing %s...\n" % path)
-        pdbdict, errlist = read_pdb(open(path, "rU"))
+        _, errlist = read_pdb(open(path, "rU"))
         if len(errlist) > 0:
             sys.stdout.write("\tSkipped records: %s\n" % errlist)
         sys.stdout.write("\tNo skipped records.\n")
