@@ -572,18 +572,14 @@ def mainCommand(argv):
     pdb2pka_group.add_option('--sdie', dest='pdb2pka_sdie', default=80, type='int',
                              help='Solvent dielectric constant. Defaults to %default')
 
-#     pdb2pka_group.add_option('--maps', dest='maps', default=None, type='int',
-#                              help='<1 for using provided 3D maps; 2 for genereting new maps>')
-#     pdb2pka_group.add_option('--xdiel', dest='xdiel', default=None, type='str',
-#                              help='<xdiel maps>')
-#     pdb2pka_group.add_option('--ydiel', dest='ydiel', default=None, type='str',
-#                              help='<ydiel maps>')
-#     pdb2pka_group.add_option('--zdiel', dest='zdiel', default=None, type='str',
-#                              help='<zdiel maps>')
-#     pdb2pka_group.add_option('--kappa', dest='kappa', default=None, type='str',
-#                              help='<ion-accessibility map>')
-#     pdb2pka_group.add_option('--smooth', dest='sd', default=None, type='float',
-#                              help='<st.dev [A] of Gaussian smooting of 3D maps at the boundary, bandthwith=3 st.dev>')
+    #
+    # Option to use Graph Cut or Monte Carlo
+    #
+    pdb2pka_group.add_option('--titration-curve-method', dest='pdb2pka_curve_method', metavar='gc|mc', action='store', default='gc',
+                             help='Method used to generate titration curve data.  The default is \'gc\' for '
+                             'Graph Cut and \'mc\' for Monte Carlo.')
+
+
     #
     # Cut off energy for calculating non-charged-charged interaction energies
     #
@@ -657,10 +653,11 @@ def mainCommand(argv):
         if options.ff.lower() != 'parse':
             parser.error('PDB2PKA requires the PARSE force field.')
         ph_calc_options = {'output_dir': options.pdb2pka_out,
-                          'clean_output': not options.pdb2pka_resume,
-                          'pdie': options.pdb2pka_pdie,
-                          'sdie': options.pdb2pka_sdie,
-                          'pairene': options.pdb2pka_pairene}
+                           'clean_output': not options.pdb2pka_resume,
+                           'pdie': options.pdb2pka_pdie,
+                           'sdie': options.pdb2pka_sdie,
+                           'pairene': options.pdb2pka_pairene,
+                           'curve_meth': options.pdb2pka_curve_method}
 
     if options.ligand is not None:
         try:

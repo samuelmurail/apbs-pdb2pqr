@@ -1503,8 +1503,10 @@ class Routines:
         import pka
         from pdb2pka import pka_routines
         init_params = pdb2pka_params.copy()
+        # OMG this is gross.
         init_params.pop('pairene')
         init_params.pop('clean_output')
+        init_params.pop('curve_meth')
 
         results = pka.pre_init(original_pdb_list=pdblist,
                                ff=ff,
@@ -1515,7 +1517,8 @@ class Routines:
 
         mypkaRoutines = pka_routines.pKaRoutines(protein, routines, forcefield, apbs_setup, output_dir, maps, sd,
                                                  restart=pdb2pka_params.get('clean_output'),
-                                                 pairene=pdb2pka_params.get('pairene'))
+                                                 pairene=pdb2pka_params.get('pairene'),
+                                                 curve_meth=pdb2pka_params.get('curve_meth'))
 
         print 'Doing full pKa calculation'
         mypkaRoutines.runpKa()
@@ -1525,6 +1528,8 @@ class Routines:
         self.warnings.extend(pdb2pka_warnings)
 
         residue_ph = {}
+
+
         for pka_residue_tuple, calc_ph in mypkaRoutines.ph_at_0_5.iteritems():
             tit_type, chain_id, number_str = pka_residue_tuple
             if tit_type == 'NTR':
