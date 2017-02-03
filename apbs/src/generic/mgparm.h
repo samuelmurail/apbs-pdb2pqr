@@ -130,6 +130,9 @@ struct sMGparm {
     int setnlev;  /**< Flag, @see nlev */
     double etol;  /**< User-defined error tolerance */
     int setetol;  /**< Flag, @see etol */
+    int sor; /**< Flag, if 1 uses sor for solver */
+    double omegal; /**< Relaxation parameter to be used with SOR solver */
+    int setomegal; /**< Flag, @see omegal */
     double grid[3];  /**< Grid spacings */
     int setgrid;  /**< Flag, @see grid */
     double glen[3];  /**< Grid side lengths. */

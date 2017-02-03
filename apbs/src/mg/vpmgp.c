@@ -141,7 +141,14 @@ value: %g \n", thee->errtol);
     thee->nu2 = 2;
     thee->mgprol = 0;
     thee->mgdisc = 0;
-    thee->omegal = 19.4e-1;
+    if(mgparm->setomegal){
+    	thee->omegal = mgparm->omegal;
+    	Vnm_print(1, "  Relaxation parameter (omegal) is now set to user-defined value: %g\n", thee->omegal);
+    	Vnm_print(0, "  Relaxation parameter (omegal) is now set to user-defined value: %g\n", thee->omegal);
+    }
+    else{
+    	thee->omegal = 19.4e-1;
+    }
     thee->omegan = 9.0e-1;
     thee->ipcon = 3;
     thee->irite = 8;

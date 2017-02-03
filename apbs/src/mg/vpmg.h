@@ -186,6 +186,8 @@ struct sVpmg {
   int useChargeMap;  /**< Indicates whether Vpmg_fillco was called with an
                       * external charge distribution map */
   Vgrid *chargeMap;  /**< External charge distribution map */
+
+  int sorflag; /**< Flag, used to determine whether to use mg or sor on one level.*/
 };
 
 /**

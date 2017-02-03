@@ -145,6 +145,9 @@ VPUBLIC Vrc_Codes MGparm_ctor2(MGparm *thee, MGparm_CalcType type) {
     thee->setnlev = 1;
     thee->etol = 1.0e-6;
     thee->setetol = 0;
+    thee->omegal = 1.9e-1;
+    thee->setomegal=0;
+    thee->sor = 0;
     thee->setgrid = 0;
     thee->setglen = 0;
     thee->setgcent = 0;
@@ -361,6 +364,9 @@ VPUBLIC void MGparm_copy(MGparm *thee, MGparm *parm) {
     thee->setnlev = parm->setnlev;
     thee->etol = parm->etol;
     thee->setetol = parm->setetol;
+    thee->omegal = parm->omegal;
+    thee->setomegal = parm->omegal;
+    thee->sor = parm->sor;
     for (i=0; i<3; i++) thee->grid[i] = parm->grid[i];
     thee->setgrid = parm->setgrid;
     for (i=0; i<3; i++) thee->glen[i] = parm->glen[i];
@@ -535,6 +541,30 @@ keyword!\n", tok);
         return VRC_WARNING;
 }
 
+VPRIVATE Vrc_Codes MGparm_parseOMEGAL(MGparm *thee, Vio *sock){
+	char tok[VMAX_BUFSIZE];
+	double tf;
+
+	VJMPERR1(Vio_scanf(sock, "%d", tok)==1);
+	if(sscanf(tok, "%lf", &tf) == 0){
+		Vnm_tprint(2, "NOsh: Rean non-float (%s) while parsing omegal keyword!\n", tok);
+		return VRC_WARNING;
+	}
+	else if(tf<=0.0 || tf >=2.0){
+		Vnm_print(2, "parseMG: omegal must be greater than 0.0 and less than 2.0\n");
+		return VRC_WARNING;
+	}
+	else{
+		thee->omegal = tf;
+	}
+
+	thee->setomegal = 1;
+	return VRC_SUCCESS;
+
+	VERROR1:
+		Vnm_print(2, "parseMG: ran out of tokens!\n");
+		return VRC_WARNING;
+}
 
 VPRIVATE Vrc_Codes MGparm_parseGRID(MGparm *thee, Vio *sock) {
 
@@ -916,6 +946,12 @@ VPRIVATE Vrc_Codes MGparm_parseUSEAQUA(MGparm *thee, Vio *sock) {
     return VRC_SUCCESS;
 }
 
+VPRIVATE Vrc_Codes MGparm_parseSOR(MGparm *thee, Vio *sock){
+	Vnm_print(0, "NOsh: parsed sor\n");
+	thee->sor = 1;
+	return VRC_SUCCESS;
+}
+
 VPUBLIC Vrc_Codes MGparm_parseToken(MGparm *thee, char tok[VMAX_BUFSIZE],
   Vio *sock) {
 
@@ -940,6 +976,8 @@ VPUBLIC Vrc_Codes MGparm_parseToken(MGparm *thee, char tok[VMAX_BUFSIZE],
         return MGparm_parseNLEV(thee, sock);
     } else if (Vstring_strcasecmp(tok, "etol") == 0) {
         return MGparm_parseETOL(thee, sock);
+    } else if(Vstring_strcasecmp(tok, "omagal") == 0){
+    	return MGparm_parseOMEGAL(tok, sock);
     } else if (Vstring_strcasecmp(tok, "grid") == 0) {
         return MGparm_parseGRID(thee, sock);
     } else if (Vstring_strcasecmp(tok, "glen") == 0) {
@@ -964,6 +1002,8 @@ VPUBLIC Vrc_Codes MGparm_parseToken(MGparm *thee, char tok[VMAX_BUFSIZE],
         return MGparm_parseGAMMA(thee, sock);
     } else if (Vstring_strcasecmp(tok, "useaqua") == 0) {
         return MGparm_parseUSEAQUA(thee, sock);
+    } else if (Vstring_strcasecom(tok, "sor") == 0) {
+    	return MGparm_parseSOR(tok, sock);
     } else {
         Vnm_print(2, "parseMG:  Unrecognized keyword (%s)!\n", tok);
         return VRC_WARNING;

@@ -163,6 +163,7 @@ VPUBLIC int Vpmg_ctor2(Vpmg *thee, Vpmgp *pmgp, Vpbe *pbe, int focusFlag,
     VASSERT(pbe != VNULL);
     thee->pmgp = pmgp;
     thee->pbe = pbe;
+    thee->sorflag = mgparm->sor;
 
     /* Set up the memory */
     thee->vmem = Vmem_ctor("APBS:VPMG");
@@ -475,7 +476,12 @@ VPUBLIC int Vpmg_solve(Vpmg *thee) {
 
             if (thee->pmgp->iinfo > 1)
                 Vnm_print(2, "Driving with MGDRIV\n");
-
+            if(thee->sorflag){
+            	if((thee->xf) * (thee->yf) * (thee->zf) < 4e4){
+					Vnm_print(2, "Using SOR on on level\n");
+					VAT(thee->iparm, 23) = 1;
+            	}
+            }
             Vmgdriv(thee->iparm, thee->rparm, thee->iwork, thee->rwork,
                                         thee->u, thee->xf, thee->yf, thee->zf, thee->gxcf, thee->gycf,
                                         thee->gzcf, thee->a1cf, thee->a2cf, thee->a3cf, thee->ccf,
