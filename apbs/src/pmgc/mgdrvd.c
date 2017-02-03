@@ -488,6 +488,19 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
 
             if (mgkey == 0) {
 
+            	if(VAT(iparm,23)){
+            		nlev = 1;
+            		mgsolv = 0;
+            		mgsmoo = 2;
+                    Vmvcs(nx, ny, nz,
+                            u, iz, a1cf, a2cf, a3cf, ccf,
+                            &istop, &itmax, &iters, &ierror, &nlev,
+                            &ilev, &nlev_real, &mgsolv,
+                            &iok, &iinfo, &epsiln, &errtol, &omegal,
+                            &nu1, &nu2, &mgsmoo,
+                            ipc, rpc, pc, ac, cc, fc, tcf);
+            	}
+            	else {
                 Vmvcs(nx, ny, nz,
                         u, iz, a1cf, a2cf, a3cf, ccf,
                         &istop, &itmax, &iters, &ierror, &nlev,
@@ -495,6 +508,7 @@ VPUBLIC void Vmgdriv2(int *iparm, double *rparm,
                         &iok, &iinfo, &epsiln, &errtol, &omegal,
                         &nu1, &nu2, &mgsmoo,
                         ipc, rpc, pc, ac, cc, fc, tcf);
+            	}
 
             } else if (mgkey == 1) {
 

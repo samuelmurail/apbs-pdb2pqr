@@ -91,6 +91,8 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
     double alpha;     // A utility variable used to pass a parameter to xaxpy
     int numlev;       // A utility variable used to pass a parameter to mkcors
 
+    int sf;
+
     MAT2(iz, 50, 1);
 
     // Recover level information
@@ -183,7 +185,27 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
             itmax_s  = 100;
             iters_s  = 0;
             errtol_s = *epsiln;
-            mgsmoo_s = 4;
+            switch(*mgsmoo){
+            case 0:
+            	mgsmoo_s =0;
+            	break;
+            case 1:
+            	mgsmoo_s = 1;
+            	break;
+            case 2:
+            	mgsmoo_s = 2;
+            	break;
+            case 3:
+            	mgsmoo_s = 3;
+            	break;
+            case 4:
+            	mgsmoo_s = 4;
+            	break;
+            default:
+            	Vnm_print(2, "MGCSD: Unrecognized smoothing (mgsmoo) key: %d.\n Using cghs (mgsmoo=4).\n", *mgsmoo);
+            	mgsmoo_s = 4;
+            }
+            //mgsmoo_s = 4;
 
             Vazeros(&nxf, &nyf, &nzf, RAT(x, VAT2(iz, 1,lev)));
 

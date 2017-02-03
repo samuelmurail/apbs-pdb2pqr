@@ -70,8 +70,8 @@ VEXTERNC void Vsmooth(int *nx, int *ny, int *nz,
                 errtol, omega,
                 iresid, iadjoint);
     } else if (*meth == 2) {
-        VABORT_MSG0( "sor not yet translated" );
-        //sor(nx,ny,nz,ipc,rpc,ac,cc,fc,x,w1,w2,r,itmax,iters,errtol,omega,iresid,iadjoint);
+        //VABORT_MSG0( "sor not yet translated" );
+        Vsor(nx,ny,nz,ipc,rpc,ac,cc,fc,x,w1,w2,r,itmax,iters,errtol,omega,iresid,iadjoint);
     } else if (*meth == 3) {
         VABORT_MSG0( "rich not yet translated" );
         //rich(nx,ny,nz,ipc,rpc,ac,cc,fc,x,w1,w2,r,itmax,iters,errtol,omega,iresid,iadjoint);
