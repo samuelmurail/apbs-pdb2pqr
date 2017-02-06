@@ -6,6 +6,7 @@ add_items(
     buildPd.c
     cgd.c
     gsd.c
+    sor.c
     matvecd.c
     mgcsd.c
     mgdrvd.c
@@ -28,6 +29,7 @@ add_items(
     buildPd.h
     cgd.h
     gsd.h
+    sor.h
     matvecd.h
     mgcsd.h
     mgdrvd.h

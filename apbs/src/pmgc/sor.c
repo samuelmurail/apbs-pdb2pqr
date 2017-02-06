@@ -97,6 +97,10 @@ VPUBLIC void Vsor7x(int *nx,int *ny,int *nz,
         int *iresid, int *iadjoint){
 
     int i, j, k, ioff;
+    int maxIter = 0;
+    double rsden;
+    double rsnrm;
+	double orsnrm;
 
     MAT3(cc, *nx, *ny, *nz);
     MAT3(fc, *nx, *ny, *nz);
@@ -110,25 +114,60 @@ VPUBLIC void Vsor7x(int *nx,int *ny,int *nz,
     MAT3(uC, *nx, *ny, *nz);
     MAT3(oC, *nx, *ny, *nz);
 
-    for (*iters=1; *iters<=*itmax; (*iters)++) {
 
-		for (k=2; k<=*nz-1; k++) {
-			for (j=2; j<=*ny-1; j++) {
-				for (i=2; i<=*nx-1; i++) {
-							VAT3(x, i, j, k) = (1-*omega)*VAT3(x, i, j ,k)+ (*omega)*(
-									VAT3(fc,   i,  j,  k)
-								 +  VAT3(oN,   i,   j,   k) * VAT3(x,   i, j+1,   k)
-								 +  VAT3(oN,   i, j-1,   k) * VAT3(x,   i, j-1,   k)
-								 +  VAT3(oE,   i,   j,   k) * VAT3(x, i+1,   j,   k)
-								 +  VAT3(oE, i-1,   j,   k) * VAT3(x, i-1,   j,   k)
-								 + VAT3( uC,   i,   j, k-1) * VAT3(x,   i,   j, k-1)
-								 + VAT3( uC,   i,   j,   k) * VAT3(x,   i,   j, k+1)
-								 ) / (VAT3(oC, i, j, k) + VAT3(cc, i, j, k));
-						}
+    rsnrm = 1;
+    //*itmax = 500;
+
+    do {
+		for (*iters=1; *iters<=*itmax; (*iters)++) {
+
+			for (k=2; k<=*nz-1; k++) {
+				for (j=2; j<=*ny-1; j++) {
+					ioff = (1 - *iadjoint) * (    (j + k + 2) % 2)
+						 + (    *iadjoint) * (1 - (j + k + 2) % 2);
+					for (i=2+ioff; i<=*nx-1; i+=2) {
+						VAT3(x, i, j, k) = (1-*omega)*VAT3(x, i, j ,k)+ (*omega)*(
+										VAT3(fc,   i,  j,  k)
+									 +  VAT3(oN,   i,   j,   k) * VAT3(x,   i, j+1,   k)
+									 +  VAT3(oN,   i, j-1,   k) * VAT3(x,   i, j-1,   k)
+									 +  VAT3(oE,   i,   j,   k) * VAT3(x, i+1,   j,   k)
+									 +  VAT3(oE, i-1,   j,   k) * VAT3(x, i-1,   j,   k)
+									 + VAT3( uC,   i,   j, k-1) * VAT3(x,   i,   j, k-1)
+									 + VAT3( uC,   i,   j,   k) * VAT3(x,   i,   j, k+1)
+									 ) / (VAT3(oC, i, j, k) + VAT3(cc, i, j, k));
 					}
 				}
+			}
 
-    }
+			for (k=2; k<=*nz-1; k++) {
+				for (j=2; j<=*ny-1; j++) {
+					ioff =   (    *iadjoint) * (    (j + k + 2) % 2 )
+							   + (1 - *iadjoint) * (1 - (j + k + 2) % 2 );
+					for (i=2+ioff;i<=*nx-1; i+=2) {
+						VAT3(x, i, j, k) = (1-*omega)*VAT3(x, i, j ,k)+ (*omega)*(
+										VAT3(fc,   i,  j,  k)
+									 +  VAT3(oN,   i,   j,   k) * VAT3(x,   i, j+1,   k)
+									 +  VAT3(oN,   i, j-1,   k) * VAT3(x,   i, j-1,   k)
+									 +  VAT3(oE,   i,   j,   k) * VAT3(x, i+1,   j,   k)
+									 +  VAT3(oE, i-1,   j,   k) * VAT3(x, i-1,   j,   k)
+									 + VAT3( uC,   i,   j, k-1) * VAT3(x,   i,   j, k-1)
+									 + VAT3( uC,   i,   j,   k) * VAT3(x,   i,   j, k+1)
+									 ) / (VAT3(oC, i, j, k) + VAT3(cc, i, j, k));
+
+					}
+				}
+			}
+
+		}
+
+		Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);
+		rsnrm = Vxnrm1(nx, ny, nz, r);
+		maxIter++;
+		*iters = 1;
+
+    }while(maxIter<1.0e9 && rsnrm > *errtol);
+
+    //Vprtstp(*iok, *iters, rsnrm, rsden, orsnrm);
 
     if (*iresid == 1)
         Vmresid7_1s(nx, ny, nz, ipc, rpc, oC, cc, fc, oE, oN, uC, x, r);

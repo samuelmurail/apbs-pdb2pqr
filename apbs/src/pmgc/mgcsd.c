@@ -194,6 +194,7 @@ VEXTERNC void Vmvcs(int *nx, int *ny, int *nz,
             	break;
             case 2:
             	mgsmoo_s = 2;
+            	errtol_s = *errtol;
             	break;
             case 3:
             	mgsmoo_s = 3;
