@@ -1250,6 +1250,11 @@ ELEC section!\n");
             (thee->nelec)++;
             calc->mgparm->type = MCT_DUMMY;
             return NOsh_parseMG(thee, sock, calc);
+        } else if (Vstring_strcasecmp(tok, "gpu") == 0){
+        	thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_GPU);
+        	(thee->nelec)++;
+        	calc->gpuparm->mgparm->type = MCT_AUTO;
+        	return NOsh_parseGPU(thee, sock, calc);
         } else if (Vstring_strcasecmp(tok, "fe-manual") == 0) {
             thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_FEM);
             calc = thee->elec[thee->nelec];
