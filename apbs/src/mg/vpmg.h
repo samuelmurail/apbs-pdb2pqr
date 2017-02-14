@@ -92,6 +92,7 @@
 #include "generic/pbeparm.h"
 #include "generic/vmatrix.h"
 #include "pmgc/mgdrvd.h"
+#include "pmgc/gpudrvd.h"
 #include "pmgc/newdrvd.h"
 #include "pmgc/mgsubd.h"
 #include "pmgc/mikpckd.h"

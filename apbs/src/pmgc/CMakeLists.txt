@@ -10,6 +10,7 @@ add_items(
     mgcsd.c
     mgdrvd.c
     mgsubd.c
+    gpudrvd.c
     mikpckd.c
     mlinpckd.c
     mypdec.c
@@ -31,6 +32,7 @@ add_items(
     matvecd.h
     mgcsd.h
     mgdrvd.h
+    gpudrvd.h
     mgsubd.h
     mikpckd.h
     mlinpckd.h

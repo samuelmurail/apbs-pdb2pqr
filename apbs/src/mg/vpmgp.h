@@ -151,7 +151,8 @@ struct sVpmgp {
                 * \li   6: weighted jacobi
                 * \li   7: richardson
                 * \li   8: conjugate gradient multigrid aqua
-                * \li   9: newton aqua */
+                * \li   9: newton aqua
+                * \li	10: gpu */
     int mgkey;  /**< Multigrid method [default = 0]
                  * \li   0: variable v-cycle
                  * \li   1: nested iteration */

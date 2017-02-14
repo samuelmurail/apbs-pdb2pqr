@@ -551,6 +551,18 @@ int main(
             		VJMPERR1(0);
             	}
 
+                /* Print problem parameters */
+                printMGPARM(gpuparm->mgparm, realCenter);
+                printPBEPARM(pbeparm);
+
+                /* Solve PDE */
+                if(solveGPU(nosh, pmg[i], gpuparm->mgparm->type != 1)){
+                	Vnm_tprint(2, "Error Solving PDE!\n");
+                	VJMPERR1(0);
+                }
+
+                printf("---Got here!\n");
+
             	break;
 
                 /* ***** Do FEM calculation ***** */

@@ -304,6 +304,17 @@ VEXTERNC void killMG(
 VEXTERNC int solveMG(NOsh *nosh, Vpmg *pmg, MGparm_CalcType type);
 
 /**
+ * @brief Solve the PBE using GPU
+ * @ingroup Frontend
+ * @author Juan Brandi (mostly copied from Nathan Baker)
+ * @param nosh Object with parsed input file parameters
+ * @param pmg MG objects used in the calculation
+ * @param type Type of MG calculation
+ * @return 1 if successful, 0 otherwise
+ */
+VEXTERNC int solveGPU(NOsh *nosh, Vpmg *pmg, MGparm_CalcType type);
+
+/**
  * @brief  Set MG partitions for calculating observables and performing I/O
  * @ingroup  Frontend
  * @author  Nathan Baker

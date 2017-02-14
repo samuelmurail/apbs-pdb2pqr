@@ -482,6 +482,17 @@ VPUBLIC int Vpmg_solve(Vpmg *thee) {
                                         thee->fcf, thee->tcf);
             break;
 
+        case VSOL_GPU:
+
+        	if(thee->pmgp->iinfo > 1)
+        		Vnm_print(2, "Driving with GPUDRIV\n");
+
+            Vgpudriv(thee->iparm, thee->rparm, thee->iwork, thee->rwork,
+                                        thee->u, thee->xf, thee->yf, thee->zf, thee->gxcf, thee->gycf,
+                                        thee->gzcf, thee->a1cf, thee->a2cf, thee->a3cf, thee->ccf,
+                                        thee->fcf, thee->tcf);
+            break;
+
         /* CGHS (linear/nonlinear) */
         case VSOL_CG:
 

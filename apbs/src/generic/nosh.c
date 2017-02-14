@@ -2007,10 +2007,10 @@ fixing mesh min violation (%g in %d-direction).\n", __FILE__, __LINE__, ifocus,
     			maxf[j] = calcf->gpuparm->mgparm->center[j]
 					+ 0.5*(calcf->gpuparm->mgparm->glen[j]);
     			maxc[j] = calcc->gpuparm->mgparm->center[j]
-					+ 0.5*(calcc->gpuparm->mgparm->center[j]);
+					+ 0.5*(calcc->gpuparm->mgparm->glen[j]);
     			d[j] = maxf[j] - maxc[j];
     			if(d[j] >= VSMALL){
-    				if(ifocus ==(nfocus -1)){
+    				if(ifocus == (nfocus -1 )){
                         Vnm_print(2, "NOsh_setupCalcGPU:  Error!  Finest \
 mesh has fallen off the coarser meshes!\n");
                         Vnm_print(2, "NOsh_setupCalcGPU:  difference in %d-\

@@ -89,7 +89,8 @@ enum eVsol_Meth {
     VSOL_WJ,        /* 6: weighted jacobi */
     VSOL_Richardson,/* 7: richardson  */
     VSOL_CGMGAqua,    /* 8: conjugate gradient multigrid aqua */
-    VSOL_NewtonAqua    /* 9: newton aqua */
+    VSOL_NewtonAqua,    /* 9: newton aqua */
+	VSOL_GPU			/* 10: use gpu to solve */
 
 };
 typedef enum eVsol_Meth Vsol_Meth;

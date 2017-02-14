@@ -1487,7 +1487,9 @@ VPUBLIC int initGPU(int icalc, NOsh *nosh, GPUparm *gpuparm,
 	 */
 	/*
 	q=0;
+	*/
 	myalist = alist[pbeparm->molid-1];
+	/*
 	for(iatom=0; iatom<Valist_getNumberAtoms(myalist); iatom++){
 		atom = Valist_getAtom(myalist, iatom);
 		q+= VSQR(Vatom_getCharge(atom));
@@ -1721,6 +1723,29 @@ solution array\n");
 
     return 1;
 
+}
+
+VPUBLIC int solveGPU(NOsh *nosh,
+		Vpmg *pmg,
+		MGparm_CalcType type){
+
+	int nx, ny, nz, i;
+
+	if(nosh != VNULL){
+		if(nosh->bogus)
+			return 1;
+	}
+
+	Vnm_tstart(APBS_TIMER_SOLVER, "Solver timer");
+
+	pmg->pmgp->meth = VSOL_GPU;
+	if(!Vpmg_solve(pmg)){
+		Vnm_print(2, "  Error during PDE solution!\n");
+		return 0;
+	}
+
+	Vnm_tstop(APBS_TIMER_SOLVER, "Solver timer");
+	return 1;
 }
 
 VPUBLIC int setPartMG(NOsh *nosh,
