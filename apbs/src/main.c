@@ -521,6 +521,38 @@ int main(
 
                 break;
 
+            /* Using GPU for calc */
+            case NCT_GPU:
+
+            	/* What is this? This seems like a very awkward way to find the right ELEC statement... */
+            	for(k=0; k<nosh->nelec; k++){
+            		if(nosh->elec2calc[k] >= i){
+            			break;
+            		}
+            	}
+            	if(Vstring_strcasecmp(nosh->elecname[k], "") == 0){
+            		Vnm_tprint(1, "CALCULATION #%d: GPU\n", i+1);
+            	}
+            	else {
+            		Vnm_tprint(1, "CALCULATION #%d (%s): GPU\n", i+1, nosh->elecname[k]);
+            	}
+            	/* Useful local variables */
+            	GPUparm *gpuparm;
+            	gpuparm = nosh->calc[i]->gpuparm;
+            	pbeparm = nosh->calc[i]->pbeparm;
+
+            	/* Set up problem */
+            	Vnm_tprint(1, "  Setting up problem...\n");
+
+            	if(!initGPU(i, nosh, gpuparm, pbeparm, realCenter, pbe,
+            			alist, dielXMap, dielYMap, dielZMap, kappaMap,
+						chargeMap, pmgp, pmg, potMap)){
+            		Vnm_tprint(2, "Error setting up GPU calculation!\n");
+            		VJMPERR1(0);
+            	}
+
+            	break;
+
                 /* ***** Do FEM calculation ***** */
             case NCT_FEM:
 #ifdef HAVE_MC_H

@@ -1450,6 +1450,217 @@ VPUBLIC int initMG(int icalc,
 
 }
 
+VPUBLIC int initGPU(int icalc, NOsh *nosh, GPUparm *gpuparm,
+		PBEparm *pbeparm, double realCenter[3],
+		Vpbe *pbe[NOSH_MAXCALC],
+		Valist *alist[NOSH_MAXMOL],
+		Vgrid *dielXMap[NOSH_MAXMOL],
+		Vgrid *dielYMap[NOSH_MAXMOL],
+		Vgrid *dielZMap[NOSH_MAXMOL],
+		Vgrid *kappaMap[NOSH_MAXMOL],
+		Vgrid *chargeMap[NOSH_MAXMOL],
+		Vpmgp *pmgp[NOSH_MAXCALC],
+		Vpmg *pmg[NOSH_MAXCALC],
+		Vgrid *potMap[NOSH_MAXMOL]){
+
+	int j, focusFlag, iatom;
+	size_t bytesTotal, highWater;
+	double sparm, iparm, q;
+	Vatom *atom = VNULL;
+	Vgrid *theDielXMap = VNULL;
+	Vgrid *theDielYMap = VNULL;
+	Vgrid *theDielZMap = VNULL;
+	Vgrid *theKappaMap = VNULL;
+	Vgrid *thePotMap = VNULL;
+	Vgrid *theChargeMap = VNULL;
+	Valist *myalist = VNULL;
+
+	Vnm_tstart(APBS_TIMER_SETUP, "Setup timer");
+
+	/* Update the gid center */
+	for(j=0; j<3; j++)
+		realCenter[j] = gpuparm->mgparm->center[j];
+
+	/* Check for completely-neutral molecule */
+	/* TODO: determine if the check below is necessary for
+	 * anything but the check below.
+	 */
+	/*
+	q=0;
+	myalist = alist[pbeparm->molid-1];
+	for(iatom=0; iatom<Valist_getNumberAtoms(myalist); iatom++){
+		atom = Valist_getAtom(myalist, iatom);
+		q+= VSQR(Vatom_getCharge(atom));
+	}
+	*/
+
+	/* D. Gohara 10/22/09 - disabled
+	if (q < (1e-6)) {
+		Vnm_tprint(2, "Molecule #%d is uncharged!\n", pbeparm->molid);
+        Vnm_tprint(2, "Sum square charge = %g!\n", q);
+        return 0;
+    }
+    */
+
+	/* Set up PBE pbject */
+	Vnm_tprint(0, "Setting up PBD object...\n");
+	if(pbeparm->srfm == VSM_SPLINE){
+		sparm = pbeparm-> swin;
+	}
+	else{
+		sparm = pbeparm->srad;
+	}
+
+	if(pbeparm->nion > 0){
+		iparm = pbeparm->ionr[0];
+	}
+	else{
+		iparm = 0.0;
+	}
+
+	if(pbeparm->bcfl == BCFL_FOCUS){
+		if(icalc == 0){
+			Vnm_print(2, "Can't focus first calculation\n");
+			return 0;
+		}
+		focusFlag = 1;
+	}
+	else{
+		focusFlag = 0;
+	}
+
+	/* Construct Vpbe object */
+	pbe[icalc] = Vpbe_ctor(myalist, pbeparm->nion, pbeparm->ionc, pbeparm->ionr,
+			pbeparm->ionq, pbeparm->temp, pbeparm->pdie, pbeparm->sdie, sparm,
+			focusFlag, pbeparm->sdens, pbeparm->zmem, pbeparm->Lmem, pbeparm->mdie,
+			pbeparm->memv);
+
+	/* Set up PDE object */
+	Vnm_tprint(0, "Setting up PDE object...\n");
+	switch(pbeparm->pbetype){
+		case PBE_LPBE:
+			/* TEMPORARY USEAQUA */
+			gpuparm->mgparm->nonlintype = NONLIN_LPBE;
+			gpuparm->mgparm->method = (gpuparm->mgparm->useAqua == 1) ? VSOL_CGMGAqua : VSOL_MG;
+			pmgp[icalc] = Vpmgp_ctor(gpuparm->mgparm);
+			break;
+		default:
+			Vnm_tprint(2, "Sorry, GPU method currently only supports LPBE\n");
+			return 0;
+
+	}
+
+	Vnm_tprint(0, "Setting PDE center to local center...\n");
+	pmgp[icalc]->bcfl = pbeparm->bcfl;
+	pmgp[icalc]->xcent = realCenter[0];
+	pmgp[icalc]->ycent = realCenter[1];
+	pmgp[icalc]->zcent = realCenter[2];
+
+	if(pbeparm->bcfl == BCFL_FOCUS){
+		if(icalc ==0){
+			Vnm_tprint(2, "Can't focus first calculation!\n");
+			return 0;
+		}
+
+		/* Focusing requires the previous calculation in order to setup the current run... */
+		pmg[icalc] = Vpmg_ctor(pmgp[icalc], pbe[icalc], 1, pmg[icalc-1],
+				gpuparm->mgparm, pbeparm->calcenergy);
+
+        /* ...however, it should be done with the previous calculation now, so
+        we should be able to destroy it here. */
+        /* Vpmg_dtor(&(pmg[icalc-1])); */
+
+
+	}
+	else {
+		if(icalc>0)
+			Vpmg_dtor(&(pmg[icalc-1]));
+
+		pmg[icalc] = Vpmg_ctor(pmgp[icalc], pbe[icalc], 0, VNULL, gpuparm->mgparm,
+				PCE_NO);
+	}
+
+	if (icalc>0) {
+		Vpmgp_dtor(&(pmgp[icalc-1]));
+		Vpbe_dtor(&(pbe[icalc-1]));
+	}
+
+	if(pbeparm->useDielMap){
+		if((pbeparm->dielMapID-1) < nosh->ndiel){
+			theDielXMap = dielXMap[pbeparm->dielMapID-1];
+			theDielYMap = dielYMap[pbeparm->dielMapID-1];
+			theDielZMap = dielZMap[pbeparm->dielMapID-1];
+		}
+		else{
+			Vnm_print(2, "Error! %d is ont a vvalid dielectric map ID!\n",
+					pbeparm->dielMapID);
+			return 0;
+		}
+	}
+
+	if(pbeparm->useKappaMap){
+		if((pbeparm->kappaMapID-1) < nosh->nkappa){
+			theKappaMap = kappaMap[pbeparm->kappaMapID-1];
+		}
+		else{
+			Vnm_print(2, "Error! %d is not a valid kappa map ID!\n",
+					pbeparm->kappaMapID);
+			return 0;
+		}
+	}
+
+	if(pbeparm->usePotMap){
+		if((pbeparm->potMapID-1) < nosh->ncharge){
+			theChargeMap = chargeMap[pbeparm->chargeMapID-1];
+		}
+		else{
+			Vnm_print(2, "Error! %d is not a valid charge map ID!\n",
+					pbeparm->chargeMapID);
+			return 0;
+		}
+	}
+
+	if(pbeparm->bcfl == BCFL_MAP && thePotMap == VNULL){
+		Vnm_print(2, "Warning: You specified 'bcfl map' in the input file, but no potential map was found.\n");
+		Vnm_print(2, "         You must specify 'usemap pot' statement in the APBS input file!\n");
+		Vnm_print(2, "Bailing out ...\n");
+		return 0;
+	}
+
+	/* Initialize calculation coefficients */
+	if(!Vpmg_fillco(pmg[icalc],
+			pbeparm->srfm, pbeparm->swin, gpuparm->mgparm->chgm,
+			pbeparm->useDielMap, theDielXMap,
+			pbeparm->useDielMap, theDielYMap,
+			pbeparm->useDielMap, theDielZMap,
+			pbeparm->useKappaMap, theKappaMap,
+			pbeparm->usePotMap, thePotMap,
+			pbeparm->useChargeMap, theChargeMap)){
+		Vnm_print(2, "initGPU: problems setting up coefficients (fillco)!\n");
+		return 0;
+	}
+
+	/* Print a few derived parameters */
+#ifndef VAPBSQUIET
+	Vnm_tprint(1, "  Debye length:  %g A\n", Vpbe_getDeblen(pbe[icalc]));
+#endif
+
+	/* Setup time statistics */
+	Vnm_tstop(APBS_TIMER_SETUP, "Setup timer");
+
+	/* Memory statistics */
+	bytesTotal = Vmem_bytesTotal();
+	highWater = Vmem_highWaterTotal();
+
+#ifndef VAPBSQUIET
+	Vnm_tprint(1, "  Current memory usage: %4.3f MB total, %4.3f high water\n",
+			(double)(bytesTotal)/(1024.*1024.),
+			(double)(highWater)/(1024.*1024.));
+#endif
+
+	return 1;
+}
+
 VPUBLIC void killMG(NOsh *nosh, Vpbe *pbe[NOSH_MAXCALC],
                     Vpmgp *pmgp[NOSH_MAXCALC], Vpmg *pmg[NOSH_MAXCALC]) {
 

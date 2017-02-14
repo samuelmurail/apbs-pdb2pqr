@@ -83,7 +83,32 @@ VPUBLIC Vrc_Codes GPUparm_ctor2(GPUparm *thee, MGparm_CalcType type){
 
 VPUBLIC void GPUparm_dtor(GPUparm **thee){
 	if((*thee) != VNULL){
+		MGparm_dtor(&((*thee)->mgparm));
 		GPUparm_dtor2(*thee);
-		Vmem_free(VNULL, 1, sizeof)
+		Vmem_free(VNULL, 1, sizeof(GPUparm), (void**)thee);
+		(*thee) = VNULL;
 	}
+}
+
+VPUBLIC void GPUparm_dtor2(GPUparm *thee){ ; };
+
+VPUBLIC Vrc_Codes GPUparm_parseToken(GPUparm *thee, char tok[VMAX_BUFSIZE], Vio *sock){
+
+	if(thee == VNULL){
+		Vnm_print(2, "parseGPU: got NULL thee!\n");
+		return VRC_WARNING;
+	}
+	if(sock == VNULL){
+		Vnm_print(2, "parseGPU: got NULL socket!\n");
+		return VRC_WARNING;
+	}
+
+	Vnm_print(0, "GPUparm_parseToken: trying %s...\n", tok);
+
+	return 1;//MGparm_parseToken(thee->mgparm, tok, sock);
+}
+
+VPUBLIC void GPUparm_copy(GPUparm *thee, GPUparm *parm){
+
+	MGparm_copy(thee->mgparm, parm->mgparm);
 }

@@ -74,7 +74,7 @@
  */
 struct sGPUparm {
 
-	MGparm mgparm; /**< Object to contain mg specific paramters*/
+	MGparm *mgparm; /**< Object to contain mg specific paramters*/
 
 
 };
@@ -119,7 +119,7 @@ VEXTERNC void GPUparm_dtor(GPUparm **thee);
  * @author	Juan Brandi (mostly copied from Nathan Baker)
  * @param	thee Pointer to GPUparm object
  */
-VEXTERNC void GPUparm_dtor2(MGparm *thee);
+VEXTERNC void GPUparm_dtor2(GPUparm *thee);
 
 /**
  * @brief 	Constistency check for parameters stored in object
@@ -148,7 +148,15 @@ VEXTERNC void GPUparm_copy(GPUparm *thee, GPUparm *parm);
  * @param	sock Stream for more tokens
  * @returns	Success enumeration (1 if matched and assigned; -1 if matched, but there's some sort of error, (i.e., too few args; 0 if not matched)
  */
-VEXTERNC Vrc_Codes GPUparm_parseToken(GPUparm *thee, char tok[VMAX_BUFSIZE]);
+VEXTERNC Vrc_Codes GPUparm_parseToken(GPUparm *thee, char tok[VMAX_BUFSIZE], Vio *sock);
 
+/**
+ * @brief	Copy GPUparm object into thee
+ * @ingroup	GPUparm
+ * @author	Juan Brandi (mostly copied from Nathan Baker)
+ * @param	thee GPUparam object (target for copy)
+ * @param	parm GPUparam object (source for copy)
+ */
+VEXTERNC void GPUparm_copy(GPUparm *thee, GPUparm *parm);
 
 #endif /* _GPUPARM_H_ */

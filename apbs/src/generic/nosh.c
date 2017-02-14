@@ -119,11 +119,21 @@ VEXTERNC int NOsh_parseAPOL(
                            NOsh_calc *elec
                            );
 
+VEXTERNC int NOsh_parseGPU(
+                           NOsh *thee,
+                           Vio *sock,
+                           NOsh_calc *elec
+                           );
+
 VPRIVATE int NOsh_setupCalcMG(
                               NOsh *thee,
                               NOsh_calc *elec
                               );
 
+VPRIVATE int NOsh_setupCalcGPU(
+							NOsh *thee,
+							NOsh_calc *elec
+							);
 
 VPRIVATE int NOsh_setupCalcMGAUTO(
                                   NOsh *thee,
@@ -379,6 +389,7 @@ VPUBLIC NOsh_calc* NOsh_calc_ctor(
     thee->calctype = calctype;
 
     thee->mgparm = VNULL;
+    thee->gpuparm = VNULL;
     thee->femparm = VNULL;
     thee->apolparm = VNULL;
     thee->bemparm = VNULL;
@@ -390,6 +401,9 @@ VPUBLIC NOsh_calc* NOsh_calc_ctor(
         case NCT_MG:
             thee->mgparm = MGparm_ctor(MCT_NONE);
             break;
+        case NCT_GPU:
+        	thee->gpuparm = GPUparm_ctor(MCT_NONE);
+        	break;
         case NCT_FEM:
             thee->femparm = FEMparm_ctor(FCT_NONE);
             break;
@@ -432,6 +446,9 @@ VPUBLIC void NOsh_calc_dtor(
         case NCT_MG:
             MGparm_dtor(&(calc->mgparm));
             break;
+        case NCT_GPU:
+        	GPUparm_dtor(&(calc->gpuparm));
+        	break;
         case NCT_FEM:
             FEMparm_dtor(&(calc->femparm));
             break;
@@ -474,6 +491,8 @@ VPUBLIC int NOsh_calc_copy(
     VASSERT(thee->calctype == source->calctype);
     if (source->mgparm != VNULL)
         MGparm_copy(thee->mgparm, source->mgparm);
+    if(source->gpuparm != VNULL)
+    	GPUparm_copy(thee->gpuparm, source->gpuparm);
     if (source->femparm != VNULL)
         FEMparm_copy(thee->femparm, source->femparm);
     if (source->bemparm != VNULL)
@@ -1252,6 +1271,7 @@ ELEC section!\n");
             return NOsh_parseMG(thee, sock, calc);
         } else if (Vstring_strcasecmp(tok, "gpu") == 0){
         	thee->elec[thee->nelec] = NOsh_calc_ctor(NCT_GPU);
+        	calc = thee->elec[thee->nelec];
         	(thee->nelec)++;
         	calc->gpuparm->mgparm->type = MCT_AUTO;
         	return NOsh_parseGPU(thee, sock, calc);
@@ -1431,6 +1451,40 @@ map is used!\n");
                 }
                 NOsh_setupCalcMG(thee, elec);
                 break;
+
+            case NCT_GPU:
+                /* Center on the molecules, if requested */
+                mgparm = elec->gpuparm->mgparm;
+                VASSERT(mgparm != VNULL);
+                if (mgparm->cmeth == MCM_MOLECULE) {
+                    VASSERT(mgparm->centmol >= 0);
+                    VASSERT(mgparm->centmol < thee->nmol);
+                    mymol = thee->alist[mgparm->centmol];
+                    VASSERT(mymol != VNULL);
+                    for (i=0; i<3; i++) {
+                        mgparm->center[i] = mymol->center[i];
+                    }
+                }
+                if (mgparm->fcmeth == MCM_MOLECULE) {
+                    VASSERT(mgparm->fcentmol >= 0);
+                    VASSERT(mgparm->fcentmol < thee->nmol);
+                    mymol = thee->alist[mgparm->fcentmol];
+                    VASSERT(mymol != VNULL);
+                    for (i=0; i<3; i++) {
+                        mgparm->fcenter[i] = mymol->center[i];
+                    }
+                }
+                if (mgparm->ccmeth == MCM_MOLECULE) {
+                    VASSERT(mgparm->ccentmol >= 0);
+                    VASSERT(mgparm->ccentmol < thee->nmol);
+                    mymol = thee->alist[mgparm->ccentmol];
+                    VASSERT(mymol != VNULL);
+                    for (i=0; i<3; i++) {
+                        mgparm->ccenter[i] = mymol->center[i];
+                    }
+                }
+                NOsh_setupCalcGPU(thee, elec);
+                break;
             case NCT_FEM:
                 NOsh_setupCalcFEM(thee, elec);
                 break;
@@ -1598,6 +1652,98 @@ VPUBLIC int NOsh_parseMG(
     return 1;
 }
 
+VPUBLIC int NOsh_parseGPU(
+						NOsh *thee,
+						Vio *sock,
+						NOsh_calc *elec){
+
+	char tok[VMAX_BUFSIZE];
+	GPUparm *gpuparm = VNULL;
+	MGparm *mgparm = VNULL;
+	PBEparm *pbeparm = VNULL;
+	int rc;
+
+	/*Check the arguments*/
+	if(thee == VNULL){
+		Vnm_print(2, "NOsh: Got NULL thee!\n");
+		return 0;
+	}
+	if(sock == VNULL){
+		Vnm_print(2, "NOsh: Got pointer to NULL socket!\n");
+		return 0;
+	}
+	if(elec == VNULL){
+		Vnm_print(2, "NOsh: Got pointer to NULL elec object!\n");
+		return 0;
+	}
+	gpuparm = elec->gpuparm;
+	if(gpuparm == VNULL){
+		Vnm_print(2, "NOsh: Got pointer to NULL gpuparm object!\n");
+		return 0;
+	}
+	pbeparm = elec->pbeparm;
+	if(pbeparm == VNULL){
+		Vnm_print(2, "NOsh: Got pointer to NULL pbeparm object!\n");
+		return 0;
+	}
+	mgparm = (elec->gpuparm)->mgparm;
+
+	Vnm_print(0, "NOsh_parseGPU: Parsing parameters for GPU calculation!\n");
+	/* Parallel stuff */
+	if(mgparm->type == MCT_PARALLEL){
+        mgparm->proc_rank = thee->proc_rank;
+        mgparm->proc_size = thee->proc_size;
+        mgparm->setrank = 1;
+        mgparm->setsize = 1;
+	}
+
+    /* Start snarfing tokens from the input stream */
+    rc = 1;
+    while (Vio_scanf(sock, "%s", tok) == 1) {
+
+        Vnm_print(0, "NOsh_parseGPU:  Parsing %s...\n", tok);
+
+        /* See if it's an END token */
+        if (Vstring_strcasecmp(tok, "end") == 0) {
+            mgparm->parsed = 1;
+            pbeparm->parsed = 1;
+            rc = 1;
+            break;
+        }
+
+        /* Pass the token through a series of parsers */
+        rc = PBEparm_parseToken(pbeparm, tok, sock);
+        if (rc == -1) {
+            Vnm_print(0, "NOsh_parseGPU:  parsePBE error!\n");
+            break;
+        } else if (rc == 0) {
+            /* Pass the token to the generic MG parser */
+            rc = MGparm_parseToken(mgparm, tok, sock);
+            if (rc == -1) {
+                Vnm_print(0, "NOsh_parseGPU:  parseMG error!\n");
+                break;
+            } else if (rc == 0) {
+                /* We ran out of parsers! */
+                Vnm_print(2, "NOsh:  Unrecognized keyword: %s\n", tok);
+                break;
+            }
+        }
+    }
+
+    /* Handle various errors arising in the token-snarfing loop -- these all
+        just result in simple returns right now */
+    if (rc == -1) return 0;
+    if (rc == 0) return 0;
+
+    /* Check the status of the parameter objects */
+    if ((MGparm_check(mgparm) == VRC_FAILURE) || (!PBEparm_check(pbeparm))) {
+        Vnm_print(2, "NOsh:  MG parameters not set correctly!\n");
+        return 0;
+    }
+
+    return 1;
+}
+
 VPRIVATE int NOsh_setupCalcMG(
                               NOsh *thee,
                               NOsh_calc *calc
@@ -1631,6 +1777,296 @@ VPRIVATE int NOsh_setupCalcMG(
     /* Shouldn't get here */
     return 0;
 }
+
+VPRIVATE int NOsh_setupCalcGPU(
+							NOsh *thee,
+							NOsh_calc *elec){
+
+	NOsh_calc *calcf = VNULL;
+	NOsh_calc *calcc = VNULL;
+    double fgrid[3], cgrid[3];
+    double d[3], minf[3], maxf[3], minc[3], maxc[3];
+    double redfrac, redrat[3], td;
+    int ifocus, nfocus, tnfocus[3];
+    int j;
+    int icalc;
+    int dofix;
+
+    /* A comment about the coding style in this function.  I use lots and lots
+        and lots of pointer deferencing.  I could (and probably should) save
+        these in temporary variables.  However, since there are so many MGparm,
+        etc. and NOsh_calc, etc. objects running around in this function, the
+        current scheme is easiest to debug. */
+
+    if(thee == NULL){
+    	Vnm_print(2, "NOsh_setupCalcGPU: Got NULL thee!\n");
+    	return 0;
+    }
+    if(elec == VNULL){
+    	Vnm_print(2, "NOsh_setupCalcGPU: Got NULL elec!\n");
+    	return 0;
+    }
+    if(elec->gpuparm->mgparm == VNULL){
+    	Vnm_print(2, "NOsh_setupCalcGPU: Got NULL mgparm!\n");
+    	return 0;
+    }
+    if(elec->pbeparm == VNULL){
+    	Vnm_print(2, "NOsh_setupCalcGPU: Got NULL pbeparm!\n");
+    	return 0;
+    }
+
+    MGparm *mgparm;
+    mgparm = elec->gpuparm->mgparm;
+    Vnm_print(0, "NOsh_setupCalcGPU(%s, %d): coarse grid center = %g %g %g\n",
+    		__FILE__, __LINE__,
+			mgparm->ccenter[0],
+			mgparm->ccenter[1],
+			mgparm->ccenter[2]
+    	);
+    Vnm_print(0, "NOsh_setupCalcGPU(%s, %d): fine grid center = %g %g %g\n",
+    		__FILE__, __LINE__,
+			mgparm->fcenter[0],
+			mgparm->fcenter[1],
+			mgparm->fcenter[2]
+    	);
+
+    /* Calculate the grid spacing on the coarse and fine levels */
+    for(j=0; j<3; j++){
+    	cgrid[j] = (mgparm->cglen[j])/((double)(mgparm->dime[j]-1));
+    	fgrid[j] = (mgparm->fglen[j])/((double)(mgparm->dime[j]-1));
+    	d[j] = mgparm->fcenter[j] - mgparm->ccenter[j];
+    }
+    Vnm_print(0, "NOsh_setupCalcGPU (%s, %d): Coarse grid spacing = %g, %g, %g\n",
+    		__FILE__, __LINE__,
+			cgrid[0], cgrid[1], cgrid[2]
+		);
+    Vnm_print(0, "NOsh_setupCalcGPU (%s, %d): Fine grid spacing = %g, %g, %g\n",
+    		__FILE__, __LINE__,
+			fgrid[0], fgrid[1], fgrid[2]
+    	);
+    Vnm_print(0, "NOsh_setupCalcGPU (%s, %d): Displacement between fine and coarse grids = %g, %g, %g\n",
+    		__FILE__, __LINE__,
+			d[0], d[1], d[2]
+    	);
+
+    /* Now calculate the number of focusing levels, never reducing the grid
+        spacing by more than redfrac at each level */
+    for (j=0; j<3; j++) {
+        if (fgrid[j]/cgrid[j] < VREDFRAC) {
+            redfrac = fgrid[j]/cgrid[j];
+            td = log(redfrac)/log(VREDFRAC);
+            tnfocus[j] = (int)ceil(td) + 1;
+        } else tnfocus[j] = 2;
+    }
+    nfocus = VMAX2(VMAX2(tnfocus[0], tnfocus[1]), tnfocus[2]);
+
+    /* Now set redrat to the actual value by which the grid spacing is reduced
+        at each level of focusing */
+    for (j=0; j<3; j++) {
+        redrat[j] = VPOW((fgrid[j]/cgrid[j]), 1.0/((double)nfocus-1.0));
+    }
+    Vnm_print(0, "NOsh:  %d levels of focusing with %g, %g, %g reductions\n",
+              nfocus, redrat[0], redrat[1], redrat[2]);
+
+    /* Now that we know how many focusing levels to use, we're ready to set up
+        the parameter objects */
+    if (nfocus > (NOSH_MAXCALC-(thee->ncalc))) {
+        Vnm_print(2, "NOsh:  Require more calculations than max (%d)!\n",
+                  NOSH_MAXCALC);
+        return 0;
+    }
+
+    for(ifocus=0; ifocus<nfocus; ifocus++){
+
+    	/*Generate the new calc object */
+    	icalc = thee->ncalc;
+    	thee->calc[icalc] = NOsh_calc_ctor(NCT_GPU);
+    	(thee->ncalc)++;
+
+    	/* This is the _current_ NOsh_calc object */
+    	calcf = thee->calc[icalc];
+    	/* This the _previous_ NOsh_calc object */
+    	if(ifocus != 0){
+    		calcc = thee->calc[icalc-1];
+    	}
+    	else {
+    		calcc = VNULL;
+    	}
+
+    	/* Copy over most of the parameter from the ELEC object */
+    	NOsh_calc_copy(calcf, elec);
+
+    	/* Set up thegrid lengths and spacings */
+    	if(ifocus == 0){
+    		for(j=0; j<3; j++){
+    			calcf->gpuparm->mgparm->grid[j] = cgrid[j];
+    			calcf->gpuparm->mgparm->glen[j] = mgparm->cglen[j];
+    		}
+    	}
+    	else {
+    		for(j=0; j<3; j++){
+    			calcf->gpuparm->mgparm->grid[j] = redrat[j]*(calcc->gpuparm->mgparm->grid[j]);
+    			calcf->gpuparm->mgparm->glen[j] = redrat[j]*(calcc->gpuparm->mgparm->glen[j]);
+    		}
+    	}
+    	calcf->gpuparm->mgparm->setgrid = 1;
+    	calcf->gpuparm->mgparm->setglen = 1;
+
+    	/* Get centers and centering method from tcoarse and fine meshes */
+    	if(ifocus == 0){
+    		calcf->gpuparm->mgparm->cmeth = mgparm->ccmeth;
+    		calcf->gpuparm->mgparm->centmol = mgparm->ccentmol;
+    		for(j=0; j<3; j++){
+    			calcf->gpuparm->mgparm->center[j] = mgparm->ccenter[j];
+    		}
+    	}
+    	else if(ifocus == (nfocus -1 )){
+    		calcf->gpuparm->mgparm->cmeth = mgparm->fcmeth;
+    		calcf->gpuparm->mgparm->centmol = mgparm->fcentmol;
+    		for(j=0; j<3; j++){
+    			calcf->gpuparm->mgparm->center[j] = mgparm->fcenter[j];
+    		}
+    	}
+    	else {
+    		calcf->gpuparm->mgparm->cmeth = MCM_FOCUS;
+            /* TEMPORARILY move the current grid center
+            to the fine grid center.  In general, this will move portions of
+            the current mesh off the immediately-coarser mesh.  We'll fix that
+            in the next step. */
+    		for(j=0; j<3; j++){
+    			calcf->gpuparm->mgparm->center[j] = mgparm->fcenter[j];
+    		}
+    	}
+
+        /* As mentioned above, it is highly likely that the previous "jump"
+            to the fine grid center put portions of the current mesh off the
+            previous (coarser) mesh.  Fix this by displacing the current mesh
+            back onto the previous coarser mesh.  */
+    	if(ifocus != 0){
+    		Vnm_print(0, "NOsh_setupCalcGPU (%s, %d): starting mesh repositioning.\n",
+    				__FILE__, __LINE__
+    			);
+    		Vnm_print(0, "NOsh_setupCalcGPU (%s, %d): coarse mesh center = %g, %g, %g\n",
+    				__FILE__, __LINE__,
+					calcc->gpuparm->mgparm->center[0],
+					calcc->gpuparm->mgparm->center[1],
+					calcc->gpuparm->mgparm->center[2]
+    			);
+    		Vnm_print(0,"NOsh_setupCalcGPU (%s, %d): coarse mesh upper corner = %g, %g, %g\n",
+    				__FILE__, __LINE__,
+					calcc->gpuparm->mgparm->center[0]+0.5*(calcc->gpuparm->mgparm->glen[0]),
+					calcc->gpuparm->mgparm->center[1]+0.5*(calcc->gpuparm->mgparm->glen[1]),
+					calcc->gpuparm->mgparm->center[2]+0.5*(calcc->gpuparm->mgparm->glen[2])
+    			);
+    		Vnm_print(0, "NOsh_setupCalcGPU (%s, %d): coarse mesh lower corner = %g, %g, %g\n",
+    				__FILE__, __LINE__,
+					calcc->gpuparm->mgparm->center[0]-0.5*(calcc->gpuparm->mgparm->glen[0]),
+					calcc->gpuparm->mgparm->center[1]-0.5*(calcc->gpuparm->mgparm->glen[1]),
+					calcc->gpuparm->mgparm->center[2]-0.5*(calcc->gpuparm->mgparm->glen[2])
+    			);
+    		Vnm_print(0, "NOsh_setupCalcGPU (%s, %d): initial fine mesh upper corner = %g, %g, %g\n",
+    				calcf->gpuparm->mgparm->center[0]+0.5*(calcf->gpuparm->mgparm->glen[0]),
+					calcf->gpuparm->mgparm->center[1]+0.5*(calcf->gpuparm->mgparm->glen[1]),
+					calcf->gpuparm->mgparm->center[2]+0.5*(calcf->gpuparm->mgparm->glen[2])
+    			);
+    		Vnm_print(0, "NOsh_setupCalcGPU (%s, %d): initial fine mesh lower corner = %g, %g, %g\n",
+    				calcf->gpuparm->mgparm->center[0]-0.5*(calcf->gpuparm->mgparm->glen[0]),
+					calcf->gpuparm->mgparm->center[1]-0.5*(calcf->gpuparm->mgparm->glen[1]),
+					calcf->gpuparm->mgparm->center[2]-0.5*(calcf->gpuparm->mgparm->glen[2])
+    			);
+
+    		for(j=0; j<3; j++){
+    			/*Check if we've fallen off of the lower end of the mesh */
+    			dofix = 0;
+    			minf[j] = calcf->gpuparm->mgparm->center[j]
+						- 0.5*(calcf->gpuparm->mgparm->glen[j]);
+    			minc[j] = calcc->gpuparm->mgparm->center[j]
+						- 0.5*(calcc->gpuparm->mgparm->glen[j]);
+    			d[j]  = minc[j] - minf[j];
+    			if(d[j] >= VSMALL){
+    				if(ifocus == (nfocus -1)){
+                        Vnm_print(2, "NOsh_setupCalcGPU:  Error!  Finest \
+mesh has fallen off the coarser meshes!\n");
+                        Vnm_print(2, "NOsh_setupCalcGPU:  difference in min %d-\
+direction = %g\n", j, d[j]);
+                        Vnm_print(2, "NOsh_setupCalcGPU:  min fine = %g %g %g\n",
+                                  minf[0], minf[1], minf[2]);
+                        Vnm_print(2, "NOsh_setupCalcGPU:  min coarse = %g %g %g\n",
+                                  minc[0], minc[1], minc[2]);
+                        VASSERT(0);
+    				}
+    				else {
+                        Vnm_print(0, "NOsh_setupCalcGPU(%s, %d):  ifocus = %d, \
+fixing mesh min violation (%g in %d-direction).\n", __FILE__, __LINE__, ifocus,
+                                  d[j], j);
+                        calcf->gpuparm->mgparm->center[j] += d[j];
+                        dofix = 1;
+    				}
+    			}
+    			/* Check if we've fallen off of the upper end of the mesh */
+    			maxf[j] = calcf->gpuparm->mgparm->center[j]
+					+ 0.5*(calcf->gpuparm->mgparm->glen[j]);
+    			maxc[j] = calcc->gpuparm->mgparm->center[j]
+					+ 0.5*(calcc->gpuparm->mgparm->center[j]);
+    			d[j] = maxf[j] - maxc[j];
+    			if(d[j] >= VSMALL){
+    				if(ifocus ==(nfocus -1)){
+                        Vnm_print(2, "NOsh_setupCalcGPU:  Error!  Finest \
+mesh has fallen off the coarser meshes!\n");
+                        Vnm_print(2, "NOsh_setupCalcGPU:  difference in %d-\
+direction = %g\n", j, d[j]);
+                        VASSERT(0);
+    				}
+    				else {
+    					/* If we already fixed the lower boundary and we now need to fix the upper boundary, we have a serious problem. */
+						if (dofix) {
+							Vnm_print(2, "NOsh_setupCalcGPU:  Error!  Both \
+ends of the finer mesh do not fit in the bigger mesh!\n");
+							VASSERT(0);
+						}
+						Vnm_print(0, "NOsh_setupCalcGPU(%s, %d):  ifocus = %d, \
+fixing mesh max violation (%g in %d-direction).\n", __FILE__, __LINE__, ifocus,
+								  d[j], j);
+						calcf->gpuparm->mgparm->center[j] -= d[j];
+						dofix = 1;
+    				}
+    			}
+    		}
+            Vnm_print(0, "NOsh_setupCalcGPU (%s, %d):  final fine mesh upper corner = \
+%g %g %g\n", __FILE__, __LINE__,
+                      calcf->gpuparm->mgparm->center[0]+0.5*(calcf->gpuparm->mgparm->glen[0]),
+                      calcf->gpuparm->mgparm->center[1]+0.5*(calcf->gpuparm->mgparm->glen[1]),
+                      calcf->gpuparm->mgparm->center[2]+0.5*(calcf->gpuparm->mgparm->glen[2]));
+            Vnm_print(0, "NOsh_setupCalcMGAUTO (%s, %d):  final fine mesh lower corner = \
+%g %g %g\n", __FILE__, __LINE__,
+                      calcf->gpuparm->mgparm->center[0]-0.5*(calcf->gpuparm->mgparm->glen[0]),
+                      calcf->gpuparm->mgparm->center[1]-0.5*(calcf->gpuparm->mgparm->glen[1]),
+                      calcf->gpuparm->mgparm->center[2]-0.5*(calcf->gpuparm->mgparm->glen[2]));
+    	}
+
+        /* Finer levels have focusing boundary conditions */
+        if (ifocus != 0) calcf->pbeparm->bcfl = BCFL_FOCUS;
+
+        /* Only the finest level handles I/O and needs to worry about disjoint
+            partitioning */
+        if (ifocus != (nfocus-1)) calcf->pbeparm->numwrite = 0;
+
+        /* Reset boundary flags for everything except parallel focusing */
+        if (calcf->gpuparm->mgparm->type != MCT_PARALLEL)  {
+            Vnm_print(0, "NOsh_setupMGAUTO:  Resetting boundary flags\n");
+            for (j=0; j<6; j++) calcf->gpuparm->mgparm->partDisjOwnSide[j] = 0;
+            for (j=0; j<3; j++) {
+                calcf->gpuparm->mgparm->partDisjCenter[j] = 0;
+                calcf->gpuparm->mgparm->partDisjLength[j] = calcf->gpuparm->mgparm->glen[j];
+            }
+        }
+
+        calcf->gpuparm->mgparm->parsed = 1;
+    }
+
+    return 1;
+}
+
 
 
 VPRIVATE int NOsh_setupCalcBEM(

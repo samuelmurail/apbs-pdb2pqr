@@ -18,6 +18,7 @@ add_items(
     vstring.c
     vparam.c
     vgreen.c
+    gpuparm.c
 )
 
 add_items(
@@ -43,6 +44,7 @@ add_items(
     vmatrix.h
     vhal.h
     vunit.h
+    gpuparm.h
 )
 
 add_sublibrary(generic)
