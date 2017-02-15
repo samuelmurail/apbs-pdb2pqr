@@ -22,6 +22,11 @@ macro(add_items TYPE)
 
 endmacro()
 
+FIND_PACKAGE(CUDA REQUIRED)
+include_directories(${CUDA_INCLUDE_DIRS})
+
+#LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20, code=sm_20)
+LIST(APPEND CUDA_NVCC_FLAGS -arch=sm_20)
 
 
 macro(add_sublibrary LIBRARY)
