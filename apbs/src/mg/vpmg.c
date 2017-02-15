@@ -3123,10 +3123,12 @@ VPRIVATE void bcCalcOrig(Vpmg *thee) {
         case BCFL_UNUSED:
             Vnm_print(2, "bcCalc:  Invalid bcfl (%d)!\n", thee->pmgp->bcfl);
             VASSERT(0);
+            break;
 
         case BCFL_FOCUS:
             Vnm_print(2, "VPMG::bcCalc -- not appropriate for focusing!\n");
             VASSERT(0);
+            break;
 
         default:
             Vnm_print(2, "VPMG::bcCalc -- invalid boundary condition \
@@ -3702,6 +3704,7 @@ VPRIVATE void bcfl_sdh(Vpmg *thee){
                 sdhquadrupole[6] += 1.5*(traced[6]);
                 sdhquadrupole[7] += 1.5*(traced[7]);
                 sdhquadrupole[8] += 1.5*(traced[8] - qave);
+                break;
 #if defined(WITH_TINKER)
             case VCM_PERMANENT:
                 charge = Vatom_getCharge(atom);
@@ -3801,9 +3804,9 @@ VPRIVATE void bcfl_sdh(Vpmg *thee){
                 sdhquadrupole[8] += 1.5*(traced[8] - qave);
 /*added this to kill a warning when building with clang (by Juan Brandi)*/
 #else
-                    case VCM_PERMANENT:;
-                    case VCM_INDUCED:;
-                    case VCM_NLINDUCED:;
+                    case VCM_PERMANENT: break;
+                    case VCM_INDUCED: break;
+                    case VCM_NLINDUCED: break;
 #endif /* if defined(WITH_TINKER) */
         }
     }

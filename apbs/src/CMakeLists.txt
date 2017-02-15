@@ -57,7 +57,7 @@ add_sublibrary(routines)
 
 message(STATUS ${EXTERNAL_HEADERS})
 
-add_executable(apbs main.c apbs.h routines.c routines.h)
+add_executable(apbs main.c apbs.h routines.c routines.h ${APBS_ROOT}/src/pmgc/gpu.cu)
 message(***************************)
 message(STATUS " ")
 message(STATUS "APBS Libraries: ${APBS_LIBS}")
