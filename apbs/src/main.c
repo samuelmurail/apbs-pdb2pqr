@@ -561,7 +561,36 @@ int main(
                 	VJMPERR1(0);
                 }
 
-                printf("---Got here!\n");
+                /* Set partition information for observables and I/O */
+                if(setPartMG(nosh, gpuparm->mgparm, pmg[i]) != 1){
+                	Vnm_print(2, "Error setting partition info!\n");
+                	VJMPERR1(0);
+                }
+
+                /* Write out energies */
+                energyMG(nosh, i, pmg[i], &(nenergy[i]),
+                		&(totEnergy[i]), &(qfEnergy[i]),
+						&(qmEnergy[i]), &(dielEnergy[i]));
+
+                /* Write out forces */
+                forceMG(mem, nosh, pbeparm, gpuparm->mgparm,
+                		pmg[i], &(nforce[i]), &(atomForce[i]),
+						alist);
+
+                /* Write out data folks might want */
+                writedataMG(rank, nosh, pbeparm, pmg[i]);
+
+                /* Write matrix */
+                writematMG(rank, nosh, pbeparm, pmg[i]);
+
+                /* If needed, cache atom energies */
+                nenergy[i] = 0;
+                if ((pbeparm->calcenergy == PCE_COMPS) && (outputformat != OUTPUT_NULL)){
+                    storeAtomEnergy(pmg[i], i, &(atomEnergy[i]), &(nenergy[i]));
+                }
+
+                fflush(stdout);
+                fflush(stderr);
 
             	break;
 
