@@ -65,6 +65,7 @@
 #include "pmgc/mgcsd.h"
 #include "pmgc/powerd.h"
 #include "pmgc/mgfasd.h"
+#include "pmgc/gpu.h"
 
 /**
  * @brief 	Multilevel solver driver
@@ -247,6 +248,19 @@ VEXTERNC void Vgpusz(
         int *iretot, ///< @todo: Doc
         int *iintot  ///< @todo: Doc
         );
+
+VEXTERNC void Vgvcs(int *nx, int *ny, int *nz,
+	double *x,
+	int *iz,
+	double *w0, double *w1, double *w2, double *w3,
+	int *istop, int *itmax, int *iters, int *ierror,
+	int *nlev, int *ilev, int *nlev_real,
+	int *mgsolv, int *iok, int *iinfo,
+	double *epsiln, double *errtol, double *omega,
+	int *nu1, int *nu2,
+	int *mgsmoo,
+	int *ipc, double *rpc,
+	double *pc, double *ac, double *cc, double *fc, double *tru);
 
 #endif /* _GPUDRVD_H_ */
 

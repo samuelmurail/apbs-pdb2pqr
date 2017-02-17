@@ -47,7 +47,8 @@
  * @endverbatim
  */
 
-#include "gpudrvd.h"
+#include "pmgc/gpudrvd.h"
+#include "pmgc/gpu.h"
 
 VPUBLIC void Vgpudriv(int* iparm, double* rparm,
         int* iwork, double* rwork, double* u,
@@ -454,7 +455,7 @@ VPUBLIC  void Vgpusz(int *mgcoar, int *mgdisc, int *mgsolv,
     *iintot = *n_iz + *n_ipc;
 }
 
-VEXTERNC void Vgvcs(int *nx, int *ny, int *nz,
+VPUBLIC void Vgvcs(int *nx, int *ny, int *nz,
         double *x,
         int *iz,
         double *w0, double *w1, double *w2, double *w3,
@@ -564,8 +565,9 @@ VEXTERNC void Vgvcs(int *nx, int *ny, int *nz,
         		lev = 1;
         		nuuu = Vivariv(nu1, &lev);
         		rsnrm = 1.0;
-        		int iter = 0;
-        		int miter = 100;
+				int iter = 0;
+        		int miter = 1000;
+				int mt = 0;
 
         		do{
 					Vgpu(&nxf, &nyf, &nzf,
@@ -574,11 +576,13 @@ VEXTERNC void Vgvcs(int *nx, int *ny, int *nz,
 							  RAT(x, VAT2(iz, 1,lev)), w2, w3, w1,
 							&nuuu, &iters_s,
 							&errtol_s, omega,
-							&iresid, &iadjoint, mgsmoo);
+							&iresid, &iadjoint, &mt);
 
 					rsnrm = Vxnrm1(&nxf, &nyf, &nzf, w1);
-					iter++;
-        		} while(iter < miter && rsnrm > *errtol);
+					iter = iter + 1;
+					//printf("iter: %d, res: %g\n", iter, rsnrm / rsden);
+					
+        		} while(iter < miter && rsnrm/rsden > *errtol);
 
         	}
         }

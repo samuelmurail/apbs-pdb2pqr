@@ -1965,11 +1965,13 @@ VPRIVATE int NOsh_setupCalcGPU(
 					calcc->gpuparm->mgparm->center[2]-0.5*(calcc->gpuparm->mgparm->glen[2])
     			);
     		Vnm_print(0, "NOsh_setupCalcGPU (%s, %d): initial fine mesh upper corner = %g, %g, %g\n",
+				    __FILE__, __LINE__,
     				calcf->gpuparm->mgparm->center[0]+0.5*(calcf->gpuparm->mgparm->glen[0]),
 					calcf->gpuparm->mgparm->center[1]+0.5*(calcf->gpuparm->mgparm->glen[1]),
 					calcf->gpuparm->mgparm->center[2]+0.5*(calcf->gpuparm->mgparm->glen[2])
     			);
     		Vnm_print(0, "NOsh_setupCalcGPU (%s, %d): initial fine mesh lower corner = %g, %g, %g\n",
+				    __FILE__, __LINE__,
     				calcf->gpuparm->mgparm->center[0]-0.5*(calcf->gpuparm->mgparm->glen[0]),
 					calcf->gpuparm->mgparm->center[1]-0.5*(calcf->gpuparm->mgparm->glen[1]),
 					calcf->gpuparm->mgparm->center[2]-0.5*(calcf->gpuparm->mgparm->glen[2])

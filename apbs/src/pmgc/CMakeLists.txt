@@ -28,6 +28,7 @@ add_items(
     buildGd.h
     buildPd.h
     cgd.h
+	gpu.h
     gsd.h
     matvecd.h
     mgcsd.h

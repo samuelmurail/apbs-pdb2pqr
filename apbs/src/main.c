@@ -66,7 +66,6 @@
  */
 
 #include <time.h>
-
 #include "routines.h"
 
 VEMBED(rcsid="$Id$")
@@ -483,11 +482,17 @@ int main(
                 printMGPARM(mgparm, realCenter);
                 printPBEPARM(pbeparm);
 
+				ts = clock();
                 /* Solve PDE */
                 if (solveMG(nosh, pmg[i], mgparm->type) != 1) {
                     Vnm_tprint(2, "Error solving PDE!\n");
                     VJMPERR1(0);
                 }
+				te = clock();
+
+				printf("--- SolveMG run time = %f\n", (double)(te - ts) / CLOCKS_PER_SEC);
+
+
 
                 /* Set partition information for observables and I/O */
                 if (setPartMG(nosh, mgparm, pmg[i]) != 1) {
@@ -555,11 +560,14 @@ int main(
                 printMGPARM(gpuparm->mgparm, realCenter);
                 printPBEPARM(pbeparm);
 
+				ts = clock();
                 /* Solve PDE */
-                if(solveGPU(nosh, pmg[i], gpuparm->mgparm->type != 1)){
+                if(solveGPU(nosh, pmg[i], gpuparm->mgparm->type) != 1){
                 	Vnm_tprint(2, "Error Solving PDE!\n");
                 	VJMPERR1(0);
                 }
+				te = clock();
+				printf("--- SolveGPU run time = %f\n", (double)(te - ts) / CLOCKS_PER_SEC);
 
                 /* Set partition information for observables and I/O */
                 if(setPartMG(nosh, gpuparm->mgparm, pmg[i]) != 1){

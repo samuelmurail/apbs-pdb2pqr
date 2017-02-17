@@ -46,8 +46,8 @@
  * @endverbatim
  */
 
-#ifndef _GSD_HU_
-#define _GSD_HU_
+#ifndef _GSD_H_
+#define _GSD_H_
 
 #include "apbscfg.h"
 
@@ -82,6 +82,7 @@ VEXTERNC void Vgpu(
         int    *iadjoint,///< @todo:  Doc
         int    *gpu      /**< Flag whether or not to use gpu code */
         );
+
 VEXTERNC void V7xgpu(
         int    *nx,      ///< @todo:  Doc
         int    *ny,      ///< @todo:  Doc
@@ -141,4 +142,4 @@ VEXTERNC void V27xgpu(
         );
 
 
-#endif /* _GSD_HU_ */
+#endif /* _GSD_H_ */

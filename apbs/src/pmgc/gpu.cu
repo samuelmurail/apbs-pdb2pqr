@@ -47,12 +47,7 @@
  * @endverbatim
  */
 
-#include "gpu.hu"
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<math.h>
-#include<time.h>
+#include "gpu.h"
 
 #define HANDLE_ERROR(x){									\
 	cudaError_t _err = x;									\
@@ -96,10 +91,10 @@ VPUBLIC void Vgpu(int *nx, int *ny, int *nz,
 
     // Do in one step ***
     numdia = VAT(ipc, 11);
-    if (numdia == 7) {
+    if(numdia == 7) {
        if(*gpu == 0){
 
-			Vgsrb7xGpu(nx, ny, nz,
+			V7xgpu(nx, ny, nz,
 				ipc, rpc,
 				RAT2(ac, 1,1), cc, fc,
 				RAT2(ac, 1,2), RAT2(ac, 1,3), RAT2(ac, 1,4),
@@ -107,7 +102,7 @@ VPUBLIC void Vgpu(int *nx, int *ny, int *nz,
 				itmax, iters, errtol, omega, iresid, iadjoint);
 
        }
-    } else if (numdia == 27) {
+    } else if(numdia == 27) {
         V27xgpu(nx, ny, nz,
                  ipc, rpc,
                  RAT2(ac, 1, 1), cc, fc,
@@ -117,7 +112,8 @@ VPUBLIC void Vgpu(int *nx, int *ny, int *nz,
                  RAT2(ac, 1,11), RAT2(ac, 1,12), RAT2(ac, 1,13), RAT2(ac, 1,14),
                  x, w1, w2, r,
                  itmax, iters, errtol, omega, iresid, iadjoint);
-    } else {
+    }
+	else {
         Vnm_print(2, "GSRB: invalid stencil type given...\n");
     }
 }
@@ -168,7 +164,7 @@ VPUBLIC void V7xgpu(int *nx,int *ny,int *nz,
 	HANDLE_ERROR(cudaMemcpy(d_oN, oN, sizeof(double)*sz, cudaMemcpyHostToDevice));
 	HANDLE_ERROR(cudaMemcpy(d_oE, oE, sizeof(double)*sz, cudaMemcpyHostToDevice));
 
-	int imax = 100;
+	int imax = 3000;
 	int iter = 0;
 	do {
 

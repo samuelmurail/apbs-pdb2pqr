@@ -26,7 +26,7 @@ FIND_PACKAGE(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
 
 #LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20, code=sm_20)
-LIST(APPEND CUDA_NVCC_FLAGS -arch=sm_20)
+LIST(APPEND CUDA_NVCC_FLAGS -arch=sm_50)
 
 
 macro(add_sublibrary LIBRARY)
@@ -62,7 +62,7 @@ add_sublibrary(routines)
 
 message(STATUS ${EXTERNAL_HEADERS})
 
-add_executable(apbs main.c apbs.h routines.c routines.h ${APBS_ROOT}/src/pmgc/gpu.cu)
+cuda_add_executable(apbs main.c apbs.h routines.c routines.h ${APBS_ROOT}/src/pmgc/gpu.cu)
 message(***************************)
 message(STATUS " ")
 message(STATUS "APBS Libraries: ${APBS_LIBS}")
@@ -72,7 +72,7 @@ message(***************************)
 
 #add_dependencies(apbs ${BEM_LIB})
 target_link_libraries(apbs ${APBS_LIBS} ${APBS_INTERNAL_LIBS} ${APBS_LIBS})
-#add_dependencies(apbs ${APBS_LIBS} ${APBS_INTERNAL_LIBS} ${APBS_LIBS})
+#add_dependencies(apbs ${CUDA_LIBRARIES} ${APBS_LIBS} ${APBS_INTERNAL_LIBS} ${APBS_LIBS})
 
 configure_file(
     ${APBS_ROOT}/src/.config/apbscfg.h.in
