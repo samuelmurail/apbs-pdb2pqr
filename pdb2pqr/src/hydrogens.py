@@ -393,7 +393,7 @@ class Optimize:
         for i in range(3):
             newcoords.append(vec[i]/dist + atom.getCoords()[i])
             
-        residue.createAtom(addname, newcoords)
+        residue.createAtom(addname, newcoords, overwriteelement='H')
         newatom = residue.getAtom(addname)
         self.routines.cells.addCell(newatom)
 
@@ -418,7 +418,7 @@ class Optimize:
         # Make the atom
 
         newcoords = findCoordinates(2, coords, refcoords, refatomcoords)
-        residue.createAtom(addname, newcoords)
+        residue.createAtom(addname, newcoords, overwriteelement='H')
 
         # Set the bonds (since not in reference structure)
 
@@ -443,7 +443,7 @@ class Optimize:
         # Make the atom
 
         newcoords = findCoordinates(2, coords, refcoords, refatomcoords)
-        residue.createAtom(addname, newcoords)
+        residue.createAtom(addname, newcoords, overwriteelement='H')
 
     def makeAtomWithOneBondLP(self, atom, addname):
         """
@@ -457,6 +457,8 @@ class Optimize:
         for refname in atom.reference.bonds:
             if refname.startswith("H"): break
 
+        assert refname.startswith("H"), "No hydrogen atom found in reference residue"
+
         nextatom = atom.bonds[0]
         coords = [atom.getCoords(), nextatom.getCoords()]
         refcoords = [residue.reference.map[atom.name].getCoords(), \
@@ -466,7 +468,7 @@ class Optimize:
         # Make the atom
 
         newcoords = findCoordinates(2, coords, refcoords, refatomcoords)
-        residue.createAtom(addname, newcoords)     
+        residue.createAtom(addname, newcoords, overwriteelement='H')     
 
         # Set the bonds (since not in reference structure)
 
@@ -606,7 +608,7 @@ class Optimize:
         
         # Try the first position
         
-        residue.createAtom(newname, loc1)
+        residue.createAtom(newname, loc1, overwriteelement='H')
         if self.isHbond(donor, acc):
             besten = self.getPairEnergy(donor, acc)
             bestcoords = loc1
@@ -660,7 +662,7 @@ class Optimize:
 
         # Try the first position
         
-        residue.createAtom(newname, loc1)
+        residue.createAtom(newname, loc1, overwriteelement='X')
         newatom = residue.getAtom(newname)
         angle = abs(self.getHbondangle(donorhatom, acc, newatom))
         if angle < bestangle:
@@ -729,7 +731,7 @@ class Optimize:
             position.
         """
         residue = donor.residue
-        residue.createAtom(newname, loc)
+        residue.createAtom(newname, loc, overwriteelement='H')
         if self.isHbond(donor, acc):
             newatom = residue.getAtom(newname)
             self.routines.cells.addCell(newatom)
@@ -753,7 +755,7 @@ class Optimize:
             if donorhatom.isHydrogen() and \
                self.getHbondangle(acc, donor, donorhatom) < ANGLE_CUTOFF: break
 
-        residue.createAtom(newname, loc)
+        residue.createAtom(newname, loc, overwriteelement='X')
         newatom = residue.getAtom(newname)
 
         # Remove if geometry does not work
@@ -835,7 +837,7 @@ class Flip(Optimize):
 
         for name in map:
             newname = "%sFLIP" % name
-            residue.createAtom(newname, map[name])
+            residue.createAtom(newname, map[name], templateatom=residue.getAtom(name))
             newatom = residue.getAtom(newname)
             self.routines.cells.addCell(newatom)
 
@@ -1213,7 +1215,7 @@ class Alcoholic(Optimize):
            
         elif len(atom.bonds) == 2:    
             loc1, loc2 = self.getPositionsWithTwoBonds(atom)
-            residue.createAtom(addname, loc1)
+            residue.createAtom(addname, loc1, overwriteelement='H')
             newatom = residue.getAtom(addname)
             self.routines.cells.addCell(newatom)
             
@@ -1255,7 +1257,7 @@ class Alcoholic(Optimize):
         elif len(atom.bonds) == 3:
           
             loc = self.getPositionWithThreeBonds(atom)
-            residue.createAtom(addname, loc)
+            residue.createAtom(addname, loc, overwriteelement='H')
             self.routines.cells.addCell(residue.getAtom(addname))
 
     def complete(self):
@@ -1469,7 +1471,7 @@ class Water(Optimize):
             else:
                 newcoords = add(atom.getCoords(), [1.0, 0.0, 0.0])      
 
-            residue.createAtom(addname, newcoords)
+            residue.createAtom(addname, newcoords, overwriteelement='H')
             self.routines.cells.addCell(residue.getAtom(addname))
 
             self.finalize()
@@ -1515,7 +1517,7 @@ class Water(Optimize):
         elif len(atom.bonds) == 2:
 
             loc1, loc2 = self.getPositionsWithTwoBonds(atom)
-            residue.createAtom(addname, loc1)
+            residue.createAtom(addname, loc1, overwriteelement='H')
             newatom = residue.getAtom(addname)
             self.routines.cells.addCell(newatom)
             
@@ -1551,7 +1553,7 @@ class Water(Optimize):
         elif len(atom.bonds) == 3:
 
             loc = self.getPositionWithThreeBonds(atom)
-            residue.createAtom(addname, loc)
+            residue.createAtom(addname, loc, overwriteelement='H')
             self.routines.cells.addCell(residue.getAtom(addname))            
 
           
@@ -1665,7 +1667,7 @@ class Carboxylic(Optimize):
 
             residue.renameAtom(hname, "%s1" % hname)
             newname = "%s2" % hname
-            residue.createAtom(newname, newcoords)
+            residue.createAtom(newname, newcoords, overwriteelement='H')
             newatom = residue.getAtom(newname)
             self.routines.cells.addCell(newatom)
             newatom.refdistance = hatom.refdistance
@@ -2215,7 +2217,7 @@ class hydrogenRoutines:
                         raise PDBInternalError("Could not find necessary atom!")
     
                 newcoords = findCoordinates(3, refcoords, defcoords, defatomcoords)
-                residue.createAtom(hname, newcoords)
+                residue.createAtom(hname, newcoords, overwriteelement='H')
 
             boundname = conf.boundatom
             residue.getAtom(boundname).hacceptor = 0
@@ -2580,7 +2582,6 @@ class hydrogenRoutines:
                 if atom.hacceptor and atom2.hdonor and res == 0:
                     obj2.tryBoth(atom2, atom, obj1)
          
-                   
             ### FOURTH: Complete all residues
     
             for obj in network:  obj.complete()

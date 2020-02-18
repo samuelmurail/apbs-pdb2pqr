@@ -708,7 +708,7 @@ class Routines:
                          residue.reference.map[nextatomname].getCoords()]
             refatomcoords = atomref.getCoords()
             newcoords = findCoordinates(2, coords, refcoords, refatomcoords)
-            residue.createAtom(atomname, newcoords)
+            residue.createAtom(atomname, newcoords, overwriteelement='H')
 
             # For LEU and ILE residues only: make sure the Hydrogens are in staggered conformation instead of eclipsed.
 
@@ -750,7 +750,7 @@ class Routines:
             residue.rotateTetrahedral(nextatom, bondatom, 120)
             newcoords = hatom.getCoords()
             residue.rotateTetrahedral(nextatom, bondatom, -120)
-            residue.createAtom(atomname, newcoords)
+            residue.createAtom(atomname, newcoords, overwriteelement='H')
 
             return 1
 
@@ -778,9 +778,9 @@ class Routines:
             # Determine which one hatoms[1] is not in
 
             if distance(hatoms[1].getCoords(), newcoords1) > 0.1:
-                residue.createAtom(atomname, newcoords1)
+                residue.createAtom(atomname, newcoords1, overwriteelement='H')
             else:
-                residue.createAtom(atomname, newcoords2)
+                residue.createAtom(atomname, newcoords2, overwriteelement='H')
 
             return 1
 
@@ -844,7 +844,7 @@ class Routines:
 
                 if len(coords) == 3:
                     newcoords = findCoordinates(3, coords, refcoords, refatomcoords)
-                    residue.createAtom(atomname, newcoords)
+                    residue.createAtom(atomname, newcoords, overwriteelement='H')
                     count += 1
                 else:
                     self.write("Couldn't rebuild %s in %s!\n" % (atomname, residue), 1)
@@ -935,7 +935,7 @@ class Routines:
 
                 else: # Rebuild the atom
                     newcoords = findCoordinates(3, coords, refcoords, refatomcoords)
-                    residue.createAtom(atomname, newcoords)
+                    residue.createAtom(atomname, newcoords, overwriteelement="")
                     self.write("Added %s to %s at coordinates" % (atomname, residue), 1)
                     self.write(" %.3f %.3f %.3f\n" % \
                            (newcoords[0], newcoords[1], newcoords[2]))

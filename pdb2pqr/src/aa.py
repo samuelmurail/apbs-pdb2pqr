@@ -100,7 +100,7 @@ class Amino(Residue):
                 atom = Atom(a, "ATOM", self)
                 self.addAtom(atom)
 
-    def createAtom(self, atomname, newcoords):
+    def createAtom(self, atomname, newcoords, templateatom=None, overwriteelement=None):
         """
             Create an atom.  Override the generic residue's version of
             createAtom().
@@ -109,7 +109,10 @@ class Amino(Residue):
                 atomname:  The name of the atom (string)
                 newcoords: The coordinates of the atom (list).
         """
-        oldatom = self.atoms[0]
+        if templateatom is not None:
+            oldatom = templateatom
+        else:
+            oldatom = self.atoms[0]
         newatom = Atom(oldatom, "ATOM", self)
         newatom.set("x",newcoords[0])
         newatom.set("y",newcoords[1])
@@ -117,6 +120,8 @@ class Amino(Residue):
         newatom.set("name", atomname)
         newatom.set("occupancy",1.00)
         newatom.set("tempFactor",0.00)
+        if overwriteelement is not None:
+            newatom.set("element", overwriteelement)
         newatom.added = 1
         self.addAtom(newatom)
 
@@ -755,7 +760,7 @@ class WAT(Residue):
                 oldatom = self.getAtom(atomname)
                 oldatom.set("altLoc","")
 
-    def createAtom(self, atomname, newcoords):
+    def createAtom(self, atomname, newcoords, overwriteelement=None):
         """
             Create a water atom.  Note the HETATM field.
 
@@ -771,6 +776,8 @@ class WAT(Residue):
         newatom.set("name", atomname)
         newatom.set("occupancy",1.00)
         newatom.set("tempFactor",0.00)
+        if overwriteelement is not None:
+            newatom.set("element", overwriteelement)
         newatom.added = 1
         self.addAtom(newatom)
 
@@ -839,7 +846,7 @@ class LIG(Residue):
                 oldatom = self.getAtom(atomname)
                 oldatom.set("altLoc","")
 
-    def createAtom(self, atomname, newcoords):
+    def createAtom(self, atomname, newcoords, overwriteelement=None):
         """
             Create a water atom.  Note the HETATM field.
 
@@ -855,6 +862,8 @@ class LIG(Residue):
         newatom.set("name", atomname)
         newatom.set("occupancy",1.00)
         newatom.set("tempFactor",0.00)
+        if overwriteelement is not None:
+            newatom.set("element", overwriteelement)
         newatom.added = 1
         self.addAtom(newatom)
 
