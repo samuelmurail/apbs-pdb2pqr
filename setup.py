@@ -31,9 +31,10 @@ setup(name='pdb2pqr',
                 'pdb2pqr.src',
                 'pdb2pqr.pdb2pka',
                 'pdb2pqr.propka30',
+                'pdb2pqr.propka30.Source',
                 'pdb2pqr.extensions'
                 ],
-      package_data={'pdb2pqr': ['dat/*', 'NEWS', 'README.md', 'COPYING', 'AUTHORS']},
+      package_data={'pdb2pqr': ['dat/*', 'NEWS', 'README.md', 'COPYING', 'AUTHORS', 'propka30/Source/*.dat', 'propka30/Source/ions.list']},
       cmdclass=dict(build_py=build_py),
       entry_points={
           'console_scripts': [

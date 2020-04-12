@@ -1567,9 +1567,9 @@ class Routines:
 
     def _runPROPKA30(self, rootname, outname, options):
 
-        from propka30.Source.protein import Protein as pkaProtein
-        from propka30.Source.pdb import readPDB as pkaReadPDB
-        from propka30.Source.lib import residueList, setVerbose
+        from ..propka30.Source.protein import Protein as pkaProtein
+        from ..propka30.Source.pdb import readPDB as pkaReadPDB
+        from ..propka30.Source.lib import residueList, setVerbose
 
         setVerbose(options.verbose)
 

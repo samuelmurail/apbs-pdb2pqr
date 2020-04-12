@@ -137,7 +137,7 @@ def createPropkaOptions(pH, verbose=False, reference='neutral'):
     propkaOpts.version_label = "Nov30"
     
     #These adds a few bits to propkaOpts 
-    from propka30.Source import lib
+    from ..propka30.Source import lib
     lib.interpretMutator(propkaOpts)
     #With the current defaults used here this does not do anything.
     #However if we start adding the propka options we'll need to do this.
