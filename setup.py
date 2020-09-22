@@ -28,7 +28,7 @@ class build_py(build_py):
 
 setup(
     name='pdb2pqr_htmd_propka30',
-    version='0.0.3',
+    version='0.0.4',
     url='http://www.poissonboltzmann.org/',
     description="PDB2PQR: an automated pipeline for the setup of Poisson-Boltzmann electrostatics calculations",
     long_description=open("pdb2pqr/README.md", encoding='utf-8').read(),
